@@ -7,6 +7,8 @@ module Teller
 
     def create
       supervisor = User.find_by(email_address: approval_params[:supervisor_email_address].to_s.strip.downcase)
+      policy_trigger = approval_params[:policy_trigger].presence || "amount_threshold"
+      policy_context = parsed_policy_context
 
       if supervisor.blank? || !supervisor.authenticate(approval_params[:supervisor_password].to_s)
         render json: { ok: false, error: "Invalid supervisor credentials" }, status: :unauthorized
@@ -23,6 +25,8 @@ module Teller
           supervisor_user_id: supervisor.id,
           request_id: approval_params[:request_id].to_s,
           reason: approval_params[:reason].to_s,
+          policy_trigger: policy_trigger,
+          policy_context: policy_context,
           approved_at: Time.current.to_i
         },
         expires_in: 10.minutes
@@ -37,7 +41,9 @@ module Teller
         metadata: {
           request_id: approval_params[:request_id].to_s,
           requester_user_id: Current.user&.id,
-          reason: approval_params[:reason].to_s
+          reason: approval_params[:reason].to_s,
+          policy_trigger: policy_trigger,
+          policy_context: policy_context
         }.to_json,
         occurred_at: Time.current
       )
@@ -51,7 +57,16 @@ module Teller
       end
 
       def approval_params
-        params.permit(:request_id, :reason, :supervisor_email_address, :supervisor_password)
+        params.permit(:request_id, :reason, :supervisor_email_address, :supervisor_password, :policy_trigger, :policy_context)
+      end
+
+      def parsed_policy_context
+        raw_context = approval_params[:policy_context]
+        return {} if raw_context.blank?
+
+        JSON.parse(raw_context)
+      rescue JSON::ParserError
+        {}
       end
 
       def approval_verifier

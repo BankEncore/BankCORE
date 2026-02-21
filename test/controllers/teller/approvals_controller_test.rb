@@ -26,6 +26,13 @@ module Teller
       post teller_approvals_path, params: {
         request_id: "approval-1",
         reason: "threshold_exceeded",
+        policy_trigger: "amount_threshold",
+        policy_context: {
+          trigger: "amount_threshold",
+          threshold_cents: 100_000,
+          amount_cents: 150_000,
+          transaction_type: "deposit"
+        }.to_json,
         supervisor_email_address: @supervisor.email_address,
         supervisor_password: "password"
       }
@@ -34,6 +41,12 @@ module Teller
       body = JSON.parse(response.body)
       assert_equal true, body["ok"]
       assert body["approval_token"].present?
+
+      event = AuditEvent.order(:id).last
+      metadata = JSON.parse(event.metadata)
+      assert_equal "amount_threshold", metadata["policy_trigger"]
+      assert_equal "deposit", metadata.dig("policy_context", "transaction_type")
+      assert_equal 150_000, metadata.dig("policy_context", "amount_cents")
     end
 
     test "rejects invalid supervisor credentials" do

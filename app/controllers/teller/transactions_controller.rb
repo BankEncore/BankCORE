@@ -17,11 +17,16 @@ module Teller
         errors << "Posting entries are out of balance"
       end
 
+      approval_trigger = approval_policy_trigger(validation_params)
+      approval_needed = approval_trigger.present?
+
       render json: {
         ok: errors.empty?,
         errors: errors,
-        approval_required: approval_required?(validation_params),
-        approval_reason: approval_required?(validation_params) ? "Amount threshold exceeded" : nil,
+        approval_required: approval_needed,
+        approval_reason: approval_needed ? "Amount threshold exceeded" : nil,
+        approval_policy_trigger: approval_trigger,
+        approval_policy_context: approval_needed ? approval_policy_context(validation_params) : {},
         totals: {
           debit_cents: debit_total,
           credit_cents: credit_total,

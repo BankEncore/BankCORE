@@ -1,19 +1,30 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["panel", "reason", "supervisorEmail", "supervisorPassword", "approvalReasonInput"]
+  static targets = ["panel", "reason", "supervisorEmail", "supervisorPassword", "approvalReasonInput", "policyTriggerInput", "policyContextInput"]
 
   static values = {
     approvalUrl: String
   }
 
   show(event) {
+    const policyTrigger = event.detail?.policyTrigger || ""
+    const policyContext = event.detail?.policyContext || {}
+
     if (this.hasPanelTarget) {
       this.panelTarget.hidden = false
     }
 
     if (this.hasReasonTarget) {
       this.reasonTarget.textContent = event.detail?.reason || "Approval required"
+    }
+
+    if (this.hasPolicyTriggerInputTarget) {
+      this.policyTriggerInputTarget.value = policyTrigger
+    }
+
+    if (this.hasPolicyContextInputTarget) {
+      this.policyContextInputTarget.value = JSON.stringify(policyContext)
     }
   }
 
@@ -36,6 +47,8 @@ export default class extends Controller {
     const formData = new FormData()
     formData.set("request_id", requestIdElement.value)
     formData.set("reason", this.hasApprovalReasonInputTarget ? this.approvalReasonInputTarget.value : "")
+    formData.set("policy_trigger", this.hasPolicyTriggerInputTarget ? this.policyTriggerInputTarget.value : "")
+    formData.set("policy_context", this.hasPolicyContextInputTarget ? this.policyContextInputTarget.value : "{}")
     formData.set("supervisor_email_address", this.hasSupervisorEmailTarget ? this.supervisorEmailTarget.value : "")
     formData.set("supervisor_password", this.hasSupervisorPasswordTarget ? this.supervisorPasswordTarget.value : "")
 

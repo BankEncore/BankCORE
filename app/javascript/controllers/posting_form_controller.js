@@ -290,7 +290,9 @@ export default class extends Controller {
       this.element.dispatchEvent(new CustomEvent("tx:approval-required", {
         bubbles: true,
         detail: {
-          reason: validation.approval_reason || "Approval required"
+          reason: validation.approval_reason || "Approval required",
+          policyTrigger: validation.approval_policy_trigger || "",
+          policyContext: validation.approval_policy_context || {}
         }
       }))
       this.setHeaderState("Approval Required")

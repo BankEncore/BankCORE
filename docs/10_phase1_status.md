@@ -52,7 +52,7 @@ This document is **non-authoritative** and exists only to track implementation p
 - [x] Non-destructive prompt when approval is required
 - [x] Supervisor credential validation + token issuance endpoint
 - [x] Posting requires/validates approval token when required
-- [ ] Approval capture records “policy trigger” metadata beyond a generic threshold reason (richer audit trail)
+- [x] Approval capture records “policy trigger” metadata beyond a generic threshold reason (richer audit trail)
 
 ---
 

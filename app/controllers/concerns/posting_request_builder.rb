@@ -141,6 +141,28 @@ module PostingRequestBuilder
     end
 
     def approval_required?(posting_params)
-      posting_params[:amount_cents].to_i >= 100_000
+      approval_policy_trigger(posting_params).present?
+    end
+
+    def approval_policy_trigger(posting_params)
+      return "amount_threshold" if posting_params[:amount_cents].to_i >= approval_amount_threshold_cents
+
+      nil
+    end
+
+    def approval_policy_context(posting_params)
+      trigger = approval_policy_trigger(posting_params)
+      return {} if trigger.blank?
+
+      {
+        trigger: trigger,
+        threshold_cents: approval_amount_threshold_cents,
+        amount_cents: posting_params[:amount_cents].to_i,
+        transaction_type: posting_params[:transaction_type].to_s
+      }
+    end
+
+    def approval_amount_threshold_cents
+      100_000
     end
 end

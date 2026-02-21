@@ -54,6 +54,10 @@ module Teller
       assert_equal true, body["ok"]
       assert_equal true, body["approval_required"]
       assert_match(/threshold/i, body["approval_reason"])
+      assert_equal "amount_threshold", body["approval_policy_trigger"]
+      assert_equal "deposit", body.dig("approval_policy_context", "transaction_type")
+      assert_equal 150_000, body.dig("approval_policy_context", "amount_cents")
+      assert_equal 100_000, body.dig("approval_policy_context", "threshold_cents")
     end
 
     test "validates balanced explicit split entries for deposit" do
