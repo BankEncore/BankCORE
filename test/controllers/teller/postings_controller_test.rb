@@ -80,6 +80,36 @@ module Teller
       assert_equal 1, TellerTransaction.where(request_id: "http-post-4").count
     end
 
+    test "persists check hold metadata into posting batch metadata" do
+      post teller_posting_path, params: valid_posting_payload(
+        request_id: "http-post-hold-1",
+        amount_cents: 20_000,
+        entries: [
+          { side: "debit", account_reference: "check:111000:222000:9001", amount_cents: 20_000 },
+          { side: "credit", account_reference: "acct:deposit", amount_cents: 20_000 }
+        ]
+      ).merge(
+        check_items: [
+          {
+            routing: "111000",
+            account: "222000",
+            number: "9001",
+            account_reference: "check:111000:222000:9001",
+            amount_cents: 20_000,
+            hold_reason: "large_item",
+            hold_until: "2026-03-01"
+          }
+        ]
+      )
+
+      assert_response :success
+
+      posting_batch = PostingBatch.find_by!(request_id: "http-post-hold-1")
+      assert_equal "large_item", posting_batch.metadata.dig("check_items", 0, "hold_reason")
+      assert_equal "2026-03-01", posting_batch.metadata.dig("check_items", 0, "hold_until")
+      assert_equal "check:111000:222000:9001", posting_batch.metadata.dig("check_items", 0, "account_reference")
+    end
+
     private
       def valid_posting_payload(request_id:, amount_cents: 10_000, entries: nil)
         {

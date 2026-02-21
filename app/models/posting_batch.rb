@@ -1,6 +1,8 @@
 class PostingBatch < ApplicationRecord
   STATUSES = %w[committed].freeze
 
+  attribute :metadata, :json, default: {}
+
   belongs_to :teller_transaction
   has_many :posting_legs, dependent: :destroy
   has_many :account_transactions, dependent: :destroy

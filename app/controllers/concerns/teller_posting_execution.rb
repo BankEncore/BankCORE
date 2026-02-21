@@ -36,6 +36,7 @@ module TellerPostingExecution
         transaction_type: request_params[:transaction_type],
         amount_cents: request_params[:amount_cents],
         entries: normalized_entries(request_params),
+        metadata: posting_metadata(request_params),
         currency: request_params[:currency].presence || "USD"
       ).call
 
@@ -58,6 +59,7 @@ module TellerPostingExecution
         :primary_account_reference,
         :counterparty_account_reference,
         :cash_account_reference,
+        check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :hold_reason, :hold_until ],
         entries: [ :side, :account_reference, :amount_cents ]
       )
     end

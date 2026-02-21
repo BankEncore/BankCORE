@@ -29,7 +29,7 @@ module Teller
     test "blocks posting when drawer is not assigned" do
       post teller_teller_session_path, params: { opening_cash_cents: 1_000 }
 
-      post teller_posting_check_path
+      post teller_posting_check_path, params: { transaction_type: "deposit" }
 
       assert_redirected_to teller_context_path
       follow_redirect!
@@ -40,7 +40,16 @@ module Teller
       post teller_teller_session_path, params: { opening_cash_cents: 1_000 }
       patch assign_drawer_teller_teller_session_path, params: { cash_location_id: @drawer.id }
 
-      post teller_posting_check_path
+      post teller_posting_check_path, params: { transaction_type: "deposit" }
+
+      assert_response :success
+      assert_equal({ "ok" => true, "message" => "Posting prerequisites satisfied" }, JSON.parse(response.body))
+    end
+
+    test "allows transfer check without assigned drawer" do
+      post teller_teller_session_path, params: { opening_cash_cents: 1_000 }
+
+      post teller_posting_check_path, params: { transaction_type: "transfer" }
 
       assert_response :success
       assert_equal({ "ok" => true, "message" => "Posting prerequisites satisfied" }, JSON.parse(response.body))

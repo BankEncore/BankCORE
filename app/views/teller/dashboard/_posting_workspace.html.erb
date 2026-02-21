@@ -6,6 +6,7 @@
   data-posting-form-validate-url-value="<%= teller_validate_transaction_path %>"
   data-posting-form-account-reference-url-value="<%= teller_account_reference_path %>"
   data-posting-form-account-history-url-value="<%= teller_account_history_path %>"
+  data-posting-form-receipt-url-template-value="<%= teller_receipt_path(request_id: "__REQUEST_ID__") %>"
   data-approval-panel-approval-url-value="<%= teller_approvals_path %>"
   data-reference-panel-account-reference-url-value="<%= teller_account_reference_path %>"
   data-reference-panel-account-history-url-value="<%= teller_account_history_path %>">
@@ -14,6 +15,7 @@
   <% show_counterparty = fixed_flow && flow_type == "transfer" %>
   <% show_cash_account = local_assigns.fetch(:show_transaction_type, true) %>
   <% show_checks = fixed_flow && flow_type == "deposit" %>
+  <% cash_account_reference_value = teller_session.cash_location.present? ? "cash:#{teller_session.cash_location.code}" : "" %>
 
   <%= form_with url: local_assigns.fetch(:form_url, teller_posting_path), method: :post, html: { id: "posting-form", data: { action: "submit->posting-form#submit" } } do |form| %>
     <p class="alert alert-info hidden" data-posting-form-target="message" aria-live="polite" hidden></p>
@@ -56,13 +58,13 @@
             <p class="form-control" data-posting-form-target="cashAccountRow" hidden>
               <%= form.label :cash_account_reference, "Cash Account Reference" %><br>
               <%= form.text_field :cash_account_reference,
-                value: "cash:#{teller_session.cash_location.code}",
+                value: cash_account_reference_value,
                 data: { posting_form_target: "cashAccountReference", action: "input->posting-form#recalculate" },
                 class: "input input-bordered" %>
             </p>
           <% else %>
             <%= form.hidden_field :cash_account_reference,
-              value: "cash:#{teller_session.cash_location.code}",
+              value: cash_account_reference_value,
               data: { posting_form_target: "cashAccountReference" } %>
           <% end %>
 
@@ -126,6 +128,9 @@
         <p>Teller Transaction ID: <strong data-posting-form-target="receiptTransactionId">N/A</strong></p>
         <p>Request ID: <strong data-posting-form-target="receiptRequestId">N/A</strong></p>
         <p>Posted At: <strong data-posting-form-target="receiptPostedAt">N/A</strong></p>
+        <p>
+          <a class="btn btn-outline btn-sm" data-posting-form-target="receiptLink" href="#" hidden>View Receipt / Audit</a>
+        </p>
       </div>
     </section>
 

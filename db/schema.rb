@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_20_001040) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_21_000000) do
   create_table "account_transactions", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.string "account_reference", null: false
     t.integer "amount_cents", null: false
@@ -107,12 +107,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_20_001040) do
     t.datetime "committed_at", null: false
     t.datetime "created_at", null: false
     t.string "currency", default: "USD", null: false
+    t.text "metadata", size: :long, collation: "utf8mb4_bin"
     t.string "request_id", null: false
     t.string "status", default: "committed", null: false
     t.bigint "teller_transaction_id", null: false
     t.datetime "updated_at", null: false
     t.index ["request_id"], name: "index_posting_batches_on_request_id", unique: true
     t.index ["teller_transaction_id"], name: "index_posting_batches_on_teller_transaction_id"
+    t.check_constraint "json_valid(`metadata`)", name: "metadata"
   end
 
   create_table "posting_legs", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|

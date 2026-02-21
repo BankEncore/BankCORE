@@ -3,6 +3,8 @@
 ## Status
 This document is the **authoritative** Phase 1 scope and acceptance criteria.
 
+Implementation progress is tracked separately in [docs/10_phase1_status.md](docs/10_phase1_status.md) (non-authoritative snapshot).
+
 Other documents in `docs/` may provide charter/architecture/roadmap/UX guidance, but **must not redefine Phase 1 scope**.
 
 ---

@@ -82,6 +82,19 @@ module Teller
       assert_select "p[data-posting-form-target='counterpartyRow']:not([hidden])", count: 1
     end
 
+    test "allows transfer page without assigned drawer" do
+      grant_posting_access(@user, @branch, @workstation)
+      sign_in_as(@user)
+      patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000 }
+
+      get teller_transfer_transaction_path
+
+      assert_response :success
+      assert_select "h2", "Transfer"
+      assert_select "input[name='transaction_type'][value='transfer']", count: 1
+    end
+
     private
       def grant_posting_access(user, branch, workstation)
         [ "teller.dashboard.view", "transactions.deposit.create", "sessions.open" ].each do |permission_key|

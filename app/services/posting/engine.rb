@@ -4,7 +4,7 @@ module Posting
 
     attr_reader :request
 
-    def initialize(user:, teller_session:, branch:, workstation:, request_id:, transaction_type:, amount_cents:, entries:, currency: "USD")
+    def initialize(user:, teller_session:, branch:, workstation:, request_id:, transaction_type:, amount_cents:, entries:, metadata: {}, currency: "USD")
       @request = build_request(
         user: user,
         teller_session: teller_session,
@@ -14,6 +14,7 @@ module Posting
         transaction_type: transaction_type,
         amount_cents: amount_cents,
         entries: entries,
+        metadata: metadata,
         currency: currency
       )
     end
@@ -32,7 +33,7 @@ module Posting
     end
 
     private
-      def build_request(user:, teller_session:, branch:, workstation:, request_id:, transaction_type:, amount_cents:, entries:, currency:)
+      def build_request(user:, teller_session:, branch:, workstation:, request_id:, transaction_type:, amount_cents:, entries:, metadata:, currency:)
         {
           user: user,
           teller_session: teller_session,
@@ -41,6 +42,7 @@ module Posting
           request_id: request_id.to_s,
           transaction_type: transaction_type.to_s,
           amount_cents: amount_cents.to_i,
+          metadata: metadata.presence || {},
           currency: currency.to_s,
           entries: Array(entries).map.with_index do |entry, index|
             {
@@ -68,7 +70,19 @@ module Posting
         teller_session = request.fetch(:teller_session)
 
         raise Error, "teller session must be open" unless teller_session.open?
-        raise Error, "drawer must be assigned" if teller_session.cash_location.blank?
+        raise Error, "drawer must be assigned" if drawer_required? && teller_session.cash_location.blank?
+      end
+
+      def drawer_required?
+        cash_affecting_transaction_type? || cash_legs_present?
+      end
+
+      def cash_affecting_transaction_type?
+        %w[deposit withdrawal].include?(request.fetch(:transaction_type))
+      end
+
+      def cash_legs_present?
+        request.fetch(:entries).any? { |entry| entry.fetch(:account_reference).start_with?("cash:") }
       end
 
       def generate_legs
@@ -102,7 +116,8 @@ module Posting
             request_id: request.fetch(:request_id),
             currency: request.fetch(:currency),
             status: "committed",
-            committed_at: Time.current
+            committed_at: Time.current,
+            metadata: request.fetch(:metadata)
           )
 
           legs.each do |leg|
@@ -123,13 +138,13 @@ module Posting
             )
           end
 
-          create_cash_movement!(teller_transaction)
+          create_cash_movement!(teller_transaction, legs)
 
           posting_batch
         end
       end
 
-      def create_cash_movement!(teller_transaction)
+      def create_cash_movement!(teller_transaction, legs)
         direction = case request.fetch(:transaction_type)
         when "deposit"
           "in"
@@ -141,12 +156,25 @@ module Posting
 
         return if direction.blank?
 
+        cash_account_prefix = "cash:"
+        cash_legs = legs.select { |leg| leg.fetch(:account_reference).start_with?(cash_account_prefix) }
+        cash_amount_cents = case request.fetch(:transaction_type)
+        when "deposit"
+          cash_legs.select { |leg| leg.fetch(:side) == "debit" }.sum { |leg| leg.fetch(:amount_cents) }
+        when "withdrawal"
+          cash_legs.select { |leg| leg.fetch(:side) == "credit" }.sum { |leg| leg.fetch(:amount_cents) }
+        else
+          0
+        end
+
+        return unless cash_amount_cents.positive?
+
         CashMovement.create!(
           teller_transaction: teller_transaction,
           teller_session: request.fetch(:teller_session),
           cash_location: request.fetch(:teller_session).cash_location,
           direction: direction,
-          amount_cents: request.fetch(:amount_cents)
+          amount_cents: cash_amount_cents
         )
       end
   end

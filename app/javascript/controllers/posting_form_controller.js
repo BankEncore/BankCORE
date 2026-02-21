@@ -31,6 +31,7 @@ export default class extends Controller {
     "receiptTransactionId",
     "receiptRequestId",
     "receiptPostedAt",
+    "receiptLink",
     "headerStateBadge",
     "primaryReferenceValue",
     "primaryStatus",
@@ -66,7 +67,8 @@ export default class extends Controller {
     defaultTransactionType: String,
     validateUrl: String,
     accountReferenceUrl: String,
-    accountHistoryUrl: String
+    accountHistoryUrl: String,
+    receiptUrlTemplate: String
   }
 
   connect() {
@@ -497,6 +499,23 @@ export default class extends Controller {
       formData.append("entries[][account_reference]", entry.account_reference)
       formData.append("entries[][amount_cents]", entry.amount_cents.toString())
     })
+
+    this.appendCheckItems(formData)
+  }
+
+  appendCheckItems(formData) {
+    const checks = this.collectCheckRows()
+    checks
+      .filter((check) => check.amount_cents > 0)
+      .forEach((check) => {
+        formData.append("check_items[][routing]", check.routing)
+        formData.append("check_items[][account]", check.account)
+        formData.append("check_items[][number]", check.number)
+        formData.append("check_items[][account_reference]", check.account_reference)
+        formData.append("check_items[][amount_cents]", check.amount_cents.toString())
+        formData.append("check_items[][hold_reason]", check.hold_reason || "")
+        formData.append("check_items[][hold_until]", check.hold_until || "")
+      })
   }
 
   effectiveAmountCents() {
@@ -510,17 +529,23 @@ export default class extends Controller {
   }
 
   collectCheckRows() {
-    return Array.from(this.checkRowsTarget.querySelectorAll("[data-check-row]")).map((row) => {
+    return Array.from(this.checkRowsTarget.querySelectorAll("[data-check-row]")).map((row, index) => {
       const routing = row.querySelector('[data-check-field="routing"]')?.value?.trim() || ""
       const account = row.querySelector('[data-check-field="account"]')?.value?.trim() || ""
       const number = row.querySelector('[data-check-field="number"]')?.value?.trim() || ""
       const amountCents = parseInt(row.querySelector('[data-check-field="amount"]')?.value || "0", 10)
 
+      const holdReason = row.querySelector('[data-check-field="holdReason"]')?.value?.trim() || ""
+      const holdUntil = row.querySelector('[data-check-field="holdUntil"]')?.value?.trim() || ""
+
       return {
         routing,
         account,
         number,
-        amount_cents: amountCents > 0 ? amountCents : 0
+        account_reference: this.checkAccountReference({ routing, account, number }, index),
+        amount_cents: amountCents > 0 ? amountCents : 0,
+        hold_reason: holdReason,
+        hold_until: holdUntil
       }
     })
   }
@@ -562,6 +587,11 @@ export default class extends Controller {
     this.receiptTransactionIdTarget.textContent = tellerTransactionId?.toString() || "N/A"
     this.receiptRequestIdTarget.textContent = requestId || "N/A"
     this.receiptPostedAtTarget.textContent = postedAt || "N/A"
+
+    if (this.hasReceiptLinkTarget && this.hasReceiptUrlTemplateValue && requestId) {
+      this.receiptLinkTarget.hidden = false
+      this.receiptLinkTarget.href = this.receiptUrlTemplateValue.replace("__REQUEST_ID__", encodeURIComponent(requestId))
+    }
     this.receiptPanelTarget.hidden = false
   }
 
@@ -574,6 +604,11 @@ export default class extends Controller {
     this.receiptTransactionIdTarget.textContent = "N/A"
     this.receiptRequestIdTarget.textContent = "N/A"
     this.receiptPostedAtTarget.textContent = "N/A"
+
+    if (this.hasReceiptLinkTarget) {
+      this.receiptLinkTarget.hidden = true
+      this.receiptLinkTarget.href = "#"
+    }
     this.receiptPanelTarget.hidden = true
   }
 

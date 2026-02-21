@@ -1,0 +1,23 @@
+module Teller
+  class ReceiptsController < ApplicationController
+    before_action :load_posting_batch
+    before_action :ensure_authorized
+
+    def show
+      @teller_transaction = @posting_batch.teller_transaction
+      @posting_legs = @posting_batch.posting_legs.order(:position)
+      @cash_movements = @teller_transaction.cash_movements
+    end
+
+    private
+      def ensure_authorized
+        authorize([ :teller, @posting_batch ], :show?)
+      end
+
+      def load_posting_batch
+        @posting_batch = PostingBatch
+          .includes(:posting_legs, :account_transactions, teller_transaction: [ :branch, :workstation, :user, :teller_session ])
+          .find_by!(request_id: params[:request_id].to_s)
+      end
+  end
+end

@@ -2,6 +2,28 @@ module PostingRequestBuilder
   extend ActiveSupport::Concern
 
   private
+    def posting_metadata(posting_params)
+      return {} unless posting_params[:transaction_type].to_s == "deposit"
+
+      check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
+      check_items = check_items.select { |item| item[:amount_cents].to_i.positive? }
+      return {} if check_items.empty?
+
+      {
+        check_items: check_items.map do |item|
+          {
+            routing: item[:routing].to_s,
+            account: item[:account].to_s,
+            number: item[:number].to_s,
+            account_reference: item[:account_reference].to_s,
+            amount_cents: item[:amount_cents].to_i,
+            hold_reason: item[:hold_reason].to_s,
+            hold_until: item[:hold_until].to_s
+          }
+        end
+      }
+    end
+
     def normalized_entries(posting_params)
       explicit_entries = Array(posting_params[:entries]).map { |entry| entry.to_h.symbolize_keys }
       return sanitized_explicit_entries(posting_params, explicit_entries) if explicit_entries.present?

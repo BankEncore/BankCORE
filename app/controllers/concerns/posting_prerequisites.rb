@@ -18,6 +18,31 @@ module PostingPrerequisites
       require_open_teller_session!
       return if performed?
 
-      require_assigned_drawer!
+      require_assigned_drawer! if drawer_required_for_request?
+    end
+
+    def drawer_required_for_request?
+      transaction_type = params[:transaction_type].to_s.presence || inferred_transaction_type
+      %w[deposit withdrawal].include?(transaction_type)
+    end
+
+    def inferred_transaction_type
+      case controller_path
+      when "teller/deposits"
+        "deposit"
+      when "teller/withdrawals"
+        "withdrawal"
+      when "teller/transfers"
+        "transfer"
+      when "teller/transaction_pages"
+        case action_name
+        when "deposit"
+          "deposit"
+        when "withdrawal"
+          "withdrawal"
+        when "transfer"
+          "transfer"
+        end
+      end
     end
 end

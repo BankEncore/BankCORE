@@ -33,6 +33,45 @@ module Posting
       assert_equal 1, CashMovement.where(teller_transaction_id: batch.teller_transaction_id).count
     end
 
+    test "does not create cash movement for check-only deposit" do
+      entries = [
+        { side: "debit", account_reference: "check:#{SecureRandom.hex(4)}", amount_cents: 10_000 },
+        { side: "credit", account_reference: "acct:deposit", amount_cents: 10_000 }
+      ]
+
+      batch = build_engine(request_id: "req-check-only-1", entries: entries).call
+
+      assert_equal 0, CashMovement.where(teller_transaction_id: batch.teller_transaction_id).count
+    end
+
+    test "allows transfer posting without assigned drawer" do
+      session_without_drawer = TellerSession.create!(
+        user: @user,
+        branch: @branch,
+        workstation: @workstation,
+        cash_location: nil,
+        status: "open",
+        opened_at: Time.current,
+        opening_cash_cents: 10_000
+      )
+
+      engine = build_engine(
+        request_id: "req-transfer-no-drawer-1",
+        teller_session: session_without_drawer,
+        transaction_type: "transfer",
+        amount_cents: 5_00,
+        entries: [
+          { side: "debit", account_reference: "acct:from", amount_cents: 5_00 },
+          { side: "credit", account_reference: "acct:to", amount_cents: 5_00 }
+        ]
+      )
+
+      batch = engine.call
+
+      assert_equal "committed", batch.status
+      assert_equal 0, CashMovement.where(teller_transaction_id: batch.teller_transaction_id).count
+    end
+
     test "raises when posting is unbalanced" do
       engine = build_engine(
         request_id: "req-unbalanced-1",
@@ -57,22 +96,22 @@ module Posting
     end
 
     private
-      def build_engine(request_id:, entries: default_entries)
+      def build_engine(request_id:, entries: default_entries, teller_session: @teller_session, transaction_type: "deposit", amount_cents: 10_000)
         Posting::Engine.new(
           user: @user,
-          teller_session: @teller_session,
+          teller_session: teller_session,
           branch: @branch,
           workstation: @workstation,
           request_id: request_id,
-          transaction_type: "deposit",
-          amount_cents: 10_000,
+          transaction_type: transaction_type,
+          amount_cents: amount_cents,
           entries: entries
         )
       end
 
       def default_entries
         [
-          { side: "debit", account_reference: "acct:cash", amount_cents: 10_000 },
+          { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 10_000 },
           { side: "credit", account_reference: "acct:deposit", amount_cents: 10_000 }
         ]
       end
