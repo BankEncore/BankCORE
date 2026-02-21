@@ -3,7 +3,10 @@ module PostingRequestBuilder
 
   private
     def posting_metadata(posting_params)
-      return {} unless posting_params[:transaction_type].to_s == "deposit"
+      transaction_type = posting_params[:transaction_type].to_s
+
+      return check_cashing_metadata(posting_params) if transaction_type == "check_cashing"
+      return {} unless transaction_type == "deposit"
 
       check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
       check_items = check_items.select { |item| item[:amount_cents].to_i.positive? }
@@ -21,6 +24,29 @@ module PostingRequestBuilder
             hold_until: item[:hold_until].to_s
           }
         end
+      }
+    end
+
+    def check_cashing_metadata(posting_params)
+      check_amount_cents = posting_params[:check_amount_cents].to_i
+      fee_cents = posting_params[:fee_cents].to_i
+      net_cash_payout_cents = check_amount_cents - fee_cents
+
+      {
+        check_cashing: {
+          check_amount_cents: check_amount_cents,
+          fee_cents: fee_cents,
+          net_cash_payout_cents: net_cash_payout_cents,
+          settlement_account_reference: posting_params[:settlement_account_reference].to_s,
+          fee_income_account_reference: fee_income_account_reference(posting_params),
+          check_number: posting_params[:check_number].to_s,
+          routing_number: posting_params[:routing_number].to_s,
+          account_number: posting_params[:account_number].to_s,
+          payer_name: posting_params[:payer_name].to_s,
+          presenter_type: posting_params[:presenter_type].to_s,
+          id_type: posting_params[:id_type].to_s,
+          id_number: posting_params[:id_number].to_s
+        }
       }
     end
 
@@ -78,9 +104,34 @@ module PostingRequestBuilder
           { side: "debit", account_reference: primary_account_reference, amount_cents: amount_cents },
           { side: "credit", account_reference: counterparty_account_reference, amount_cents: amount_cents }
         ]
+      when "check_cashing"
+        check_amount_cents = posting_params[:check_amount_cents].to_i
+        fee_cents = posting_params[:fee_cents].to_i
+        net_cash_payout_cents = check_amount_cents - fee_cents
+        settlement_account_reference = posting_params[:settlement_account_reference].to_s
+
+        return [] unless check_amount_cents.positive?
+        return [] unless net_cash_payout_cents.positive?
+        return [] if settlement_account_reference.blank?
+        return [] unless amount_cents == net_cash_payout_cents
+
+        entries = [
+          { side: "debit", account_reference: settlement_account_reference, amount_cents: check_amount_cents },
+          { side: "credit", account_reference: default_cash_account_reference, amount_cents: net_cash_payout_cents }
+        ]
+
+        if fee_cents.positive?
+          entries << { side: "credit", account_reference: fee_income_account_reference(posting_params), amount_cents: fee_cents }
+        end
+
+        entries
       else
         []
       end
+    end
+
+    def fee_income_account_reference(posting_params)
+      posting_params[:fee_income_account_reference].presence || "income:check_cashing_fee"
     end
 
     def default_cash_account_reference

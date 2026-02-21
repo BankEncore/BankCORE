@@ -11,9 +11,21 @@ export default class extends Controller {
     "cashAccountReference",
     "cashAccountRow",
     "checkSection",
+    "checkCashingSection",
     "checkRows",
     "checkTemplate",
     "amountCents",
+    "checkAmountCents",
+    "feeCents",
+    "settlementAccountReference",
+    "feeIncomeAccountReference",
+    "checkNumber",
+    "routingNumber",
+    "accountNumber",
+    "payerName",
+    "presenterType",
+    "idType",
+    "idNumber",
     "headerStatus",
     "statusBadge",
     "cashSubtotal",
@@ -86,14 +98,22 @@ export default class extends Controller {
     const cashAmountCents = parseInt(this.amountCentsTarget.value || "0", 10)
     const checkSubtotalCents = this.checkSubtotalCents()
     const transactionType = this.transactionTypeTarget.value
+    const checkCashingAmounts = this.checkCashingAmounts()
+    if (transactionType === "check_cashing") {
+      this.amountCentsTarget.value = checkCashingAmounts.netCashPayoutCents.toString()
+    }
     const totalAmountCents = this.effectiveAmountCents()
     const hasPrimaryAccount = this.primaryAccountReferenceTarget.value.trim().length > 0
+    const requiresPrimaryAccount = transactionType !== "check_cashing"
     const requiresCounterparty = transactionType === "transfer"
     const requiresCashAccount = transactionType !== "transfer"
+    const requiresSettlementAccount = transactionType === "check_cashing"
     const hasCounterparty = this.counterpartyAccountReferenceTarget.value.trim().length > 0
     const hasCashAccount = this.cashAccountReferenceTarget.value.trim().length > 0
+    const hasSettlementAccount = this.hasSettlementAccountReferenceTarget && this.settlementAccountReferenceTarget.value.trim().length > 0
     const hasInvalidCheckRows = this.hasInvalidCheckRows()
-    const hasMissingFields = totalAmountCents <= 0 || !hasPrimaryAccount || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || hasInvalidCheckRows
+    const hasInvalidCheckCashingFields = this.hasInvalidCheckCashingFields(checkCashingAmounts)
+    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || (requiresSettlementAccount && !hasSettlementAccount) || hasInvalidCheckRows || hasInvalidCheckCashingFields
 
     const entries = this.generatedEntriesForCurrentState()
     const debitTotal = entries
@@ -108,11 +128,15 @@ export default class extends Controller {
     const blockedReason = this.blockedReason({
       totalAmountCents,
       hasPrimaryAccount,
+      requiresPrimaryAccount,
       requiresCounterparty,
       hasCounterparty,
       requiresCashAccount,
       hasCashAccount,
+      requiresSettlementAccount,
+      hasSettlementAccount,
       hasInvalidCheckRows,
+      hasInvalidCheckCashingFields,
       balanced
     })
 
@@ -121,8 +145,20 @@ export default class extends Controller {
       this.cashAccountRowTarget.hidden = !requiresCashAccount
     }
     this.checkSectionTarget.hidden = transactionType !== "deposit"
+    if (this.hasCheckCashingSectionTarget) {
+      this.checkCashingSectionTarget.hidden = transactionType !== "check_cashing"
+    }
+    this.primaryAccountReferenceTarget.required = requiresPrimaryAccount
+    this.amountCentsTarget.readOnly = transactionType === "check_cashing"
+    if (this.hasSettlementAccountReferenceTarget) {
+      this.settlementAccountReferenceTarget.required = requiresSettlementAccount
+    }
+    if (this.hasIdNumberTarget) {
+      this.idNumberTarget.required = transactionType === "check_cashing"
+    }
 
-    this.cashSubtotalTarget.textContent = this.formatCents(Math.max(cashAmountCents, 0))
+    const displayedCashAmount = transactionType === "check_cashing" ? checkCashingAmounts.netCashPayoutCents : Math.max(cashAmountCents, 0)
+    this.cashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
     this.checkSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
     this.debitTotalTarget.textContent = this.formatCents(debitTotal)
     this.creditTotalTarget.textContent = this.formatCents(creditTotal)
@@ -133,7 +169,7 @@ export default class extends Controller {
       this.headerStatusTarget.textContent = balanced ? "Balanced" : "Editing"
     }
 
-    const cashImpact = this.calculateCashImpact(cashAmountCents)
+    const cashImpact = this.calculateCashImpact(displayedCashAmount)
     const projectedDrawer = (this.openingCashCentsValue || 0) + cashImpact
 
     this.cashImpactTarget.textContent = this.formatCents(cashImpact)
@@ -164,7 +200,9 @@ export default class extends Controller {
         counterpartyReference: this.counterpartyAccountReferenceTarget.value.trim(),
         cashReference: this.cashAccountReferenceTarget.value.trim(),
         requestId: this.requestIdTarget.value,
-        cashAmountCents: Math.max(cashAmountCents, 0),
+        cashAmountCents: displayedCashAmount,
+        checkAmountCents: checkCashingAmounts.checkAmountCents,
+        feeCents: checkCashingAmounts.feeCents,
         checkSubtotalCents,
         totalAmountCents,
         debitTotal,
@@ -181,23 +219,31 @@ export default class extends Controller {
   blockedReason({
     totalAmountCents,
     hasPrimaryAccount,
+    requiresPrimaryAccount,
     requiresCounterparty,
     hasCounterparty,
     requiresCashAccount,
     hasCashAccount,
+    requiresSettlementAccount,
+    hasSettlementAccount,
     hasInvalidCheckRows,
+    hasInvalidCheckCashingFields,
     balanced
   }) {
     if (totalAmountCents <= 0) {
       return "Amount must be greater than zero."
     }
 
-    if (!hasPrimaryAccount) {
+    if (requiresPrimaryAccount && !hasPrimaryAccount) {
       return "Primary account reference is required."
     }
 
     if (requiresCounterparty && !hasCounterparty) {
       return "Counterparty account reference is required."
+    }
+
+    if (requiresSettlementAccount && !hasSettlementAccount) {
+      return "Settlement account reference is required."
     }
 
     if (requiresCashAccount && !hasCashAccount) {
@@ -206,6 +252,10 @@ export default class extends Controller {
 
     if (hasInvalidCheckRows) {
       return "Complete check routing, account, and number for each entered check."
+    }
+
+    if (hasInvalidCheckCashingFields) {
+      return "Complete check cashing amount and presenter ID details."
     }
 
     if (!balanced) {
@@ -321,6 +371,7 @@ export default class extends Controller {
     this.amountCentsTarget.value = "0"
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
+    this.resetCheckCashingFields()
     this.resetReceipt()
     this.clearMessage()
     this.element.dispatchEvent(new CustomEvent("tx:approval-cleared", { bubbles: true }))
@@ -336,6 +387,7 @@ export default class extends Controller {
     this.cashAccountReferenceTarget.value = this.defaultCashAccountReference || ""
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
+    this.resetCheckCashingFields()
     this.requestIdTarget.value = this.generateRequestId()
     this.element.dispatchEvent(new CustomEvent("tx:approval-cleared", { bubbles: true }))
     this.recalculate()
@@ -392,7 +444,7 @@ export default class extends Controller {
       return amountCents
     }
 
-    if (transactionType === "withdrawal") {
+    if (["withdrawal", "check_cashing"].includes(transactionType)) {
       return -amountCents
     }
 
@@ -445,10 +497,13 @@ export default class extends Controller {
     const transactionType = this.transactionTypeTarget.value
     const amountCents = this.effectiveAmountCents()
     const cashAmountCents = parseInt(this.amountCentsTarget.value || "0", 10)
+    const { checkAmountCents, feeCents, netCashPayoutCents } = this.checkCashingAmounts()
     const checks = this.collectCheckRows()
     const primaryAccountReference = this.primaryAccountReferenceTarget.value.trim()
     const counterpartyAccountReference = this.counterpartyAccountReferenceTarget.value.trim()
     const cashAccountReference = this.cashAccountReferenceTarget.value.trim()
+    const settlementAccountReference = this.hasSettlementAccountReferenceTarget ? this.settlementAccountReferenceTarget.value.trim() : ""
+    const feeIncomeAccountReference = this.hasFeeIncomeAccountReferenceTarget ? this.feeIncomeAccountReferenceTarget.value.trim() : "income:check_cashing_fee"
 
     if (amountCents <= 0) {
       return []
@@ -489,6 +544,23 @@ export default class extends Controller {
       ]
     }
 
+    if (transactionType === "check_cashing") {
+      if (checkAmountCents <= 0 || netCashPayoutCents <= 0 || !settlementAccountReference) {
+        return []
+      }
+
+      const entries = [
+        { side: "debit", account_reference: settlementAccountReference, amount_cents: checkAmountCents },
+        { side: "credit", account_reference: cashAccountReference, amount_cents: netCashPayoutCents }
+      ]
+
+      if (feeCents > 0) {
+        entries.push({ side: "credit", account_reference: feeIncomeAccountReference, amount_cents: feeCents })
+      }
+
+      return entries
+    }
+
     return []
   }
 
@@ -501,6 +573,26 @@ export default class extends Controller {
     })
 
     this.appendCheckItems(formData)
+    this.appendCheckCashingPayload(formData)
+  }
+
+  appendCheckCashingPayload(formData) {
+    if (this.transactionTypeTarget.value !== "check_cashing") {
+      return
+    }
+
+    const amounts = this.checkCashingAmounts()
+    formData.set("check_amount_cents", amounts.checkAmountCents.toString())
+    formData.set("fee_cents", amounts.feeCents.toString())
+    formData.set("settlement_account_reference", this.hasSettlementAccountReferenceTarget ? this.settlementAccountReferenceTarget.value.trim() : "")
+    formData.set("fee_income_account_reference", this.hasFeeIncomeAccountReferenceTarget ? this.feeIncomeAccountReferenceTarget.value.trim() : "income:check_cashing_fee")
+    formData.set("check_number", this.hasCheckNumberTarget ? this.checkNumberTarget.value.trim() : "")
+    formData.set("routing_number", this.hasRoutingNumberTarget ? this.routingNumberTarget.value.trim() : "")
+    formData.set("account_number", this.hasAccountNumberTarget ? this.accountNumberTarget.value.trim() : "")
+    formData.set("payer_name", this.hasPayerNameTarget ? this.payerNameTarget.value.trim() : "")
+    formData.set("presenter_type", this.hasPresenterTypeTarget ? this.presenterTypeTarget.value.trim() : "")
+    formData.set("id_type", this.hasIdTypeTarget ? this.idTypeTarget.value.trim() : "")
+    formData.set("id_number", this.hasIdNumberTarget ? this.idNumberTarget.value.trim() : "")
   }
 
   appendCheckItems(formData) {
@@ -519,9 +611,82 @@ export default class extends Controller {
   }
 
   effectiveAmountCents() {
+    if (this.transactionTypeTarget.value === "check_cashing") {
+      return this.checkCashingAmounts().netCashPayoutCents
+    }
+
     const baseAmount = parseInt(this.amountCentsTarget.value || "0", 10)
     const depositCheckSubtotal = this.transactionTypeTarget.value === "deposit" ? this.checkSubtotalCents() : 0
     return Math.max(baseAmount, 0) + depositCheckSubtotal
+  }
+
+  checkCashingAmounts() {
+    const checkAmountCents = this.hasCheckAmountCentsTarget ? Math.max(parseInt(this.checkAmountCentsTarget.value || "0", 10), 0) : 0
+    const feeCents = this.hasFeeCentsTarget ? Math.max(parseInt(this.feeCentsTarget.value || "0", 10), 0) : 0
+
+    return {
+      checkAmountCents,
+      feeCents,
+      netCashPayoutCents: Math.max(checkAmountCents - feeCents, 0)
+    }
+  }
+
+  hasInvalidCheckCashingFields({ checkAmountCents, feeCents, netCashPayoutCents }) {
+    if (this.transactionTypeTarget.value !== "check_cashing") {
+      return false
+    }
+
+    const hasSettlementAccount = this.hasSettlementAccountReferenceTarget && this.settlementAccountReferenceTarget.value.trim().length > 0
+    const hasIdType = this.hasIdTypeTarget && this.idTypeTarget.value.trim().length > 0
+    const hasIdNumber = this.hasIdNumberTarget && this.idNumberTarget.value.trim().length > 0
+
+    return checkAmountCents <= 0 || feeCents < 0 || netCashPayoutCents <= 0 || !hasSettlementAccount || !hasIdType || !hasIdNumber
+  }
+
+  resetCheckCashingFields() {
+    if (this.hasCheckAmountCentsTarget) {
+      this.checkAmountCentsTarget.value = "0"
+    }
+
+    if (this.hasFeeCentsTarget) {
+      this.feeCentsTarget.value = "0"
+    }
+
+    if (this.hasSettlementAccountReferenceTarget) {
+      this.settlementAccountReferenceTarget.value = ""
+    }
+
+    if (this.hasCheckNumberTarget) {
+      this.checkNumberTarget.value = ""
+    }
+
+    if (this.hasRoutingNumberTarget) {
+      this.routingNumberTarget.value = ""
+    }
+
+    if (this.hasAccountNumberTarget) {
+      this.accountNumberTarget.value = ""
+    }
+
+    if (this.hasPayerNameTarget) {
+      this.payerNameTarget.value = ""
+    }
+
+    if (this.hasPresenterTypeTarget) {
+      this.presenterTypeTarget.value = "customer"
+    }
+
+    if (this.hasIdTypeTarget) {
+      this.idTypeTarget.value = "drivers_license"
+    }
+
+    if (this.hasIdNumberTarget) {
+      this.idNumberTarget.value = ""
+    }
+
+    if (this.hasFeeIncomeAccountReferenceTarget) {
+      this.feeIncomeAccountReferenceTarget.value = "income:check_cashing_fee"
+    }
   }
 
   checkSubtotalCents() {

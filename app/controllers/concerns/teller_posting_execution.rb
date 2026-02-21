@@ -59,6 +59,17 @@ module TellerPostingExecution
         :primary_account_reference,
         :counterparty_account_reference,
         :cash_account_reference,
+        :check_amount_cents,
+        :fee_cents,
+        :settlement_account_reference,
+        :fee_income_account_reference,
+        :check_number,
+        :routing_number,
+        :account_number,
+        :payer_name,
+        :presenter_type,
+        :id_type,
+        :id_number,
         check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :hold_reason, :hold_until ],
         entries: [ :side, :account_reference, :amount_cents ]
       )

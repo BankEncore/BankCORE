@@ -55,6 +55,16 @@ module Teller
       assert_equal({ "ok" => true, "message" => "Posting prerequisites satisfied" }, JSON.parse(response.body))
     end
 
+    test "blocks check cashing when drawer is not assigned" do
+      post teller_teller_session_path, params: { opening_cash_cents: 1_000 }
+
+      post teller_posting_check_path, params: { transaction_type: "check_cashing" }
+
+      assert_redirected_to teller_context_path
+      follow_redirect!
+      assert_select "div", /Assign a drawer before posting transactions/
+    end
+
     private
       def grant_permissions(user, branch, workstation)
         [ "teller.dashboard.view", "transactions.deposit.create", "sessions.open" ].each do |permission_key|

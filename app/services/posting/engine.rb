@@ -78,7 +78,7 @@ module Posting
       end
 
       def cash_affecting_transaction_type?
-        %w[deposit withdrawal].include?(request.fetch(:transaction_type))
+        %w[deposit withdrawal check_cashing].include?(request.fetch(:transaction_type))
       end
 
       def cash_legs_present?
@@ -148,7 +148,7 @@ module Posting
         direction = case request.fetch(:transaction_type)
         when "deposit"
           "in"
-        when "withdrawal"
+        when "withdrawal", "check_cashing"
           "out"
         else
           nil
@@ -161,7 +161,7 @@ module Posting
         cash_amount_cents = case request.fetch(:transaction_type)
         when "deposit"
           cash_legs.select { |leg| leg.fetch(:side) == "debit" }.sum { |leg| leg.fetch(:amount_cents) }
-        when "withdrawal"
+        when "withdrawal", "check_cashing"
           cash_legs.select { |leg| leg.fetch(:side) == "credit" }.sum { |leg| leg.fetch(:amount_cents) }
         else
           0

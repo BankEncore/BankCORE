@@ -27,6 +27,29 @@
     </div>
   </section>
 
+  <% check_cashing = @posting_batch.metadata.is_a?(Hash) ? (@posting_batch.metadata["check_cashing"] || @posting_batch.metadata[:check_cashing]) : nil %>
+  <% if check_cashing.present? %>
+    <section class="card bg-base-100 border border-base-300">
+      <div class="card-body">
+        <h3 class="card-title text-base">Check Cashing Details</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+          <p><strong>Check Amount:</strong> <%= number_to_currency(check_cashing["check_amount_cents"].to_f / 100.0) %></p>
+          <p><strong>Fee:</strong> <%= number_to_currency(check_cashing["fee_cents"].to_f / 100.0) %></p>
+          <p><strong>Net Cash Payout:</strong> <%= number_to_currency(check_cashing["net_cash_payout_cents"].to_f / 100.0) %></p>
+          <p><strong>Settlement Account:</strong> <span class="font-mono text-xs"><%= check_cashing["settlement_account_reference"] %></span></p>
+          <p><strong>Fee Account:</strong> <span class="font-mono text-xs"><%= check_cashing["fee_income_account_reference"] %></span></p>
+          <p><strong>Check Number:</strong> <%= check_cashing["check_number"].presence || "N/A" %></p>
+          <p><strong>Routing Number:</strong> <%= check_cashing["routing_number"].presence || "N/A" %></p>
+          <p><strong>Account Number:</strong> <%= check_cashing["account_number"].presence || "N/A" %></p>
+          <p><strong>Payer Name:</strong> <%= check_cashing["payer_name"].presence || "N/A" %></p>
+          <p><strong>Presenter Type:</strong> <%= check_cashing["presenter_type"].to_s.humanize.presence || "N/A" %></p>
+          <p><strong>ID Type:</strong> <%= check_cashing["id_type"].to_s.humanize.presence || "N/A" %></p>
+          <p><strong>ID Number:</strong> <%= check_cashing["id_number"].presence || "N/A" %></p>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
   <section class="card bg-base-100 border border-base-300">
     <div class="card-body">
       <h3 class="card-title text-base">Posting Legs</h3>

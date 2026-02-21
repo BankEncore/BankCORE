@@ -34,7 +34,7 @@ This document is **non-authoritative** and exists only to track implementation p
 ### Expanded transactions
 
 - [ ] Draft issuance
-- [ ] Check cashing
+- [x] Check cashing
 - [ ] Vault transfer (drawer <-> vault)
 
 ---

@@ -18,6 +18,10 @@ module Teller
       render_page(transaction_type: "transfer", title: "Transfer")
     end
 
+    def check_cashing
+      render_page(transaction_type: "check_cashing", title: "Check Cashing")
+    end
+
     private
       def ensure_authorized
         authorize([ :teller, :posting ], :create?)
@@ -37,6 +41,8 @@ module Teller
           teller_withdrawals_path
         when "transfer"
           teller_transfers_path
+        when "check_cashing"
+          teller_check_cashings_path
         else
           teller_posting_path
         end

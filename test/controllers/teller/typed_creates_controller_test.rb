@@ -63,9 +63,59 @@ module Teller
       assert_equal "transfer", TellerTransaction.find_by!(request_id: "typed-tr-1").transaction_type
     end
 
+    test "check cashing create enforces check cashing transaction type" do
+      post teller_check_cashings_path, params: {
+        request_id: "typed-cc-1",
+        transaction_type: "deposit",
+        amount_cents: 8_000,
+        entries: [
+          { side: "debit", account_reference: "check:123", amount_cents: 8_000 },
+          { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 8_000 }
+        ]
+      }
+
+      assert_response :success
+      assert_equal "check_cashing", TellerTransaction.find_by!(request_id: "typed-cc-1").transaction_type
+    end
+
+    test "check cashing create generates fee-aware entries and metadata" do
+      post teller_check_cashings_path, params: {
+        request_id: "typed-cc-2",
+        transaction_type: "check_cashing",
+        amount_cents: 9_500,
+        check_amount_cents: 10_000,
+        fee_cents: 500,
+        settlement_account_reference: "acct:check_settlement",
+        check_number: "1000123",
+        routing_number: "021000021",
+        account_number: "123456789",
+        payer_name: "Jordan Smith",
+        presenter_type: "non_customer",
+        id_type: "drivers_license",
+        id_number: "D1234567"
+      }
+
+      assert_response :success
+      transaction = TellerTransaction.find_by!(request_id: "typed-cc-2")
+      assert_equal "check_cashing", transaction.transaction_type
+      assert_equal 9_500, transaction.amount_cents
+
+      posting_batch = transaction.posting_batch
+      assert_equal 3, posting_batch.posting_legs.count
+      assert_equal 9_500, posting_batch.posting_legs.find_by!(side: "credit", account_reference: "cash:#{@drawer.code}").amount_cents
+      assert_equal 500, posting_batch.posting_legs.find_by!(side: "credit", account_reference: "income:check_cashing_fee").amount_cents
+
+      metadata = posting_batch.metadata
+      assert_equal 10_000, metadata.dig("check_cashing", "check_amount_cents")
+      assert_equal 500, metadata.dig("check_cashing", "fee_cents")
+      assert_equal 9_500, metadata.dig("check_cashing", "net_cash_payout_cents")
+      assert_equal "non_customer", metadata.dig("check_cashing", "presenter_type")
+      assert_equal "drivers_license", metadata.dig("check_cashing", "id_type")
+    end
+
     private
       def grant_permissions(user, branch, workstation)
-        [ "teller.dashboard.view", "transactions.deposit.create", "sessions.open" ].each do |permission_key|
+        [ "teller.dashboard.view", "transactions.deposit.create", "transactions.check_cashing.create", "sessions.open" ].each do |permission_key|
           permission = Permission.find_or_create_by!(key: permission_key) do |record|
             record.description = permission_key.humanize
           end

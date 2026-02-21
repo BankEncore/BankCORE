@@ -15,6 +15,7 @@ permissions = {
   "transactions.deposit.create" => "Create deposits",
   "transactions.withdrawal.create" => "Create withdrawals",
   "transactions.transfer.create" => "Create transfers",
+  "transactions.check_cashing.create" => "Create check cashing transactions",
   "approvals.override.execute" => "Execute supervisor override"
 }
 
@@ -33,7 +34,8 @@ roles = {
       "teller.dashboard.view",
       "transactions.deposit.create",
       "transactions.withdrawal.create",
-      "transactions.transfer.create"
+      "transactions.transfer.create",
+      "transactions.check_cashing.create"
     ]
   },
   "supervisor" => {
@@ -45,6 +47,7 @@ roles = {
       "transactions.deposit.create",
       "transactions.withdrawal.create",
       "transactions.transfer.create",
+      "transactions.check_cashing.create",
       "approvals.override.execute"
     ]
   },

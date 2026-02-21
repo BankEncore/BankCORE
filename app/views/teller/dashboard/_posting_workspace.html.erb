@@ -15,6 +15,7 @@
   <% show_counterparty = fixed_flow && flow_type == "transfer" %>
   <% show_cash_account = local_assigns.fetch(:show_transaction_type, true) %>
   <% show_checks = fixed_flow && flow_type == "deposit" %>
+  <% show_check_cashing = fixed_flow && flow_type == "check_cashing" %>
   <% cash_account_reference_value = teller_session.cash_location.present? ? "cash:#{teller_session.cash_location.code}" : "" %>
 
   <%= form_with url: local_assigns.fetch(:form_url, teller_posting_path), method: :post, html: { id: "posting-form", data: { action: "submit->posting-form#submit" } } do |form| %>
@@ -28,7 +29,7 @@
             <p class="form-control">
               <%= form.label :transaction_type, "Transaction Type" %><br>
               <%= form.select :transaction_type,
-                options_for_select([["Deposit", "deposit"], ["Withdrawal", "withdrawal"], ["Transfer", "transfer"]]),
+                options_for_select([["Deposit", "deposit"], ["Withdrawal", "withdrawal"], ["Transfer", "transfer"], ["Check Cashing", "check_cashing"]]),
                 {},
                 { data: { posting_form_target: "transactionType", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
             </p>
@@ -105,6 +106,67 @@
                 </div>
               </div>
             </template>
+          </section>
+
+          <section data-posting-form-target="checkCashingSection" <%= "hidden" unless show_check_cashing %>>
+            <div class="divider my-3"></div>
+            <div class="font-medium">Check Cashing Details</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+              <p class="form-control">
+                <%= form.label :check_amount_cents, "Check Amount" %><br>
+                <%= form.number_field :check_amount_cents, min: 1, step: 1, value: 0, data: { posting_form_target: "checkAmountCents", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+              <p class="form-control">
+                <%= form.label :fee_cents, "Fee" %><br>
+                <%= form.number_field :fee_cents, min: 0, step: 1, value: 0, data: { posting_form_target: "feeCents", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+              <p class="form-control">
+                <%= form.label :settlement_account_reference, "Settlement Account Reference" %><br>
+                <%= form.text_field :settlement_account_reference, data: { posting_form_target: "settlementAccountReference", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+              <p class="form-control">
+                <%= form.label :check_number, "Check Number" %><br>
+                <%= form.text_field :check_number, data: { posting_form_target: "checkNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+              <p class="form-control">
+                <%= form.label :payer_name, "Payer Name" %><br>
+                <%= form.text_field :payer_name, data: { posting_form_target: "payerName", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+              <p class="form-control">
+                <%= form.label :routing_number, "Routing Number" %><br>
+                <%= form.text_field :routing_number, data: { posting_form_target: "routingNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+              <p class="form-control">
+                <%= form.label :account_number, "Account Number" %><br>
+                <%= form.text_field :account_number, data: { posting_form_target: "accountNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+              <p class="form-control">
+                <%= form.label :presenter_type, "Presenter Type" %><br>
+                <%= form.select :presenter_type,
+                  options_for_select([["Customer", "customer"], ["Non-customer", "non_customer"]]),
+                  {},
+                  { data: { posting_form_target: "presenterType", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
+              </p>
+              <p class="form-control">
+                <%= form.label :id_type, "ID Type" %><br>
+                <%= form.select :id_type,
+                  options_for_select([["Driver's License", "drivers_license"], ["Passport", "passport"], ["State ID", "state_id"], ["Other", "other"]]),
+                  {},
+                  { data: { posting_form_target: "idType", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
+              </p>
+              <p class="form-control md:col-span-2">
+                <%= form.label :id_number, "ID Number" %><br>
+                <%= form.text_field :id_number, data: { posting_form_target: "idNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+            </div>
+
+            <%= form.hidden_field :fee_income_account_reference,
+              value: "income:check_cashing_fee",
+              data: { posting_form_target: "feeIncomeAccountReference" } %>
           </section>
 
           <%= form.hidden_field :request_id, value: "", data: { posting_form_target: "requestId" } %>

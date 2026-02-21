@@ -23,7 +23,7 @@ module PostingPrerequisites
 
     def drawer_required_for_request?
       transaction_type = params[:transaction_type].to_s.presence || inferred_transaction_type
-      %w[deposit withdrawal].include?(transaction_type)
+      %w[deposit withdrawal check_cashing].include?(transaction_type)
     end
 
     def inferred_transaction_type
@@ -34,6 +34,8 @@ module PostingPrerequisites
         "withdrawal"
       when "teller/transfers"
         "transfer"
+      when "teller/check_cashings"
+        "check_cashing"
       when "teller/transaction_pages"
         case action_name
         when "deposit"
@@ -42,6 +44,8 @@ module PostingPrerequisites
           "withdrawal"
         when "transfer"
           "transfer"
+        when "check_cashing"
+          "check_cashing"
         end
       end
     end

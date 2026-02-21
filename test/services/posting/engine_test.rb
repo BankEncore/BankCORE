@@ -44,6 +44,25 @@ module Posting
       assert_equal 0, CashMovement.where(teller_transaction_id: batch.teller_transaction_id).count
     end
 
+    test "creates cash out movement for check cashing payout" do
+      entries = [
+        { side: "debit", account_reference: "acct:check_settlement", amount_cents: 10_000 },
+        { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 9_500 },
+        { side: "credit", account_reference: "income:check_cashing_fee", amount_cents: 500 }
+      ]
+
+      batch = build_engine(
+        request_id: "req-check-cashing-1",
+        transaction_type: "check_cashing",
+        amount_cents: 9_500,
+        entries: entries
+      ).call
+
+      movement = CashMovement.find_by!(teller_transaction_id: batch.teller_transaction_id)
+      assert_equal "out", movement.direction
+      assert_equal 9_500, movement.amount_cents
+    end
+
     test "allows transfer posting without assigned drawer" do
       session_without_drawer = TellerSession.create!(
         user: @user,

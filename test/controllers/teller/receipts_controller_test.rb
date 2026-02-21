@@ -51,12 +51,58 @@ module Teller
       assert_select "table"
     end
 
+    test "renders check cashing details when metadata is present" do
+      request_id = "req-receipt-check-cashing-1"
+      Posting::Engine.new(
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: request_id,
+        transaction_type: "check_cashing",
+        amount_cents: 9_500,
+        metadata: {
+          check_cashing: {
+            check_amount_cents: 10_000,
+            fee_cents: 500,
+            net_cash_payout_cents: 9_500,
+            settlement_account_reference: "acct:settlement",
+            fee_income_account_reference: "income:check_cashing_fee",
+            check_number: "1000123",
+            routing_number: "021000021",
+            account_number: "123456789",
+            payer_name: "Jordan Smith",
+            presenter_type: "non_customer",
+            id_type: "drivers_license",
+            id_number: "D1234567"
+          }
+        },
+        entries: [
+          { side: "debit", account_reference: "acct:settlement", amount_cents: 10_000 },
+          { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 9_500 },
+          { side: "credit", account_reference: "income:check_cashing_fee", amount_cents: 500 }
+        ]
+      ).call
+
+      sign_in_as(@user)
+      get teller_receipt_path(request_id: request_id)
+
+      assert_response :success
+      assert_select "h3", "Check Cashing Details"
+      assert_select "p", /Check Amount:\s+\$100.00/
+      assert_select "p", /Fee:\s+\$5.00/
+      assert_select "p", /Net Cash Payout:\s+\$95.00/
+      assert_select "p", /Presenter Type:\s+Non customer/i
+      assert_select "p", /ID Type:\s+Drivers license/i
+    end
+
     private
       def grant_posting_access(user, branch, workstation)
         [
           "transactions.deposit.create",
           "transactions.withdrawal.create",
-          "transactions.transfer.create"
+          "transactions.transfer.create",
+          "transactions.check_cashing.create"
         ].each do |permission_key|
           permission = Permission.find_or_create_by!(key: permission_key) do |record|
             record.description = permission_key.humanize

@@ -62,6 +62,10 @@ module Teller
             errors << "From account reference is required" if posting_params[:primary_account_reference].blank?
             errors << "To account reference is required" if posting_params[:counterparty_account_reference].blank?
           end
+        when "check_cashing"
+          if Array(posting_params[:entries]).blank?
+            errors << "Primary account reference is required" if posting_params[:primary_account_reference].blank?
+          end
         end
 
         errors
