@@ -10,9 +10,14 @@ export default class extends Controller {
   show(event) {
     const policyTrigger = event.detail?.policyTrigger || ""
     const policyContext = event.detail?.policyContext || {}
+    this.lastFocusedElement = document.activeElement
 
     if (this.hasPanelTarget) {
-      this.panelTarget.hidden = false
+      if (typeof this.panelTarget.showModal === "function") {
+        this.panelTarget.showModal()
+      } else {
+        this.panelTarget.setAttribute("open", "open")
+      }
     }
 
     if (this.hasReasonTarget) {
@@ -26,12 +31,41 @@ export default class extends Controller {
     if (this.hasPolicyContextInputTarget) {
       this.policyContextInputTarget.value = JSON.stringify(policyContext)
     }
+
+    if (this.hasSupervisorEmailTarget) {
+      this.supervisorEmailTarget.focus()
+    }
   }
 
   hide() {
     if (this.hasPanelTarget) {
-      this.panelTarget.hidden = true
+      if (typeof this.panelTarget.close === "function") {
+        this.panelTarget.close()
+      } else {
+        this.panelTarget.removeAttribute("open")
+      }
     }
+
+    this.clearCredentials()
+
+    if (this.lastFocusedElement && typeof this.lastFocusedElement.focus === "function") {
+      this.lastFocusedElement.focus()
+      return
+    }
+
+    const fallbackPostButton = this.element.querySelector('[data-posting-form-target="headerSubmitButton"]') || this.element.querySelector('[data-posting-form-target="submitButton"]')
+    if (fallbackPostButton && typeof fallbackPostButton.focus === "function") {
+      fallbackPostButton.focus()
+    }
+  }
+
+  deny() {
+    this.hide()
+    this.element.dispatchEvent(new CustomEvent("tx:approval-cleared", { bubbles: true }))
+  }
+
+  handleDialogClosed() {
+    this.clearCredentials()
   }
 
   async request() {
@@ -83,6 +117,16 @@ export default class extends Controller {
         bubbles: true,
         detail: { message: "Approval failed" }
       }))
+    }
+  }
+
+  clearCredentials() {
+    if (this.hasSupervisorEmailTarget) {
+      this.supervisorEmailTarget.value = ""
+    }
+
+    if (this.hasSupervisorPasswordTarget) {
+      this.supervisorPasswordTarget.value = ""
     }
   }
 }

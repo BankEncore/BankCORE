@@ -44,6 +44,7 @@ export default class extends Controller {
     "receiptRequestId",
     "receiptPostedAt",
     "receiptLink",
+    "receiptNewButton",
     "headerStateBadge",
     "primaryReferenceValue",
     "primaryStatus",
@@ -84,6 +85,7 @@ export default class extends Controller {
   }
 
   connect() {
+    this.postedLocked = false
     this.defaultCashAccountReference = this.cashAccountReferenceTarget.value
     if (this.hasDefaultTransactionTypeValue && this.defaultTransactionTypeValue) {
       this.transactionTypeTarget.value = this.defaultTransactionTypeValue
@@ -180,7 +182,10 @@ export default class extends Controller {
       this.thresholdWarningTarget.hidden = totalAmountCents < 100_000
     }
 
-    const disabled = blockedReason.length > 0 || !balanced || hasMissingFields
+    let disabled = blockedReason.length > 0 || !balanced || hasMissingFields
+    if (this.postedLocked) {
+      disabled = true
+    }
     this.submitButtonTarget.disabled = disabled
     if (this.hasHeaderSubmitButtonTarget) {
       this.headerSubmitButtonTarget.disabled = disabled
@@ -268,6 +273,12 @@ export default class extends Controller {
 
   async submit(event) {
     event.preventDefault()
+
+    if (this.postedLocked) {
+      this.renderMessage("Transaction already posted. Select New Transaction to continue.", "warning")
+      return
+    }
+
     this.resetReceipt()
     this.recalculate()
 
@@ -278,8 +289,7 @@ export default class extends Controller {
 
     this.ensureRequestId()
     this.setHeaderState("Validating")
-
-    const validation = await this.validateBeforePost()
+    const validation = await this.requestValidation()
     if (!validation.ok) {
       this.setHeaderState("Editing")
       this.renderMessage(validation.errors.join("; "), "error")
@@ -309,42 +319,45 @@ export default class extends Controller {
     const submittedRequestId = this.requestIdTarget.value
     formData.set("amount_cents", this.effectiveAmountCents().toString())
     this.appendEntries(formData)
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content")
 
     try {
       this.setHeaderState("Posting")
-      const response = await fetch(form.action, {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "X-CSRF-Token": csrfToken
-        },
-        body: formData
+      this.element.dispatchEvent(new CustomEvent("tx:posting-started", {
+        bubbles: true,
+        detail: {
+          requestId: submittedRequestId,
+          transactionType: this.transactionTypeTarget.value
+        }
+      }))
+      const postingResult = await this.requestPosting({
+        url: form.action,
+        formData,
+        requestId: submittedRequestId
       })
 
-      const body = await response.json()
-      if (!response.ok || !body.ok) {
+      if (!postingResult.ok) {
         this.setHeaderState("Blocked")
-        this.renderMessage(body.error || "Posting failed.", "error")
+        this.renderMessage(postingResult.error || "Posting failed.", "error")
         return
       }
 
       this.renderMessage(`${this.transactionTypeLabel()} posted.`, "success")
       this.showReceipt({
-        postingBatchId: body.posting_batch_id,
-        tellerTransactionId: body.teller_transaction_id,
-        requestId: submittedRequestId,
-        postedAt: new Date().toISOString()
+        postingBatchId: postingResult.postingBatchId,
+        tellerTransactionId: postingResult.tellerTransactionId,
+        requestId: postingResult.requestId,
+        postedAt: postingResult.postedAt
       })
-      this.clearTransactionFormAfterPost()
-      this.setHeaderState("Editing")
+      this.postedLocked = true
+      this.setSubmitButtonsDisabled(true)
+      this.setHeaderState("Posted")
     } catch (error) {
       this.setHeaderState("Blocked")
       this.renderMessage(`Posting failed: ${error.message}`, "error")
     }
   }
 
-  async validateBeforePost() {
+  buildValidationFormData() {
     const formData = new FormData()
     formData.set("request_id", this.requestIdTarget.value)
     formData.set("transaction_type", this.transactionTypeTarget.value)
@@ -354,20 +367,77 @@ export default class extends Controller {
     formData.set("cash_account_reference", this.cashAccountReferenceTarget.value)
     this.appendEntries(formData)
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content")
-    const response = await fetch(this.validateUrlValue, {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "X-CSRF-Token": csrfToken
-      },
-      body: formData
-    })
+    return formData
+  }
 
-    return await response.json()
+  requestValidation() {
+    const requestId = this.requestIdTarget.value
+    const formData = this.buildValidationFormData()
+
+    return new Promise((resolve) => {
+      const onValidated = (event) => {
+        cleanup()
+        resolve(event.detail || { ok: false, errors: ["Validation failed"] })
+      }
+
+      const onValidationFailed = (event) => {
+        cleanup()
+        resolve({ ok: false, errors: event.detail?.errors || ["Validation failed"] })
+      }
+
+      const cleanup = () => {
+        this.element.removeEventListener("tx:validated", onValidated)
+        this.element.removeEventListener("tx:validation-failed", onValidationFailed)
+      }
+
+      this.element.addEventListener("tx:validated", onValidated)
+      this.element.addEventListener("tx:validation-failed", onValidationFailed)
+
+      this.element.dispatchEvent(new CustomEvent("tx:validate-requested", {
+        bubbles: true,
+        detail: {
+          requestId,
+          transactionType: this.transactionTypeTarget.value,
+          url: this.validateUrlValue,
+          formData
+        }
+      }))
+    })
+  }
+
+  requestPosting({ url, formData, requestId }) {
+    return new Promise((resolve) => {
+      const onPosted = (event) => {
+        cleanup()
+        resolve({ ok: true, ...(event.detail || {}) })
+      }
+
+      const onPostFailed = (event) => {
+        cleanup()
+        resolve({ ok: false, error: event.detail?.error || "Posting failed." })
+      }
+
+      const cleanup = () => {
+        this.element.removeEventListener("tx:posted-success", onPosted)
+        this.element.removeEventListener("tx:posted-failed", onPostFailed)
+      }
+
+      this.element.addEventListener("tx:posted-success", onPosted)
+      this.element.addEventListener("tx:posted-failed", onPostFailed)
+
+      this.element.dispatchEvent(new CustomEvent("tx:post-requested", {
+        bubbles: true,
+        detail: {
+          requestId,
+          url,
+          formData
+        }
+      }))
+    })
   }
 
   resetForm() {
+    this.postedLocked = false
     this.transactionTypeTarget.value = this.defaultTransactionTypeValue || "deposit"
     this.primaryAccountReferenceTarget.value = ""
     this.counterpartyAccountReferenceTarget.value = ""
@@ -381,6 +451,17 @@ export default class extends Controller {
     this.setHeaderState("Editing")
     this.ensureRequestId()
     this.recalculate()
+    this.focusFirstField()
+  }
+
+  startNewTransaction() {
+    this.postedLocked = false
+    this.clearTransactionFormAfterPost()
+    this.resetReceipt()
+    this.clearMessage()
+    this.setSubmitButtonsDisabled(false)
+    this.setHeaderState("Editing")
+    this.focusFirstField()
   }
 
   clearTransactionFormAfterPost() {
@@ -772,7 +853,16 @@ export default class extends Controller {
       this.receiptLinkTarget.hidden = false
       this.receiptLinkTarget.href = this.receiptUrlTemplateValue.replace("__REQUEST_ID__", encodeURIComponent(requestId))
     }
+
+    if (this.hasReceiptNewButtonTarget) {
+      this.receiptNewButtonTarget.hidden = false
+    }
+
     this.receiptPanelTarget.hidden = false
+
+    if (this.hasReceiptNewButtonTarget) {
+      this.receiptNewButtonTarget.focus()
+    }
   }
 
   resetReceipt() {
@@ -789,7 +879,26 @@ export default class extends Controller {
       this.receiptLinkTarget.hidden = true
       this.receiptLinkTarget.href = "#"
     }
+
+    if (this.hasReceiptNewButtonTarget) {
+      this.receiptNewButtonTarget.hidden = true
+    }
+
     this.receiptPanelTarget.hidden = true
+  }
+
+  setSubmitButtonsDisabled(disabled) {
+    this.submitButtonTarget.disabled = disabled
+    if (this.hasHeaderSubmitButtonTarget) {
+      this.headerSubmitButtonTarget.disabled = disabled
+    }
+  }
+
+  focusFirstField() {
+    const firstField = this.primaryAccountReferenceTarget || this.amountCentsTarget
+    if (firstField && typeof firstField.focus === "function") {
+      firstField.focus()
+    }
   }
 
   setBadgeVariant(element, variant) {
