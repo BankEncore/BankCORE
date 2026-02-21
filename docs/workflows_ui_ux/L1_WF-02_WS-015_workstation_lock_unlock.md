@@ -1,6 +1,7 @@
 ## L1-WF-02 — Workstation Lock/Unlock (WS-015)
 
-**Status:** **DROP-IN SAFE (schema-aligned)** using `sessions` + `audit_events` + existing context models; no new tables required.
+**Status:** **Not aligned with current codebase** — lock/unlock surface is not implemented.
+**Current Implementation Mapping:** No `/teller/lock`, `/teller/locked`, or `/teller/unlock` routes/controllers currently exist.
 **Goal:** Allow a teller to temporarily secure the workstation **without closing the teller_session**, while guaranteeing that any privileged state (approval window) is invalidated.
 
 ---

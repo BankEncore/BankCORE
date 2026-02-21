@@ -1,6 +1,7 @@
 ## L5-WF-01 — Deposit (WS-200)
 
-**Status:** **DROP-IN SAFE (schema-aligned)** — uses your existing teller + posting infrastructure and the global posting/approval/receipt contracts already locked.
+**Status:** **Fits but needs working changes** — deposit workflow is implemented, but route/posting contract wording should be normalized to current endpoints.
+**Current Implementation Mapping:** UI flow is `GET /teller/transactions/deposit`; validation/posting are `POST /teller/transactions/validate` and `POST /teller/posting`; receipt is `GET /teller/receipts/:request_id`.
 
 ---
 

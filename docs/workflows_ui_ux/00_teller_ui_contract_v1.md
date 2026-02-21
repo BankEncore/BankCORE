@@ -1,8 +1,29 @@
 # 1) Versioned Governance Artifact
 
-**File:** `docs/00_teller_ui_contract_v1.md`
-**Status:** **BINDING** (Iteration 1 — Teller Operations)
+**File:** `docs/workflows_ui_ux/00_teller_ui_contract_v1.md`
+**Status:** **Target contract (Phase 1 direction, partially implemented)**
 **Style:** Traditional Workstation, browser-safe, keyboard-first.
+
+## 0.1 Implementation Mapping (Proposed Scope → Current BankCORE)
+
+| Contract Scope Item | Current Endpoint(s) | Implementation |
+|---|---|---|
+| Deposit | `GET /teller/transactions/deposit`, `POST /teller/posting` | Implemented |
+| Withdrawal (cash flow) | `GET /teller/transactions/withdrawal`, `POST /teller/posting` | Implemented |
+| Transfer | `GET /teller/transactions/transfer`, `POST /teller/posting` | Implemented |
+| Check Cashing | `GET /teller/transactions/check_cashing`, `POST /teller/posting` | Implemented |
+| Draft Issuance | — | Planned |
+| Bill Payment | — | Planned |
+| Misc Receipt | — | Planned |
+| Vault Transfer | — | Planned |
+| Validation API | `POST /teller/transactions/validate` | Implemented |
+| Approval API | `POST /teller/approvals` | Implemented (token-based approval) |
+| Receipt viewer | `GET /teller/receipts/:request_id` | Implemented |
+
+## 0.2 Contract usage rule
+
+- Treat this document as the target UX contract for incremental delivery.
+- If a section references a Planned surface, mark implementation tasks against the endpoint mapping above before enforcing as mandatory behavior.
 
 ## 1. Scope
 

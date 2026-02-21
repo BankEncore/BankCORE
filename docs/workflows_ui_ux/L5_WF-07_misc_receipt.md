@@ -1,6 +1,7 @@
 ## L5-WF-07 — Misc. Receipt (WS-260)
 
-**Status:** **DROP-IN SAFE (Phase 1 contract)** — consistent with global posting, approval window, receipt, and teller session rules.
+**Status:** **Not aligned with current codebase**
+**Current Implementation Mapping:** Misc Receipt workflow/routes/controllers are not implemented in teller routes today.
 
 ---
 

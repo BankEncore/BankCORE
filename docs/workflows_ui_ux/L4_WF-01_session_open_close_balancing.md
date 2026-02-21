@@ -1,6 +1,7 @@
 ## L4-WF-01 — Teller Session Open / Close (Balancing)
 
-**Status:** **DROP-IN SAFE (schema-aligned)** — uses `teller_sessions` fields present in `schema.rb` (`status`, `opened_at`, `closed_at`, `opening_cash_cents`, `expected_closing_cash_cents`, `closing_cash_cents`, `cash_variance_cents`, `user_id`, `branch_id`, `workstation_id`, etc.).
+**Status:** **Fits but needs working changes** — open/close balancing is implemented, but this doc references approval-window and route patterns not present.
+**Current Implementation Mapping:** Session lifecycle uses `POST /teller/teller_session`, `PATCH /teller/teller_session/assign_drawer`, and `PATCH /teller/teller_session/close`.
 
 ---
 

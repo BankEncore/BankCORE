@@ -1,6 +1,7 @@
 ## L3-WF-01 — Approval Modal + Approval Window Lifecycle
 
-**Status:** **DROP-IN SAFE (schema-aligned + contract-complete)**
+**Status:** **Not aligned with current codebase**
+**Current Implementation Mapping:** Approval modal exists and uses supervisor credentials + signed approval token via `POST /teller/approvals`; approval-window lifecycle and challenge binding model in this document are not implemented.
 **Applies to:** reversals, vault transfer thresholds, large withdrawals, session close over/short, fee/overdraft overrides, etc.
 
 ---

@@ -1,3 +1,6 @@
+**Implementation Status:** Fits but needs working changes.
+**Current Implementation Mapping:** Context/session gating is implemented via `/teller/context`, `/teller`, and `/teller/teller_session` routes; `/ops/*`, vault, and reversal sections in this file are roadmap-only today.
+
 Some previously uploaded files have expired in this session (including `schema.rb`). If you want this review to be **schema-aligned and drop-in safe**, re-upload `schema.rb`. If not, we can proceed with the **architecture-first contract review** using what we’ve already locked.
 
 ## C) Review by architectural layer

@@ -1,7 +1,8 @@
 
 # L6-WF-04 — Receipt Viewer (WS-031)
 
-**Status:** **DROP-IN SAFE (Phase 1 contract)**
+**Status:** **Fits but needs working changes**
+**Current Implementation Mapping:** Read-only receipt viewing exists at `GET /teller/receipts/:request_id`; reversal-linked viewer actions in this doc are not implemented.
 **Purpose:** Read-only view of a posted receipt, with print and (if eligible) reversal.
 
 ## 1) Content

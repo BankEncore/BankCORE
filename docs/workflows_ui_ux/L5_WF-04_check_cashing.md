@@ -1,6 +1,7 @@
 ## L5-WF-04 — Check Cashing (WS-230)
 
-**Status:** **DROP-IN SAFE (Phase 1 contract)** — uses the global posting/approval/receipt contracts plus teller session/drawer impact rules.
+**Status:** **Fits but needs working changes** — check cashing workflow is implemented, but policy and contract sections should align to current approval-token model.
+**Current Implementation Mapping:** UI flow is `GET /teller/transactions/check_cashing`; validation/posting are `POST /teller/transactions/validate` and `POST /teller/posting`; receipt is `GET /teller/receipts/:request_id`.
 
 ---
 

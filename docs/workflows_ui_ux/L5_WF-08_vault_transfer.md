@@ -1,6 +1,7 @@
 ## L5-WF-08 — Vault Transfer (WS-300)
 
-**Status:** **DROP-IN SAFE (Phase 1 contract)** — consistent with teller session controls, posting lifecycle, approval window, and receipt contract.
+**Status:** **Not aligned with current codebase**
+**Current Implementation Mapping:** Vault Transfer workflow/routes/controllers are not implemented in teller routes today.
 
 ---
 

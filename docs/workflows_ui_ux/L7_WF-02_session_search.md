@@ -1,6 +1,7 @@
 # L7-WF-02 — OPS-020 Session Search
 
-**Status:** DROP-IN SAFE
+**Status:** Not aligned with current codebase
+**Current Implementation Mapping:** `GET /ops/sessions` route/controller is not implemented yet.
 
 ## 1) Purpose
 

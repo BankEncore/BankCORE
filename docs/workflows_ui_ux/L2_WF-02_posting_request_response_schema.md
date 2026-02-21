@@ -1,6 +1,7 @@
 ## L2-WF-02 — Posting Request/Response Contract (UI ↔ Server)
 
-**Status:** **DROP-IN SAFE (schema-aligned)** for BankCORE Phase 1, using your existing teller + posting tables and the approval-window model we locked.
+**Status:** **Not aligned with current codebase** — transport and approval contract described here diverge from the current implementation.
+**Current Implementation Mapping:** Current UI uses Stimulus `fetch` JSON calls to `/teller/transactions/validate`, `/teller/approvals`, and `/teller/posting`; approvals are token-based (not approval-window/idempotency-key challenge model).
 
 This contract standardizes **how every WS post** (deposit/withdrawal/etc., vault transfer, reversal, session close) is submitted and how the server responds.
 

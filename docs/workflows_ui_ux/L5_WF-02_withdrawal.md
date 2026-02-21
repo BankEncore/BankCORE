@@ -1,6 +1,7 @@
 ## L5-WF-02 — Withdrawal (WS-210)
 
-**Status:** **DROP-IN SAFE (schema-aligned)** — uses the same teller transaction + posting batch infrastructure as Deposit, plus approval window + receipt contract.
+**Status:** **Fits but needs working changes** — cash withdrawal is implemented, but draft/mixed and approval-window details in this doc are not currently implemented.
+**Current Implementation Mapping:** UI flow is `GET /teller/transactions/withdrawal`; validation/posting are `POST /teller/transactions/validate` and `POST /teller/posting`; receipt is `GET /teller/receipts/:request_id`.
 
 ---
 

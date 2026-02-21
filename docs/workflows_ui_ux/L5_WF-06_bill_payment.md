@@ -1,6 +1,7 @@
 ## L5-WF-06 — Bill Payment (WS-250)
 
-**Status:** **DROP-IN SAFE (Phase 1 contract)** — consistent with global posting, approval window, receipt, and teller session rules.
+**Status:** **Not aligned with current codebase**
+**Current Implementation Mapping:** Bill Payment workflow/routes/controllers are not implemented in teller routes today.
 
 ---
 

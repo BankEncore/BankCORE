@@ -1,6 +1,7 @@
 ## L1-WF-03 — Shell Routing & Boundaries
 
-**Status:** **DROP-IN SAFE (architecture-locked)** — does not require schema beyond what we already use for `/teller` context and session.
+**Status:** **Not aligned with current codebase** — `/ops/*` shell and routing boundary model are not implemented yet.
+**Current Implementation Mapping:** Only `/teller/*` shell is implemented in routes/controllers today.
 **Goal:** Enforce two shells (`/teller` vs `/ops`) with clear boundaries, deterministic routing, and safe cross-links (Workstation → CIF opens in new tab).
 
 ---

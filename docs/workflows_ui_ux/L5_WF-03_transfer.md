@@ -1,6 +1,7 @@
 ## L5-WF-03 — Transfer (WS-220)
 
-**Status:** **DROP-IN SAFE (schema-aligned)** — uses the same teller transaction + posting batch infrastructure, with the global posting/approval/receipt contracts.
+**Status:** **Fits but needs working changes** — transfer workflow is implemented, but approval and request-shape sections need normalization to current token-based approval flow.
+**Current Implementation Mapping:** UI flow is `GET /teller/transactions/transfer`; validation/posting are `POST /teller/transactions/validate` and `POST /teller/posting`; receipt is `GET /teller/receipts/:request_id`.
 
 ---
 

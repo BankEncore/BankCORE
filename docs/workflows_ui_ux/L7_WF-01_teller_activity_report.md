@@ -1,7 +1,8 @@
 
 # L7-WF-01 — OPS-010 Teller Activity Report
 
-**Status:** DROP-IN SAFE (Phase 1 reporting contract)
+**Status:** Not aligned with current codebase
+**Current Implementation Mapping:** `GET /ops/reports/teller_activity` route/controller is not implemented yet.
 
 ## 1) Purpose
 

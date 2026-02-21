@@ -1,7 +1,8 @@
 
 # L7-WF-03 — OPS-030 Session Detail (Read-Only)
 
-**Status:** DROP-IN SAFE
+**Status:** Not aligned with current codebase
+**Current Implementation Mapping:** `GET /ops/sessions/:id` route/controller is not implemented yet.
 
 ## 1) Purpose
 

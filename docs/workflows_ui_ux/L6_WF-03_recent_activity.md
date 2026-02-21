@@ -1,7 +1,8 @@
 
 # L6-WF-03 — Recent Activity (WS-030)
 
-**Status:** **DROP-IN SAFE (Phase 1 contract)**
+**Status:** **Not aligned with current codebase**
+**Current Implementation Mapping:** No dedicated WS-030 recent activity screen/route is implemented yet.
 **Purpose:** Let teller find prior posted transactions quickly for reprint and reversal initiation.
 
 ## 1) Default scope

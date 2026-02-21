@@ -1,6 +1,7 @@
 ## L2-WF-01 — Posting & State Machine (Global)
 
-**Status:** **DROP-IN SAFE (schema-aligned)** — maps cleanly to your existing posting tables (`posting_batches`, `posting_entries`, `posting_lines`, `posting_accounts`) and teller-side containers (`teller_sessions`, `teller_transactions`).
+**Status:** **Fits but needs working changes** — lifecycle model mostly matches implemented UX, but this doc includes unimplemented workflows (reversal/vault/draft/bill/misc).
+**Current Implementation Mapping:** Implemented postable workflows are Deposit, Withdrawal (cash), Transfer, and Check Cashing via `/teller/posting` + `/teller/transactions/validate` + `/teller/approvals`.
 **Goal:** Every financial action follows a single, deterministic lifecycle that is UI-consistent, idempotent, and audit-defensible.
 
 > Note: some earlier conceptual docs you uploaded have expired; `schema.rb` is present now, so this contract is based on that.

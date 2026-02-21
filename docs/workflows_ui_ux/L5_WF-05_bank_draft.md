@@ -1,6 +1,7 @@
 ## L5-WF-05 — Bank Draft (WS-240)
 
-**Status:** **DROP-IN SAFE (Phase 1 contract)** — uses the global posting/approval/receipt contracts and teller session/drawer rules.
+**Status:** **Not aligned with current codebase**
+**Current Implementation Mapping:** Bank Draft workflow/routes/controllers are not implemented in teller routes today.
 
 ---
 

@@ -1,6 +1,7 @@
 ## L2-WF-03 — Receipt Rendering & Print Contract
 
-**Status:** **DROP-IN SAFE (Phase 1 contract)** — consistent with your Workstation shell rules, posting lifecycle, approvals, reversals, and audit expectations.
+**Status:** **Fits but needs working changes** — receipt direction aligns, but this document assumes additional workflows and reversal-linked behavior not yet implemented.
+**Current Implementation Mapping:** Implemented receipt surface is `GET /teller/receipts/:request_id` plus post-success receipt panel in teller transaction pages.
 
 ---
 
