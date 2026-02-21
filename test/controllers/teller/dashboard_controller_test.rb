@@ -26,6 +26,7 @@ module Teller
 
       assert_response :success
       assert_select "h2", "Teller Transaction Flows"
+      assert_select "form[action='#{session_path}'] button", text: "Log out"
     end
 
     test "shows transaction flow launcher when session and drawer are available" do

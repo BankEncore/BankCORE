@@ -9,5 +9,8 @@
     <p class="badge badge-outline">Branch: <%= current_branch&.name || "Not set" %></p>
     <p class="badge badge-outline">Workstation: <%= current_workstation&.name || "Not set" %></p>
     <p class="opacity-70">Timestamp: <%= Time.current.strftime("%Y-%m-%d %H:%M:%S") %></p>
+    <% if Current.user.present? %>
+      <%= button_to "Log out", session_path, method: :delete, class: "btn btn-ghost btn-sm" %>
+    <% end %>
   </div>
 </section>
