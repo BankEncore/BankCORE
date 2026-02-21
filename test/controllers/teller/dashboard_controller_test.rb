@@ -47,6 +47,7 @@ module Teller
       assert_select "h2", "Transaction Flows"
       assert_select "a[href='#{new_teller_deposit_path}']", "Deposit"
       assert_select "a[href='#{new_teller_withdrawal_path}']", "Withdrawal"
+      assert_select "a[href='#{new_teller_check_cashing_path}']", "Check Cashing"
       assert_select "a[href='#{new_teller_transfer_path}']", "Transfer"
       assert_select "div#posting-workspace", count: 0
     end

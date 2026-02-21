@@ -2,7 +2,7 @@
   <%= render "teller/shared/topbar", teller_session: @teller_session %>
   <%= render "teller/shared/page_header",
     title: "Teller Transaction Flows",
-    description: "Open a dedicated transaction page for Deposit, Withdrawal, or Transfer.",
+    description: "Open a dedicated transaction page for Deposit, Withdrawal, Transfer, or Check Cashing.",
     secondary_button_path: teller_context_path,
     secondary_button_label: "Manage Environment & Session" %>
 
@@ -15,6 +15,7 @@
           <% if @teller_session.cash_location.present? %>
             <%= link_to "Deposit", new_teller_deposit_path, class: "btn btn-outline btn-sm" %>
             <%= link_to "Withdrawal", new_teller_withdrawal_path, class: "btn btn-outline btn-sm" %>
+            <%= link_to "Check Cashing", new_teller_check_cashing_path, class: "btn btn-outline btn-sm" %>
           <% end %>
           <%= link_to "Transfer", new_teller_transfer_path, class: "btn btn-outline btn-sm" %>
         </div>

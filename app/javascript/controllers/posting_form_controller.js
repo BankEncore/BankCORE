@@ -148,6 +148,7 @@ export default class extends Controller {
     if (this.hasCheckCashingSectionTarget) {
       this.checkCashingSectionTarget.hidden = transactionType !== "check_cashing"
     }
+    this.setCheckCashingFieldState(transactionType === "check_cashing")
     this.primaryAccountReferenceTarget.required = requiresPrimaryAccount
     this.amountCentsTarget.readOnly = transactionType === "check_cashing"
     if (this.hasSettlementAccountReferenceTarget) {
@@ -687,6 +688,18 @@ export default class extends Controller {
     if (this.hasFeeIncomeAccountReferenceTarget) {
       this.feeIncomeAccountReferenceTarget.value = "income:check_cashing_fee"
     }
+  }
+
+  setCheckCashingFieldState(enabled) {
+    if (!this.hasCheckCashingSectionTarget) {
+      return
+    }
+
+    this.checkCashingSectionTarget
+      .querySelectorAll("input, select, textarea")
+      .forEach((field) => {
+        field.disabled = !enabled
+      })
   }
 
   checkSubtotalCents() {
