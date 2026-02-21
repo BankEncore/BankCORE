@@ -13,6 +13,7 @@ class TellerSession < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
   validates :opening_cash_cents, numericality: { greater_than_or_equal_to: 0 }
   validates :closing_cash_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :expected_closing_cash_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :opened_at, presence: true
 
   scope :open_sessions, -> { where(status: "open") }
@@ -32,10 +33,28 @@ class TellerSession < ApplicationRecord
     end
   end
 
-  def close!(declared_cash_cents)
+  def net_cash_movement_cents
+    cash_in_cents = cash_movements.where(direction: "in").sum(:amount_cents)
+    cash_out_cents = cash_movements.where(direction: "out").sum(:amount_cents)
+
+    cash_in_cents - cash_out_cents
+  end
+
+  def expected_cash_cents
+    opening_cash_cents + net_cash_movement_cents
+  end
+
+  def close!(declared_cash_cents, variance_reason: nil, variance_notes: nil)
+    expected_cents = expected_cash_cents
+    variance_cents = declared_cash_cents - expected_cents
+
     update!(
       status: "closed",
       closing_cash_cents: declared_cash_cents,
+      expected_closing_cash_cents: expected_cents,
+      cash_variance_cents: variance_cents,
+      cash_variance_reason: variance_reason.presence,
+      cash_variance_notes: variance_notes.presence,
       closed_at: Time.current
     )
   end

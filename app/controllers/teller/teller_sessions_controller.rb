@@ -79,7 +79,11 @@ module Teller
         return
       end
 
-      teller_session.close!(close_params[:closing_cash_cents].to_i)
+      teller_session.close!(
+        close_params[:closing_cash_cents].to_i,
+        variance_reason: close_params[:cash_variance_reason],
+        variance_notes: close_params[:cash_variance_notes]
+      )
       AuditEvent.create!(
         event_type: "teller_session.closed",
         actor_user: Current.user,
@@ -87,7 +91,13 @@ module Teller
         workstation: teller_session.workstation,
         teller_session: teller_session,
         auditable: teller_session,
-        metadata: { closing_cash_cents: close_params[:closing_cash_cents].to_i }.to_json,
+        metadata: {
+          closing_cash_cents: teller_session.closing_cash_cents,
+          expected_closing_cash_cents: teller_session.expected_closing_cash_cents,
+          cash_variance_cents: teller_session.cash_variance_cents,
+          cash_variance_reason: teller_session.cash_variance_reason,
+          cash_variance_notes: teller_session.cash_variance_notes
+        }.to_json,
         occurred_at: Time.current
       )
 
@@ -101,7 +111,7 @@ module Teller
       end
 
       def close_params
-        params.permit(:closing_cash_cents)
+        params.permit(:closing_cash_cents, :cash_variance_reason, :cash_variance_notes)
       end
 
       def available_drawers

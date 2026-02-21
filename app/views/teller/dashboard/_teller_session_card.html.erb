@@ -3,6 +3,16 @@
     <h2 class="card-title text-lg">Teller Session</h2>
     <p>Status: <%= teller_session&.status || "Not open" %></p>
     <p>Drawer: <%= teller_session&.cash_location&.name || "Not assigned" %></p>
+    <% if teller_session.present? && teller_session.open? %>
+      <p>Opening cash (cents): <%= teller_session.opening_cash_cents %></p>
+      <p>Net cash movements (cents): <%= teller_session.net_cash_movement_cents %></p>
+      <p>Expected cash now (cents): <%= teller_session.expected_cash_cents %></p>
+    <% elsif teller_session.present? && teller_session.closed? %>
+      <p>Opening cash (cents): <%= teller_session.opening_cash_cents %></p>
+      <p>Expected closing cash (cents): <%= teller_session.expected_closing_cash_cents %></p>
+      <p>Declared closing cash (cents): <%= teller_session.closing_cash_cents %></p>
+      <p>Cash variance (cents): <%= teller_session.cash_variance_cents %></p>
+    <% end %>
 
     <% if teller_session.blank? %>
       <%= form_with url: teller_teller_session_path, method: :post do |form| %>
@@ -30,6 +40,14 @@
         <p class="form-control">
           <%= form.label :closing_cash_cents, "Declared closing cash (cents)" %><br>
           <%= form.number_field :closing_cash_cents, min: 0, required: true, class: "input input-bordered" %>
+        </p>
+        <p class="form-control">
+          <%= form.label :cash_variance_reason, "Variance reason (optional)" %><br>
+          <%= form.text_field :cash_variance_reason, class: "input input-bordered" %>
+        </p>
+        <p class="form-control">
+          <%= form.label :cash_variance_notes, "Variance notes (optional)" %><br>
+          <%= form.text_area :cash_variance_notes, class: "textarea textarea-bordered", rows: 3 %>
         </p>
         <%= form.submit "Close Teller Session", class: "btn btn-warning" %>
       <% end %>

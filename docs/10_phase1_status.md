@@ -17,9 +17,9 @@ This document is **non-authoritative** and exists only to track implementation p
 - [x] Enforce prerequisites precisely as specified: **block cash-affecting postings** when no drawer is assigned
 - [ ] Close teller session captures minimal balancing:
   - [x] declared cash
-  - [ ] expected cash
-  - [ ] variance
-  - [ ] variance reason/notes
+  - [x] expected cash
+  - [x] variance
+  - [x] variance reason/notes
 
 ## 3.2 Teller transaction types
 
@@ -102,8 +102,8 @@ This document is **non-authoritative** and exists only to track implementation p
 ### 5.8 Close-out
 
 - [x] Session can be closed
-- [ ] Closing captures declared cash AND produces variance calculation
-- [ ] Close-out creates an auditable record including variance and notes
+- [x] Closing captures declared cash AND produces variance calculation
+- [x] Close-out creates an auditable record including variance and notes
 
 ---
 

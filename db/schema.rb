@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_21_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_21_001000) do
   create_table "account_transactions", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.string "account_reference", null: false
     t.integer "amount_cents", null: false
@@ -160,9 +160,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_000000) do
   create_table "teller_sessions", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "branch_id", null: false
     t.bigint "cash_location_id"
+    t.integer "cash_variance_cents"
+    t.text "cash_variance_notes"
+    t.string "cash_variance_reason"
     t.datetime "closed_at"
     t.integer "closing_cash_cents"
     t.datetime "created_at", null: false
+    t.integer "expected_closing_cash_cents"
     t.datetime "opened_at", null: false
     t.integer "opening_cash_cents", default: 0, null: false
     t.string "status", default: "open", null: false
