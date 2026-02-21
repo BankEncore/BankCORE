@@ -1,7 +1,7 @@
 ## L4-WF-01 — Teller Session Open / Close (Balancing)
 
 **Status:** **Fits but needs working changes** — open/close balancing is implemented, but this doc references approval-window and route patterns not present.
-**Current Implementation Mapping:** Session lifecycle uses `POST /teller/teller_session`, `PATCH /teller/teller_session/assign_drawer`, and `PATCH /teller/teller_session/close`.
+**Current Implementation Mapping:** Session lifecycle UI entry is `GET /teller/teller_session/new`; operations use `POST /teller/teller_session`, `PATCH /teller/teller_session/assign_drawer`, and `PATCH /teller/teller_session/close`.
 
 ---
 

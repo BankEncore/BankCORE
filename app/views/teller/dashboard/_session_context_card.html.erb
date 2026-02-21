@@ -1,13 +1,13 @@
 <section class="card bg-base-100 border border-base-300">
   <div class="card-body">
     <h2 class="card-title text-lg">Session Context</h2>
-    <%= form_with url: teller_context_path, method: :patch do |form| %>
+    <%= form_with url: teller_context_path, method: :patch, data: { controller: "teller-context" } do |form| %>
       <p class="form-control">
         <%= form.label :branch_id, "Branch" %><br>
         <%= form.select :branch_id,
           options_from_collection_for_select(branches, :id, :name, current_branch&.id),
           { include_blank: "Select branch" },
-          { required: true, class: "select select-bordered w-full" } %>
+          { required: true, class: "select select-bordered w-full", data: { teller_context_target: "branch" } } %>
       </p>
 
       <p class="form-control">
@@ -15,7 +15,7 @@
         <%= form.select :workstation_id,
           options_from_collection_for_select(workstations, :id, :name, current_workstation&.id),
           { include_blank: "Select workstation" },
-          { class: "select select-bordered w-full" } %>
+          { required: true, class: "select select-bordered w-full", data: { teller_context_target: "workstation" } } %>
       </p>
 
       <%= form.submit "Update Context", class: "btn btn-outline" %>

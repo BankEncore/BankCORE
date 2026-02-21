@@ -2,6 +2,7 @@ module Teller
   class TellerSessionsController < ApplicationController
     def new
       authorize([ :teller, :teller_session ], :new?)
+      @teller_session = current_teller_session
       @drawers = available_drawers
     end
 
@@ -14,7 +15,7 @@ module Teller
       end
 
       if current_teller_session.present?
-        redirect_to teller_context_path, alert: "A teller session is already open."
+        redirect_to new_teller_teller_session_path, alert: "A teller session is already open."
         return
       end
 
@@ -37,7 +38,7 @@ module Teller
         occurred_at: Time.current
       )
 
-      redirect_to teller_context_path, notice: "Teller session opened."
+      redirect_to new_teller_teller_session_path, notice: "Teller session opened."
     end
 
     def assign_drawer
@@ -45,13 +46,13 @@ module Teller
 
       teller_session = current_teller_session
       if teller_session.blank?
-        redirect_to teller_context_path, alert: "Open a teller session first."
+        redirect_to new_teller_teller_session_path, alert: "Open a teller session first."
         return
       end
 
       drawer = available_drawers.find_by(id: params[:cash_location_id])
       if drawer.blank?
-        redirect_to teller_context_path, alert: "Select a valid drawer."
+        redirect_to new_teller_teller_session_path, alert: "Select a valid drawer."
         return
       end
 
@@ -67,7 +68,7 @@ module Teller
         occurred_at: Time.current
       )
 
-      redirect_to teller_context_path, notice: "Drawer assigned."
+      redirect_to new_teller_teller_session_path, notice: "Drawer assigned."
     end
 
     def close
@@ -75,7 +76,7 @@ module Teller
 
       teller_session = current_teller_session
       if teller_session.blank?
-        redirect_to teller_context_path, alert: "No open teller session to close."
+        redirect_to new_teller_teller_session_path, alert: "No open teller session to close."
         return
       end
 
@@ -102,7 +103,7 @@ module Teller
       )
 
       session.delete(:current_teller_session_id)
-      redirect_to teller_context_path, notice: "Teller session closed."
+      redirect_to new_teller_teller_session_path, notice: "Teller session closed."
     end
 
     private

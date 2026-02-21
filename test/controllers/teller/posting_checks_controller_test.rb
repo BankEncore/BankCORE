@@ -21,7 +21,7 @@ module Teller
     test "blocks posting when no teller session is open" do
       post teller_posting_check_path
 
-      assert_redirected_to teller_context_path
+      assert_redirected_to new_teller_teller_session_path
       follow_redirect!
       assert_select "div", /Open a teller session before posting transactions/
     end
@@ -31,7 +31,7 @@ module Teller
 
       post teller_posting_check_path, params: { transaction_type: "deposit" }
 
-      assert_redirected_to teller_context_path
+      assert_redirected_to new_teller_teller_session_path
       follow_redirect!
       assert_select "div", /Assign a drawer before posting transactions/
     end
@@ -60,7 +60,7 @@ module Teller
 
       post teller_posting_check_path, params: { transaction_type: "check_cashing" }
 
-      assert_redirected_to teller_context_path
+      assert_redirected_to new_teller_teller_session_path
       follow_redirect!
       assert_select "div", /Assign a drawer before posting transactions/
     end

@@ -1,7 +1,7 @@
 ## L1-WF-01 — Workstation Context Gate (WS-005)
 
 **Status:** **Fits but needs working changes** — context/session gate is implemented, but route examples in this document need normalization to current teller endpoints.
-**Current Implementation Mapping:** `/teller` root + `/teller/context` + `/teller/teller_session` (create/assign_drawer/close) enforce context and posting prerequisites.
+**Current Implementation Mapping:** `/teller/context` enforces branch/workstation assignment; `/teller/teller_session/new` and `/teller/teller_session` (create/assign_drawer/close) enforce session/drawer prerequisites before posting.
 **Goal:** No `/teller/*` workflow runs without a valid **Branch + Workstation** context, and teller actions requiring a shift require an **open teller_session**.
 
 ---

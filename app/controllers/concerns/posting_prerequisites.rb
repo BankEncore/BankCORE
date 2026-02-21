@@ -5,13 +5,13 @@ module PostingPrerequisites
     def require_open_teller_session!
       return if current_teller_session.present?
 
-      redirect_to teller_context_path, alert: "Open a teller session before posting transactions."
+      redirect_to new_teller_teller_session_path, alert: "Open a teller session before posting transactions."
     end
 
     def require_assigned_drawer!
       return if current_teller_session&.cash_location.present?
 
-      redirect_to teller_context_path, alert: "Assign a drawer before posting transactions."
+      redirect_to new_teller_teller_session_path, alert: "Assign a drawer before posting transactions."
     end
 
     def require_posting_context!

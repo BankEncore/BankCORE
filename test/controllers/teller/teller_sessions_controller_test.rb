@@ -20,7 +20,7 @@ module Teller
     test "opens teller session" do
       post teller_teller_session_path, params: { opening_cash_cents: 10_000 }
 
-      assert_redirected_to teller_context_path
+      assert_redirected_to new_teller_teller_session_path
       assert_equal "open", TellerSession.last.status
       assert_equal 10_000, TellerSession.last.opening_cash_cents
       assert_equal "teller_session.opened", AuditEvent.last.event_type
@@ -31,7 +31,7 @@ module Teller
 
       patch assign_drawer_teller_teller_session_path, params: { cash_location_id: @drawer.id }
 
-      assert_redirected_to teller_context_path
+      assert_redirected_to new_teller_teller_session_path
       session_record = TellerSession.last
       assert_equal @drawer.id, session_record.cash_location_id
       assert_equal "teller_session.drawer_assigned", AuditEvent.last.event_type
@@ -87,7 +87,7 @@ module Teller
         cash_variance_notes: "Recounted twice; still short"
       }
 
-      assert_redirected_to teller_context_path
+      assert_redirected_to new_teller_teller_session_path
       session_record = TellerSession.last
       assert_equal "closed", session_record.status
       assert_equal 4_800, session_record.closing_cash_cents
@@ -96,6 +96,15 @@ module Teller
       assert_equal "counting_error", session_record.cash_variance_reason
       assert_equal "Recounted twice; still short", session_record.cash_variance_notes
       assert_equal "teller_session.closed", AuditEvent.last.event_type
+    end
+
+    test "shows dedicated teller session and drawer workflow page" do
+      get new_teller_teller_session_path
+
+      assert_response :success
+      assert_select "h2", "Teller Session & Drawer"
+      assert_select "h2", "Teller Session"
+      assert_select "form[action='#{teller_teller_session_path}'][method='post']"
     end
 
     private

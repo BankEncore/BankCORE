@@ -8,7 +8,11 @@ module Teller
     end
 
     test "denies dashboard without permission" do
-      sign_in_as(User.take)
+      user = User.take
+      branch = Branch.create!(code: "998", name: "Unauthorized Branch")
+      workstation = Workstation.create!(branch: branch, code: "U01", name: "Unauthorized WS")
+      sign_in_as(user)
+      set_signed_context(branch.id, workstation.id)
 
       get teller_root_path
 
@@ -19,8 +23,11 @@ module Teller
 
     test "shows dashboard for user with permission" do
       user = User.take
-      grant_teller_dashboard_access(user)
+      branch = Branch.create!(code: "032", name: "Dashboard Branch")
+      workstation = Workstation.create!(branch: branch, code: "D01", name: "Dashboard WS")
+      grant_teller_dashboard_access(user, branch: branch, workstation: workstation)
       sign_in_as(user)
+      set_signed_context(branch.id, workstation.id)
 
       get teller_root_path
 
@@ -63,9 +70,8 @@ module Teller
       get teller_context_path
 
       assert_response :success
-      assert_select "h2", "Teller Environment & Session"
+      assert_select "h2", "Workstation Context"
       assert_select "h2", "Session Context"
-      assert_select "h2", "Teller Session"
       assert_select "form[action='#{teller_context_path}'][method='post']"
     end
 
@@ -102,6 +108,15 @@ module Teller
     end
 
     private
+      def set_signed_context(branch_id, workstation_id)
+        ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
+          cookie_jar.signed[:current_branch_id] = branch_id
+          cookie_jar.signed[:current_workstation_id] = workstation_id
+          cookies["current_branch_id"] = cookie_jar["current_branch_id"]
+          cookies["current_workstation_id"] = cookie_jar["current_workstation_id"]
+        end
+      end
+
       def grant_teller_dashboard_access(user, branch: nil, workstation: nil)
         permission = Permission.find_or_create_by!(key: "teller.dashboard.view") do |record|
           record.description = "Access teller dashboard"

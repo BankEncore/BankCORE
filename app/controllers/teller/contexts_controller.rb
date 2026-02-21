@@ -4,16 +4,10 @@ module Teller
       authorize([ :teller, :dashboard ], :index?)
 
       @branches = Branch.order(:name)
-      @teller_session = current_teller_session
       @workstations = if current_branch
         Workstation.where(branch_id: current_branch.id).order(:name)
       else
         Workstation.none
-      end
-      @drawers = if current_branch
-        CashLocation.active.drawers.where(branch_id: current_branch.id).order(:name)
-      else
-        CashLocation.none
       end
     end
 
@@ -28,6 +22,11 @@ module Teller
         return
       end
 
+      if workstation.blank?
+        redirect_to teller_context_path, alert: "Please select a valid workstation."
+        return
+      end
+
       if workstation.present? && workstation.branch_id != branch.id
         redirect_to teller_context_path, alert: "Workstation must belong to selected branch."
         return
@@ -36,7 +35,7 @@ module Teller
       session[:current_branch_id] = branch.id
       session[:current_workstation_id] = workstation&.id
 
-      redirect_to teller_context_path, notice: "Session context updated."
+      redirect_to(session.delete(:teller_context_return_to).presence || teller_context_path, notice: "Session context updated.")
     end
 
     private

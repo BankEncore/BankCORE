@@ -1,5 +1,5 @@
 **Implementation Status:** Fits but needs working changes.
-**Current Implementation Mapping:** Context/session gating is implemented via `/teller/context`, `/teller`, and `/teller/teller_session` routes; `/ops/*`, vault, and reversal sections in this file are roadmap-only today.
+**Current Implementation Mapping:** Workstation context is managed via `/teller/context`; session/drawer management is handled on `/teller/teller_session/new` with open/assign/close actions under `/teller/teller_session`; `/ops/*`, vault, and reversal sections in this file are roadmap-only today.
 
 Some previously uploaded files have expired in this session (including `schema.rb`). If you want this review to be **schema-aligned and drop-in safe**, re-upload `schema.rb`. If not, we can proceed with the **architecture-first contract review** using what we’ve already locked.
 
@@ -69,13 +69,3 @@ We’ll review workflows in this order:
 * `/teller/*` uses Workstation shell (command bar not tabbable; transaction tab-scope rules)
 * `/ops/*` uses Backoffice shell (normal navigation/tabbing)
 * Workstation → CIF opens new tab (future)
-
----
-
-If you confirm, we’ll review **L1-WF-01 (Workstation Context Gate)** first and lock:
-
-* entry points
-* failure modes
-* redirect rules
-* required context fields (branch/workstation/user/session)
-* what happens if context changes mid-flow

@@ -42,6 +42,7 @@ module Teller
       ).call
 
       sign_in_as(@user)
+      set_signed_context(@branch.id, @workstation.id)
       get teller_receipt_path(request_id: request_id)
 
       assert_response :success
@@ -85,6 +86,7 @@ module Teller
       ).call
 
       sign_in_as(@user)
+      set_signed_context(@branch.id, @workstation.id)
       get teller_receipt_path(request_id: request_id)
 
       assert_response :success
@@ -97,6 +99,15 @@ module Teller
     end
 
     private
+      def set_signed_context(branch_id, workstation_id)
+        ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
+          cookie_jar.signed[:current_branch_id] = branch_id
+          cookie_jar.signed[:current_workstation_id] = workstation_id
+          cookies["current_branch_id"] = cookie_jar["current_branch_id"]
+          cookies["current_workstation_id"] = cookie_jar["current_workstation_id"]
+        end
+      end
+
       def grant_posting_access(user, branch, workstation)
         [
           "transactions.deposit.create",

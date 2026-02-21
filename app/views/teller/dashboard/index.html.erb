@@ -4,7 +4,9 @@
     title: "Teller Transaction Flows",
     description: "Open a dedicated transaction page for Deposit, Withdrawal, Transfer, or Check Cashing.",
     secondary_button_path: teller_context_path,
-    secondary_button_label: "Manage Environment & Session" %>
+    secondary_button_label: "Manage Workstation Context",
+    primary_button_path: new_teller_teller_session_path,
+    primary_button_label: "Manage Session & Drawer" %>
 
   <% if @teller_session.present? %>
     <section class="card bg-base-100 border border-base-300">
@@ -27,7 +29,7 @@
       <div class="card-body">
         <h2 class="card-title text-lg">Setup Required</h2>
         <p>Set branch/workstation and open a teller session to enable transaction entry.</p>
-        <p><%= link_to "Open Session Setup", teller_context_path, class: "btn btn-primary btn-sm" %></p>
+        <p><%= link_to "Open Session Setup", new_teller_teller_session_path, class: "btn btn-primary btn-sm" %></p>
       </div>
     </section>
   <% end %>

@@ -22,6 +22,7 @@ module Teller
 
     test "denies flow page without posting permission" do
       sign_in_as(@user)
+      set_signed_context(@branch.id, @workstation.id)
 
       get teller_deposit_transaction_path
 
@@ -35,7 +36,7 @@ module Teller
 
       get teller_deposit_transaction_path
 
-      assert_redirected_to teller_context_path
+      assert_redirected_to new_teller_teller_session_path
       follow_redirect!
       assert_select "div", /Open a teller session before posting transactions/i
     end
@@ -110,12 +111,21 @@ module Teller
 
       get teller_check_cashing_transaction_path
 
-      assert_redirected_to teller_context_path
+      assert_redirected_to new_teller_teller_session_path
       follow_redirect!
       assert_select "div", /Assign a drawer before posting transactions/i
     end
 
     private
+      def set_signed_context(branch_id, workstation_id)
+        ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
+          cookie_jar.signed[:current_branch_id] = branch_id
+          cookie_jar.signed[:current_workstation_id] = workstation_id
+          cookies["current_branch_id"] = cookie_jar["current_branch_id"]
+          cookies["current_workstation_id"] = cookie_jar["current_workstation_id"]
+        end
+      end
+
       def grant_posting_access(user, branch, workstation)
         [ "teller.dashboard.view", "transactions.deposit.create", "sessions.open" ].each do |permission_key|
           permission = Permission.find_or_create_by!(key: permission_key) do |record|
