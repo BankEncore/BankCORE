@@ -1,0 +1,21 @@
+<section aria-label="Approval Required" data-approval-panel-target="panel" class="card bg-base-100 border border-base-300" hidden>
+  <div class="card-body">
+    <h2 class="card-title text-lg">Approval Required</h2>
+    <p data-approval-panel-target="reason"></p>
+    <p class="form-control">
+      <label for="supervisor_email_address">Supervisor Email</label><br>
+      <input id="supervisor_email_address" type="email" class="input input-bordered" data-approval-panel-target="supervisorEmail">
+    </p>
+    <p class="form-control">
+      <label for="supervisor_password">Supervisor Password</label><br>
+      <input id="supervisor_password" type="password" class="input input-bordered" data-approval-panel-target="supervisorPassword">
+    </p>
+    <p class="form-control">
+      <label for="approval_reason">Reason</label><br>
+      <input id="approval_reason" type="text" class="input input-bordered" data-approval-panel-target="approvalReasonInput" value="threshold_exceeded">
+    </p>
+    <p class="mt-2">
+      <button type="button" class="btn btn-primary" data-action="approval-panel#request">Request Approval</button>
+    </p>
+  </div>
+</section>

@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+	--color-base-100: #ffffff;
+	--color-base-200: #f8fafc;
+	--color-base-300: #e2e8f0;
+}
+
+@layer components {
+	.bg-base-100 { @apply bg-white; }
+	.bg-base-200 { @apply bg-slate-50; }
+	.border-base-300 { @apply border-slate-200; }
+
+	.navbar { @apply flex items-center justify-between gap-3; }
+
+	.card { @apply rounded-lg border bg-white shadow-sm; }
+	.card-body { @apply p-4; }
+	.card-title { @apply font-semibold text-slate-900; }
+
+	.btn {
+		@apply inline-flex items-center justify-center gap-2 rounded-md border border-transparent px-3 py-2 text-sm font-medium;
+		@apply transition-colors duration-150;
+		@apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2;
+		@apply disabled:cursor-not-allowed disabled:opacity-50;
+	}
+
+	.btn-sm { @apply px-2.5 py-1.5 text-xs; }
+	.btn-primary { @apply bg-slate-900 text-white hover:bg-slate-800; }
+	.btn-outline { @apply border-slate-300 bg-white text-slate-700 hover:bg-slate-50; }
+	.btn-ghost { @apply bg-transparent text-slate-700 hover:bg-slate-100; }
+	.btn-warning { @apply bg-amber-500 text-white hover:bg-amber-600; }
+
+	.badge {
+		@apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+		@apply bg-slate-100 text-slate-700;
+	}
+
+	.badge-outline { @apply border border-slate-300 bg-white text-slate-700; }
+	.badge-success { @apply bg-emerald-100 text-emerald-700; }
+	.badge-warning { @apply bg-amber-100 text-amber-700; }
+	.badge-error { @apply bg-red-100 text-red-700; }
+	.badge-neutral { @apply bg-slate-100 text-slate-700; }
+
+	.alert {
+		@apply rounded-md border px-3 py-2 text-sm;
+	}
+
+	.alert-error { @apply border-red-200 bg-red-50 text-red-700; }
+	.alert-success { @apply border-emerald-200 bg-emerald-50 text-emerald-700; }
+	.alert-warning { @apply border-amber-200 bg-amber-50 text-amber-700; }
+	.alert-info { @apply border-sky-200 bg-sky-50 text-sky-700; }
+
+	.input,
+	.select {
+		@apply w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900;
+		@apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300;
+	}
+
+	.input-bordered,
+	.select-bordered { @apply border-slate-300; }
+
+	.form-control { @apply block space-y-1; }
+
+	.divider {
+		@apply relative my-2 h-px w-full bg-slate-200;
+	}
+
+	.collapse {
+		@apply rounded-md border border-slate-200 bg-slate-50;
+	}
+
+	.collapse-title {
+		@apply cursor-pointer px-3 py-2;
+	}
+
+	.collapse-content {
+		@apply hidden px-3 pb-3;
+	}
+
+	.collapse input:checked ~ .collapse-content {
+		@apply block;
+	}
+}

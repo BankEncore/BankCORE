@@ -1,0 +1,136 @@
+<div id="posting-workspace"
+  data-controller="posting-form line-items reference-panel approval-panel"
+  data-action="tx:changed->posting-form#recalculate tx:recalc->reference-panel#refresh tx:approval-required->approval-panel#show tx:approval-cleared->approval-panel#hide tx:approval-granted->posting-form#handleApprovalGranted tx:approval-error->posting-form#handleApprovalError"
+  data-posting-form-opening-cash-cents-value="<%= teller_session.opening_cash_cents %>"
+  data-posting-form-default-transaction-type-value="<%= local_assigns.fetch(:default_transaction_type, "deposit") %>"
+  data-posting-form-validate-url-value="<%= teller_validate_transaction_path %>"
+  data-posting-form-account-reference-url-value="<%= teller_account_reference_path %>"
+  data-posting-form-account-history-url-value="<%= teller_account_history_path %>"
+  data-approval-panel-approval-url-value="<%= teller_approvals_path %>"
+  data-reference-panel-account-reference-url-value="<%= teller_account_reference_path %>"
+  data-reference-panel-account-history-url-value="<%= teller_account_history_path %>">
+  <% fixed_flow = !local_assigns.fetch(:show_transaction_type, true) %>
+  <% flow_type = local_assigns.fetch(:default_transaction_type, "deposit") %>
+  <% show_counterparty = fixed_flow && flow_type == "transfer" %>
+  <% show_cash_account = local_assigns.fetch(:show_transaction_type, true) %>
+  <% show_checks = fixed_flow && flow_type == "deposit" %>
+
+  <%= form_with url: local_assigns.fetch(:form_url, teller_posting_path), method: :post, html: { id: "posting-form", data: { action: "submit->posting-form#submit" } } do |form| %>
+    <p class="alert alert-info hidden" data-posting-form-target="message" aria-live="polite" hidden></p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <section aria-label="Entry Panel" class="card bg-base-100 border border-base-300 lg:col-span-2">
+        <div class="card-body">
+          <h2 class="card-title text-lg">Transaction Entry Panel</h2>
+          <% if local_assigns.fetch(:show_transaction_type, true) %>
+            <p class="form-control">
+              <%= form.label :transaction_type, "Transaction Type" %><br>
+              <%= form.select :transaction_type,
+                options_for_select([["Deposit", "deposit"], ["Withdrawal", "withdrawal"], ["Transfer", "transfer"]]),
+                {},
+                { data: { posting_form_target: "transactionType", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
+            </p>
+          <% else %>
+            <%= hidden_field_tag :transaction_type,
+              local_assigns.fetch(:default_transaction_type, "deposit"),
+              data: { posting_form_target: "transactionType" } %>
+            <p><strong>Transaction Type:</strong> <%= local_assigns.fetch(:default_transaction_type, "deposit").titleize %></p>
+          <% end %>
+
+          <p class="form-control">
+            <%= form.label :amount_cents, "Cash Amount" %><br>
+            <%= form.number_field :amount_cents, min: 0, step: 1, value: 0, data: { posting_form_target: "amountCents", action: "input->posting-form#recalculate" }, required: true, class: "input input-bordered" %>
+          </p>
+
+          <p class="form-control">
+            <%= form.label :primary_account_reference, "Primary Account Reference" %><br>
+            <%= form.text_field :primary_account_reference, data: { posting_form_target: "primaryAccountReference", action: "input->posting-form#recalculate" }, required: true, class: "input input-bordered" %>
+          </p>
+
+          <p class="form-control" data-posting-form-target="counterpartyRow" <%= "hidden" unless show_counterparty %>>
+            <%= form.label :counterparty_account_reference, "Counterparty Account Reference" %><br>
+            <%= form.text_field :counterparty_account_reference, data: { posting_form_target: "counterpartyAccountReference", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+          </p>
+
+          <% if show_cash_account %>
+            <p class="form-control" data-posting-form-target="cashAccountRow" hidden>
+              <%= form.label :cash_account_reference, "Cash Account Reference" %><br>
+              <%= form.text_field :cash_account_reference,
+                value: "cash:#{teller_session.cash_location.code}",
+                data: { posting_form_target: "cashAccountReference", action: "input->posting-form#recalculate" },
+                class: "input input-bordered" %>
+            </p>
+          <% else %>
+            <%= form.hidden_field :cash_account_reference,
+              value: "cash:#{teller_session.cash_location.code}",
+              data: { posting_form_target: "cashAccountReference" } %>
+          <% end %>
+
+          <section data-posting-form-target="checkSection" <%= "hidden" unless show_checks %>>
+            <div class="divider my-3"></div>
+            <div class="flex items-center justify-between">
+              <div class="font-medium">Checks</div>
+              <button type="button" class="btn btn-sm btn-outline" data-action="line-items#addCheckRow">+ Add Check</button>
+            </div>
+            <div class="mt-3 space-y-3" data-posting-form-target="checkRows" data-line-items-target="checkRows"></div>
+            <template data-posting-form-target="checkTemplate" data-line-items-target="checkTemplate">
+              <div class="card bg-base-100 border border-base-300" data-check-row>
+                <div class="card-body p-4">
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <input type="text" class="input input-bordered" placeholder="Routing #" data-check-field="routing" data-action="input->posting-form#recalculate">
+                    <input type="text" class="input input-bordered" placeholder="Account #" data-check-field="account" data-action="input->posting-form#recalculate">
+                    <input type="text" class="input input-bordered" placeholder="Check #" data-check-field="number" data-action="input->posting-form#recalculate">
+                    <input type="number" min="1" step="1" class="input input-bordered" placeholder="Amount" data-check-field="amount" data-action="input->posting-form#recalculate">
+                  </div>
+                  <div class="mt-3 collapse collapse-arrow bg-base-200 border border-base-300">
+                    <input type="checkbox">
+                    <div class="collapse-title text-sm font-medium">Optional: Hold</div>
+                    <div class="collapse-content">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <select class="select select-bordered" data-check-field="holdReason">
+                          <option value="">Hold reason (none)</option>
+                          <option value="new_account">New Account</option>
+                          <option value="large_item">Large Item</option>
+                          <option value="exception">Exception</option>
+                        </select>
+                        <input type="date" class="input input-bordered" data-check-field="holdUntil">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-3 flex justify-end">
+                    <button type="button" class="btn btn-ghost btn-sm" data-action="line-items#removeCheckRow">Remove</button>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </section>
+
+          <%= form.hidden_field :request_id, value: "", data: { posting_form_target: "requestId" } %>
+          <%= form.hidden_field :approval_token, value: "", data: { posting_form_target: "approvalToken" } %>
+        </div>
+      </section>
+
+      <%= render "teller/shared/reference_panel", teller_session: teller_session %>
+    </div>
+
+    <%= render "teller/shared/totals_panel" %>
+
+    <%= render "teller/shared/cash_footer" %>
+
+    <%= render "teller/shared/approval_modal" %>
+
+    <section aria-label="Receipt Confirmation" data-posting-form-target="receiptPanel" class="card bg-base-100 border border-base-300" hidden>
+      <div class="card-body">
+        <h2 class="card-title text-lg">Receipt Confirmation</h2>
+        <p>Posting Batch ID: <strong data-posting-form-target="receiptBatchId">N/A</strong></p>
+        <p>Teller Transaction ID: <strong data-posting-form-target="receiptTransactionId">N/A</strong></p>
+        <p>Request ID: <strong data-posting-form-target="receiptRequestId">N/A</strong></p>
+        <p>Posted At: <strong data-posting-form-target="receiptPostedAt">N/A</strong></p>
+      </div>
+    </section>
+
+    <section aria-label="Primary Action">
+      <%= form.submit "Post Transaction", data: { posting_form_target: "submitButton" }, style: "display:none;" %>
+    </section>
+  <% end %>
+</div>

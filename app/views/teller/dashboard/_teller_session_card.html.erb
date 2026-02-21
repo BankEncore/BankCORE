@@ -1,0 +1,38 @@
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-lg">Teller Session</h2>
+    <p>Status: <%= teller_session&.status || "Not open" %></p>
+    <p>Drawer: <%= teller_session&.cash_location&.name || "Not assigned" %></p>
+
+    <% if teller_session.blank? %>
+      <%= form_with url: teller_teller_session_path, method: :post do |form| %>
+        <p class="form-control">
+          <%= form.label :opening_cash_cents, "Opening cash (cents)" %><br>
+          <%= form.number_field :opening_cash_cents, min: 0, value: 0, required: true, class: "input input-bordered" %>
+        </p>
+        <%= form.submit "Open Teller Session", class: "btn btn-primary" %>
+      <% end %>
+    <% else %>
+      <% if teller_session.cash_location.blank? %>
+        <%= form_with url: assign_drawer_teller_teller_session_path, method: :patch do |form| %>
+          <p class="form-control">
+            <%= form.label :cash_location_id, "Assign drawer" %><br>
+            <%= form.select :cash_location_id,
+              options_from_collection_for_select(drawers, :id, :name),
+              { include_blank: "Select drawer" },
+              { required: true, class: "select select-bordered w-full" } %>
+          </p>
+          <%= form.submit "Assign Drawer", class: "btn btn-primary" %>
+        <% end %>
+      <% end %>
+
+      <%= form_with url: close_teller_teller_session_path, method: :patch do |form| %>
+        <p class="form-control">
+          <%= form.label :closing_cash_cents, "Declared closing cash (cents)" %><br>
+          <%= form.number_field :closing_cash_cents, min: 0, required: true, class: "input input-bordered" %>
+        </p>
+        <%= form.submit "Close Teller Session", class: "btn btn-warning" %>
+      <% end %>
+    <% end %>
+  </div>
+</section>

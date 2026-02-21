@@ -1,0 +1,10 @@
+<h1>Open Teller Session</h1>
+
+<%= form_with url: teller_teller_session_path, method: :post do |form| %>
+  <p>
+    <%= form.label :opening_cash_cents, "Opening cash (cents)" %><br>
+    <%= form.number_field :opening_cash_cents, min: 0, value: 0, required: true %>
+  </p>
+
+  <%= form.submit "Open Teller Session" %>
+<% end %>

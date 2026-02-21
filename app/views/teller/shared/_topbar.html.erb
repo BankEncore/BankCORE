@@ -1,0 +1,13 @@
+<section aria-label="Top Context Bar" class="navbar bg-base-200 border border-base-300 rounded-box px-4 py-2">
+  <div class="flex-1">
+    <span class="font-semibold">Teller Workspace</span>
+  </div>
+  <div class="flex flex-wrap items-center gap-2 text-sm">
+    <p class="badge badge-outline">Teller: <%= Current.user&.email_address || "Not signed in" %></p>
+    <p class="badge badge-outline">Session ID: <%= teller_session&.id || "Not open" %></p>
+    <p class="badge badge-outline">Drawer: <%= teller_session&.cash_location&.name || "Not assigned" %></p>
+    <p class="badge badge-outline">Branch: <%= current_branch&.name || "Not set" %></p>
+    <p class="badge badge-outline">Workstation: <%= current_workstation&.name || "Not set" %></p>
+    <p class="opacity-70">Timestamp: <%= Time.current.strftime("%Y-%m-%d %H:%M:%S") %></p>
+  </div>
+</section>

@@ -1,0 +1,115 @@
+<section aria-label="Reference Panel" class="card bg-base-200 border border-base-300 lg:sticky lg:top-4 h-fit">
+  <div class="card-body text-sm">
+    <h2 class="card-title text-lg">Reference Summary</h2>
+
+    <p class="font-semibold mt-2">Session Context</p>
+    <dl class="space-y-1">
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Teller</dt>
+        <dd class="font-medium"><%= Current.user&.email_address || "Not signed in" %></dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Branch</dt>
+        <dd class="font-medium"><%= current_branch&.name || "Not set" %></dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Workstation</dt>
+        <dd class="font-medium"><%= current_workstation&.name || "Not set" %></dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Session Status</dt>
+        <dd class="font-medium"><%= teller_session&.status&.titleize || "Not open" %></dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Assigned Drawer</dt>
+        <dd class="font-medium"><%= teller_session&.cash_location&.name || "Not assigned" %></dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Cash Reference</dt>
+        <dd class="font-medium"><%= teller_session&.cash_location.present? ? "cash:#{teller_session.cash_location.code}" : "cash:unassigned" %></dd>
+      </div>
+    </dl>
+
+    <div class="divider my-2"></div>
+    <p class="font-semibold">Transaction Snapshot</p>
+    <dl class="space-y-1">
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Type</dt>
+        <dd class="font-medium" data-posting-form-target="summaryTransactionType">N/A</dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Primary Account</dt>
+        <dd class="font-medium" data-posting-form-target="primaryReferenceValue">N/A</dd>
+      </div>
+      <div data-posting-form-target="counterpartyReferencePanel" hidden>
+        <div class="flex justify-between gap-2">
+          <dt class="opacity-70">Counterparty</dt>
+          <dd class="font-medium" data-posting-form-target="counterpartyReferenceValue">N/A</dd>
+        </div>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Request ID</dt>
+        <dd class="font-medium" data-posting-form-target="summaryRequestId">N/A</dd>
+      </div>
+    </dl>
+
+    <div class="divider my-2"></div>
+    <p class="font-semibold">Amounts</p>
+    <dl class="space-y-1">
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Entered Cash</dt>
+        <dd class="font-mono tabular-nums" data-posting-form-target="cashSubtotal">$0.00</dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Check Subtotal</dt>
+        <dd class="font-mono tabular-nums" data-posting-form-target="checkSubtotal">$0.00</dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Effective Total</dt>
+        <dd class="font-mono tabular-nums" data-posting-form-target="totalAmount">$0.00</dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Debits / Credits</dt>
+        <dd class="font-mono tabular-nums"><span data-posting-form-target="debitTotal">$0.00</span> / <span data-posting-form-target="creditTotal">$0.00</span></dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Imbalance</dt>
+        <dd class="font-mono tabular-nums" data-posting-form-target="imbalance">$0.00</dd>
+      </div>
+    </dl>
+
+    <div class="divider my-2"></div>
+    <p class="font-semibold">Cash Impact</p>
+    <dl class="space-y-1">
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Cash In</dt>
+        <dd class="font-mono tabular-nums" data-posting-form-target="summaryCashIn">$0.00</dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Cash Out</dt>
+        <dd class="font-mono tabular-nums" data-posting-form-target="summaryCashOut">$0.00</dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Net Drawer Impact</dt>
+        <dd class="font-mono tabular-nums" data-posting-form-target="cashImpact">$0.00</dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="opacity-70">Projected Drawer</dt>
+        <dd class="font-mono tabular-nums" data-posting-form-target="projectedDrawer">$0.00</dd>
+      </div>
+    </dl>
+
+    <div class="divider my-2"></div>
+    <p class="font-semibold">Posting Readiness</p>
+    <div class="flex items-center justify-between gap-2">
+      <span class="badge badge-neutral" data-posting-form-target="summaryReadinessBadge">Blocked</span>
+      <span class="text-xs opacity-70" data-posting-form-target="summaryReadinessReason">Amount must be greater than zero.</span>
+    </div>
+
+    <div class="divider my-2"></div>
+    <p class="font-semibold">Alerts</p>
+    <div class="space-y-2" data-posting-form-target="referenceAlerts"></div>
+    <p class="font-semibold mt-2">Restrictions</p>
+    <div class="space-y-2" data-posting-form-target="referenceRestrictions"></div>
+  </div>
+</section>
