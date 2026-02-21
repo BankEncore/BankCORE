@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: BankCORE Documentation
+    url: https://github.com/BankEncore/BankCORE/tree/main/docs
+    about: Check project docs and implementation status before opening a request.
