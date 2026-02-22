@@ -124,3 +124,11 @@ This document is **non-authoritative** and exists only to track implementation p
   - **Decision:** Hold data lives in posting metadata.
 - **Posting decomposition:** Define an incremental refactor specification to split posting responsibilities while preserving behavior.
   - **Spec:** [docs/30_posting_refactor_spec.md](docs/30_posting_refactor_spec.md)
+
+---
+
+## Recent refactor increments
+
+- `0c22647` — Removed redundant `required_fields` OR-gating in `posting_form_controller.js`; frontend requirement gating now uses workflow policy helpers directly.
+- `b2ddc4e` — `Teller::WorkflowRegistry.workflow_schema` now derives `required_fields` from canonical workflow policy metadata (plus workflow-specific payload requirements) to eliminate duplicate rule declarations.
+- `161cd86` — Clarified architecture contract in [docs/30_posting_refactor_spec.md](docs/30_posting_refactor_spec.md): policy-oriented workflow keys are canonical; `required_fields` is compatibility output derived from those keys.
