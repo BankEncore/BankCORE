@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Bank Core" %></title>
+    <title><%= content_for(:title) || "BankCORE" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Bank Core">
+    <meta name="application-name" content="BankCORE">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -23,26 +23,19 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <div class="min-h-screen bg-base-100">
-      <% if authenticated? %>
-        <header class="navbar bg-base-200 border-b border-base-300 px-4">
-          <div class="flex-1 gap-3">
-            <%= link_to "BankCORE", root_path, class: "text-lg font-semibold" %>
-            <nav class="flex items-center gap-2 text-sm">
-              <%= link_to "Home", root_path, class: "btn btn-ghost btn-sm" %>
-              <%= link_to "Teller", teller_root_path, class: "btn btn-ghost btn-sm" %>
-              <%= link_to "Ops", ops_root_path, class: "btn btn-ghost btn-sm" %>
-            </nav>
-          </div>
+  <body class="bg-base-100">
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:m-3 focus:rounded focus:bg-base-100 focus:px-3 focus:py-2 focus:shadow">
+      Skip to content
+    </a>
 
-          <div class="flex-none flex flex-wrap items-center gap-2 text-sm">
-            <span class="badge badge-outline">Teller Session: <%= Current.teller_session&.id || "Not open" %></span>
-          </div>
-        </header>
+    <div class="min-h-screen">
+      <% if authenticated? %>
+        <div class="sticky top-0 z-50">
+          <%= render "shared/global_header" %>
+        </div>
       <% end %>
 
-      <main class="mx-auto w-full max-w-7xl p-4 space-y-4">
+      <main id="main" class="mx-auto w-full max-w-7xl px-4 py-3 space-y-3">
         <%= tag.div(flash[:alert], class: "alert alert-error") if flash[:alert] %>
         <%= tag.div(flash[:notice], class: "alert alert-success") if flash[:notice] %>
         <%= yield %>

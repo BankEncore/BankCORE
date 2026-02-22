@@ -19,12 +19,19 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <div class="min-h-screen bg-base-100">
-      <%= render "teller/shared/topbar", teller_session: current_teller_session %>
-      <%= render "teller/shared/command_bar", teller_session: current_teller_session %>
+  <body class="bg-base-100">
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:m-3 focus:rounded focus:bg-base-100 focus:px-3 focus:py-2 focus:shadow">
+      Skip to content
+    </a>
 
-      <main class="mx-auto w-full max-w-7xl p-4 space-y-4">
+    <div class="min-h-screen">
+      <div class="sticky top-0 z-50">
+        <%= render "shared/global_header" %>
+        <%= render "teller/shared/topbar", teller_session: current_teller_session %>
+        <%= render "teller/shared/command_bar", teller_session: current_teller_session %>
+      </div>
+
+      <main id="main" class="mx-auto w-full max-w-7xl px-4 py-3 space-y-3">
         <%= render "teller/shared/flash_banners" %>
         <%= yield %>
       </main>

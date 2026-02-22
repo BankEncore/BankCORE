@@ -1,0 +1,45 @@
+<%# Shared global header: identity + workspace navigation + user/logout (no teller-specific context) %>
+<% teller_active = controller_path.start_with?("teller/") %>
+<% ops_active    = controller_path.start_with?("ops/") %>
+
+<header class="border-b border-base-300 bg-base-200/70 px-4">
+  <div class="navbar min-h-0 py-2 px-0">
+    <div class="flex-1 items-center gap-3">
+      <%= link_to "BankCORE", root_path, class: "text-lg font-semibold tracking-wide" %>
+
+      <nav class="flex items-center gap-2 text-sm" aria-label="Primary">
+        <%= link_to "Home",
+                    root_path,
+                    class: "btn btn-ghost btn-sm #{current_page?(root_path) ? "btn-active" : ""}",
+                    aria: (current_page?(root_path) ? { current: "page" } : {}) %>
+
+        <details class="dropdown">
+          <summary class="btn btn-ghost btn-sm <%= (teller_active || ops_active) ? "btn-active" : "" %>">
+            Workspace
+          </summary>
+
+          <ul class="menu dropdown-content z-[1] mt-2 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow">
+            <li>
+              <%= link_to "Teller Workspace",
+                          teller_root_path,
+                          class: (teller_active ? "active" : nil) %>
+            </li>
+            <li>
+              <%= link_to "Operations Workspace",
+                          ops_root_path,
+                          class: (ops_active ? "active" : nil) %>
+            </li>
+          </ul>
+        </details>
+      </nav>
+    </div>
+
+    <div class="flex-none flex flex-wrap items-center gap-2 text-sm">
+      <span class="badge badge-outline">
+        <%= Current.user&.email_address || "Signed in" %>
+      </span>
+
+      <%= button_to "Log out", session_path, method: :delete, class: "btn btn-ghost btn-sm" %>
+    </div>
+  </div>
+</header>
