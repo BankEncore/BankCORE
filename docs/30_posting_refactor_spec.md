@@ -133,6 +133,56 @@ The following workflow contracts define required transaction prompts and data ex
 - Canonical workflow contract keys are policy-oriented fields (e.g., primary/counterparty/cash/settlement requirement policies, section visibility, entry profile, amount source, and cash-impact profile).
 - `required_fields` remains in workflow schema as a compatibility projection derived from canonical policy keys plus workflow-specific payload requirements; it must not be treated as an independently-authored source.
 
+## 5.4 Transaction leg construction contract
+Leg construction is server-authoritative and must be produced by `Posting::RecipeBuilder` from normalized workflow input.
+
+### 5.4.1 Canonical leg shape
+Each generated leg must include:
+- `side` (`debit` or `credit`)
+- `account_reference` (canonical account/cash reference)
+- `amount_cents` (positive integer)
+
+### 5.4.2 Construction pipeline
+1. Select workflow definition from `Teller::WorkflowRegistry`.
+2. Validate request with `Posting::WorkflowValidator`.
+3. Build workflow recipe in `Posting::RecipeBuilder`.
+4. Verify balancing and policy checks before commit.
+5. Persist batch/legs atomically, then apply effects.
+
+### 5.4.3 Workflow leg templates (implemented)
+- Deposit:
+  - Debits: drawer cash for cash-in and one debit per check instrument/clearing leg.
+  - Credits: primary account for effective total.
+- Withdrawal:
+  - Debit: primary account.
+  - Credit: drawer cash.
+- Transfer:
+  - Debit: primary/source account.
+  - Credit: counterparty/destination account.
+- Check Cashing:
+  - Debit: settlement account for check amount.
+  - Credits: drawer cash for net payout and fee income account for fee (when fee > 0).
+- Draft:
+  - Debits: funding account (primary account or drawer cash) for draft amount (+ fee when present).
+  - Credits: draft liability account for draft amount and fee income account for fee (when fee > 0).
+- Vault Transfer:
+  - Debit: destination cash location.
+  - Credit: source cash location.
+
+### 5.4.4 Workflow leg templates (planned, not implemented)
+- Bill Payment:
+  - Debit: funding source leg(s).
+  - Credit: bill-pay clearing/payee settlement leg(s), with optional fee income leg.
+- Misc. Receipt:
+  - Debit: funding source leg(s).
+  - Credit: receipt category income/liability leg.
+
+### 5.4.5 Non-negotiable leg invariants
+- Balanced posting is mandatory: total debits equals total credits.
+- All leg amounts must be positive integers; zero-value legs are not persisted.
+- Account references must resolve from canonical workflow rules, not user-provided override semantics.
+- Request id idempotency governs whether a recipe may be committed.
+
 ---
 
 ## 6) Realtime UX contract
