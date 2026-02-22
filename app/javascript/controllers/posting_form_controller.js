@@ -147,6 +147,7 @@ export default class extends Controller {
     const checkCashingAmounts = this.checkCashingAmounts()
     const draftAmounts = this.draftAmounts()
     const vaultTransferDetails = this.vaultTransferDetails()
+    const requiredFields = this.workflowRequiredFields(transactionType)
     if (transactionType === "check_cashing") {
       this.amountCentsTarget.value = checkCashingAmounts.netCashPayoutCents.toString()
     } else if (transactionType === "draft") {
@@ -154,10 +155,12 @@ export default class extends Controller {
     }
     const totalAmountCents = this.effectiveAmountCents()
     const hasPrimaryAccount = this.primaryAccountReferenceTarget.value.trim().length > 0
-    const requiresPrimaryAccount = !["check_cashing", "vault_transfer"].includes(transactionType) && !(transactionType === "draft" && this.draftCashFunding())
-    const requiresCounterparty = transactionType === "transfer"
+    const schemaRequiresPrimary = requiredFields.includes("primary_account_reference")
+    const defaultRequiresPrimary = !["check_cashing", "vault_transfer"].includes(transactionType)
+    const requiresPrimaryAccount = (schemaRequiresPrimary || defaultRequiresPrimary) && !(transactionType === "draft" && this.draftCashFunding())
+    const requiresCounterparty = requiredFields.includes("counterparty_account_reference") || transactionType === "transfer"
     const requiresCashAccount = transactionType !== "transfer" && transactionType !== "vault_transfer" && !(transactionType === "draft" && this.draftAccountFunding())
-    const requiresSettlementAccount = transactionType === "check_cashing"
+    const requiresSettlementAccount = requiredFields.includes("settlement_account_reference") || transactionType === "check_cashing"
     const requiresDraftDetails = transactionType === "draft"
     const requiresVaultTransferDetails = transactionType === "vault_transfer"
     const hasCounterparty = this.counterpartyAccountReferenceTarget.value.trim().length > 0
@@ -681,6 +684,10 @@ export default class extends Controller {
     }
 
     return transactionType.charAt(0).toUpperCase() + transactionType.slice(1)
+  }
+
+  workflowRequiredFields(transactionType) {
+    return Array(this.workflowSchema?.[transactionType]?.required_fields)
   }
 
   clearMessage() {
