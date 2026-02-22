@@ -113,55 +113,7 @@ module Posting
       end
 
       def commit(legs)
-        ActiveRecord::Base.transaction do
-          teller_transaction = TellerTransaction.create!(
-            user: request.fetch(:user),
-            teller_session: request.fetch(:teller_session),
-            branch: request.fetch(:branch),
-            workstation: request.fetch(:workstation),
-            request_id: request.fetch(:request_id),
-            transaction_type: request.fetch(:transaction_type),
-            currency: request.fetch(:currency),
-            amount_cents: request.fetch(:amount_cents),
-            status: "posted",
-            posted_at: Time.current
-          )
-
-          posting_batch = PostingBatch.create!(
-            teller_transaction: teller_transaction,
-            request_id: request.fetch(:request_id),
-            currency: request.fetch(:currency),
-            status: "committed",
-            committed_at: Time.current,
-            metadata: request.fetch(:metadata)
-          )
-
-          legs.each do |leg|
-            PostingLeg.create!(
-              posting_batch: posting_batch,
-              side: leg.fetch(:side),
-              account_reference: leg.fetch(:account_reference),
-              amount_cents: leg.fetch(:amount_cents),
-              position: leg.fetch(:position)
-            )
-
-            AccountTransaction.create!(
-              teller_transaction: teller_transaction,
-              posting_batch: posting_batch,
-              account_reference: leg.fetch(:account_reference),
-              direction: leg.fetch(:side),
-              amount_cents: leg.fetch(:amount_cents)
-            )
-          end
-
-          Posting::Effects::CashMovementRecorder.new(
-            request: request,
-            legs: legs,
-            teller_transaction: teller_transaction
-          ).call
-
-          posting_batch
-        end
+        Posting::Committer.new(request: request, legs: legs).call
       end
   end
 end
