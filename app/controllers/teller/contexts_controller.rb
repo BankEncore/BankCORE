@@ -9,6 +9,12 @@ module Teller
       else
         Workstation.none
       end
+      @workstations_by_branch = Workstation.order(:name)
+        .group_by(&:branch_id)
+        .transform_keys(&:to_s)
+        .transform_values do |workstations|
+          workstations.map { |workstation| { id: workstation.id.to_s, name: workstation.name } }
+        end
     end
 
     def update

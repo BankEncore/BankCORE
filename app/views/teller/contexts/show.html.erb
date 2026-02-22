@@ -4,4 +4,7 @@
   secondary_button_path: new_teller_teller_session_path,
   secondary_button_label: "Go to Session" %>
 
-<%= render "teller/dashboard/session_context_card", branches: @branches, workstations: @workstations %>
+<%= render "teller/dashboard/session_context_card",
+  branches: @branches,
+  workstations: @workstations,
+  workstations_by_branch: @workstations_by_branch %>

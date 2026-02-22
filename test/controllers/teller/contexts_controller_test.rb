@@ -42,6 +42,18 @@ module Teller
       assert_equal "Please select a valid workstation.", flash[:alert]
     end
 
+    test "shows workstation mapping payload for branch-driven selection" do
+      second_branch = Branch.create!(code: "202", name: "Context Branch 2")
+      second_workstation = Workstation.create!(branch: second_branch, code: "CTX2", name: "Context WS 2")
+
+      get teller_context_path
+
+      assert_response :success
+      assert_includes response.body, "data-teller-context-workstations-by-branch-value"
+      assert_includes response.body, @workstation.name
+      assert_includes response.body, second_workstation.name
+    end
+
     private
       def set_signed_cookie(key, value)
         ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
