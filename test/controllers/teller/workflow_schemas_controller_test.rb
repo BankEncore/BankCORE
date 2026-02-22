@@ -45,6 +45,7 @@ module Teller
       assert_equal "cash_plus_checks", body.dig("workflows", "deposit", "effective_amount_source")
       assert_equal "check_cashing_net_payout", body.dig("workflows", "check_cashing", "amount_input_mode")
       assert_equal "vault_directional", body.dig("workflows", "vault_transfer", "cash_impact_profile")
+      assert_equal "draft_account_only", body.dig("workflows", "draft", "primary_account_policy")
       assert_equal true, body.dig("workflows", "transfer", "requires_counterparty_account")
       assert_equal "draft_cash_only", body.dig("workflows", "draft", "cash_account_policy")
       assert_equal true, body.dig("workflows", "check_cashing", "requires_settlement_account")

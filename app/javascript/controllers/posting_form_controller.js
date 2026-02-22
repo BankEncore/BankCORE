@@ -162,8 +162,7 @@ export default class extends Controller {
     const totalAmountCents = this.effectiveAmountCents()
     const hasPrimaryAccount = this.primaryAccountReferenceTarget.value.trim().length > 0
     const schemaRequiresPrimary = requiredFields.includes("primary_account_reference")
-    const baseRequiresPrimary = this.workflowRequiresPrimaryAccount(transactionType)
-    const requiresPrimaryAccount = (schemaRequiresPrimary || baseRequiresPrimary) && !(transactionType === "draft" && this.draftCashFunding())
+    const requiresPrimaryAccount = schemaRequiresPrimary || this.workflowRequiresPrimaryAccount(transactionType)
     const schemaRequiresCounterparty = requiredFields.includes("counterparty_account_reference")
     const requiresCounterparty = schemaRequiresCounterparty || this.workflowRequiresCounterpartyAccount(transactionType)
     const requiresCashAccount = this.workflowRequiresCashAccount(transactionType)
@@ -761,13 +760,35 @@ export default class extends Controller {
     return fallbackProfiles[transactionType] || "none"
   }
 
-  workflowRequiresPrimaryAccount(transactionType) {
-    const value = this.workflowSchema?.[transactionType]?.requires_primary_account
-    if (value !== undefined) {
-      return value === true
+  workflowPrimaryAccountPolicy(transactionType) {
+    const policy = this.workflowSchema?.[transactionType]?.primary_account_policy
+    if (policy) {
+      return policy
     }
 
-    return !["check_cashing", "vault_transfer"].includes(transactionType)
+    if (transactionType === "draft") {
+      return "draft_account_only"
+    }
+
+    if (["check_cashing", "vault_transfer"].includes(transactionType)) {
+      return "never"
+    }
+
+    return "always"
+  }
+
+  workflowRequiresPrimaryAccount(transactionType) {
+    const policy = this.workflowPrimaryAccountPolicy(transactionType)
+
+    if (policy === "never") {
+      return false
+    }
+
+    if (policy === "draft_account_only") {
+      return transactionType === "draft" ? this.draftAccountFunding() : false
+    }
+
+    return true
   }
 
   workflowRequiresCounterpartyAccount(transactionType) {
@@ -817,10 +838,6 @@ export default class extends Controller {
     }
 
     return transactionType === "check_cashing"
-  }
-
-  hasWorkflowSchemaLoaded() {
-    return this.workflowSchema !== null
   }
 
   workflowHasSection(transactionType, sectionKey, schemaSections = null) {
@@ -1073,8 +1090,7 @@ export default class extends Controller {
       return Math.max(baseAmount, 0) + this.checkSubtotalCents()
     }
 
-    const depositCheckSubtotal = transactionType === "deposit" ? this.checkSubtotalCents() : 0
-    return Math.max(baseAmount, 0) + depositCheckSubtotal
+    return Math.max(baseAmount, 0)
   }
 
   checkCashingAmounts() {
