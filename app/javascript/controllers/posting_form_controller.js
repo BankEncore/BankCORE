@@ -162,11 +162,13 @@ export default class extends Controller {
     const totalAmountCents = this.effectiveAmountCents()
     const hasPrimaryAccount = this.primaryAccountReferenceTarget.value.trim().length > 0
     const schemaRequiresPrimary = requiredFields.includes("primary_account_reference")
-    const defaultRequiresPrimary = !["check_cashing", "vault_transfer"].includes(transactionType)
-    const requiresPrimaryAccount = (schemaRequiresPrimary || defaultRequiresPrimary) && !(transactionType === "draft" && this.draftCashFunding())
-    const requiresCounterparty = requiredFields.includes("counterparty_account_reference") || (!this.hasWorkflowSchemaLoaded() && transactionType === "transfer")
-    const requiresCashAccount = transactionType !== "transfer" && transactionType !== "vault_transfer" && !(transactionType === "draft" && this.draftAccountFunding())
-    const requiresSettlementAccount = requiredFields.includes("settlement_account_reference") || (!this.hasWorkflowSchemaLoaded() && transactionType === "check_cashing")
+    const baseRequiresPrimary = this.workflowRequiresPrimaryAccount(transactionType)
+    const requiresPrimaryAccount = (schemaRequiresPrimary || baseRequiresPrimary) && !(transactionType === "draft" && this.draftCashFunding())
+    const schemaRequiresCounterparty = requiredFields.includes("counterparty_account_reference")
+    const requiresCounterparty = schemaRequiresCounterparty || this.workflowRequiresCounterpartyAccount(transactionType)
+    const requiresCashAccount = this.workflowRequiresCashAccount(transactionType)
+    const schemaRequiresSettlement = requiredFields.includes("settlement_account_reference")
+    const requiresSettlementAccount = schemaRequiresSettlement || this.workflowRequiresSettlementAccount(transactionType)
     const requiresDraftDetails = showDraftSection
     const requiresVaultTransferDetails = showVaultTransferSection
     const hasCounterparty = this.counterpartyAccountReferenceTarget.value.trim().length > 0
@@ -757,6 +759,64 @@ export default class extends Controller {
     }
 
     return fallbackProfiles[transactionType] || "none"
+  }
+
+  workflowRequiresPrimaryAccount(transactionType) {
+    const value = this.workflowSchema?.[transactionType]?.requires_primary_account
+    if (value !== undefined) {
+      return value === true
+    }
+
+    return !["check_cashing", "vault_transfer"].includes(transactionType)
+  }
+
+  workflowRequiresCounterpartyAccount(transactionType) {
+    const value = this.workflowSchema?.[transactionType]?.requires_counterparty_account
+    if (value !== undefined) {
+      return value === true
+    }
+
+    return transactionType === "transfer"
+  }
+
+  workflowCashAccountPolicy(transactionType) {
+    const policy = this.workflowSchema?.[transactionType]?.cash_account_policy
+    if (policy) {
+      return policy
+    }
+
+    if (["transfer", "vault_transfer"].includes(transactionType)) {
+      return "never"
+    }
+
+    if (transactionType === "draft") {
+      return "draft_cash_only"
+    }
+
+    return "always"
+  }
+
+  workflowRequiresCashAccount(transactionType) {
+    const policy = this.workflowCashAccountPolicy(transactionType)
+
+    if (policy === "never") {
+      return false
+    }
+
+    if (policy === "draft_cash_only") {
+      return transactionType === "draft" ? this.draftCashFunding() : false
+    }
+
+    return true
+  }
+
+  workflowRequiresSettlementAccount(transactionType) {
+    const value = this.workflowSchema?.[transactionType]?.requires_settlement_account
+    if (value !== undefined) {
+      return value === true
+    }
+
+    return transactionType === "check_cashing"
   }
 
   hasWorkflowSchemaLoaded() {

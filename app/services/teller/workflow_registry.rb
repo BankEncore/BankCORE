@@ -9,7 +9,11 @@ module Teller
         entry_profile: "deposit",
         amount_input_mode: "manual",
         effective_amount_source: "cash_plus_checks",
-        cash_impact_profile: "inflow"
+        cash_impact_profile: "inflow",
+        requires_primary_account: true,
+        requires_counterparty_account: false,
+        cash_account_policy: "always",
+        requires_settlement_account: false
       },
       "withdrawal" => {
         label: "Withdrawal",
@@ -19,7 +23,11 @@ module Teller
         entry_profile: "withdrawal",
         amount_input_mode: "manual",
         effective_amount_source: "amount_field",
-        cash_impact_profile: "outflow"
+        cash_impact_profile: "outflow",
+        requires_primary_account: true,
+        requires_counterparty_account: false,
+        cash_account_policy: "always",
+        requires_settlement_account: false
       },
       "transfer" => {
         label: "Transfer",
@@ -29,7 +37,11 @@ module Teller
         entry_profile: "transfer",
         amount_input_mode: "manual",
         effective_amount_source: "amount_field",
-        cash_impact_profile: "none"
+        cash_impact_profile: "none",
+        requires_primary_account: true,
+        requires_counterparty_account: true,
+        cash_account_policy: "never",
+        requires_settlement_account: false
       },
       "check_cashing" => {
         label: "Check Cashing",
@@ -39,7 +51,11 @@ module Teller
         entry_profile: "check_cashing",
         amount_input_mode: "check_cashing_net_payout",
         effective_amount_source: "check_cashing_net_payout",
-        cash_impact_profile: "outflow"
+        cash_impact_profile: "outflow",
+        requires_primary_account: false,
+        requires_counterparty_account: false,
+        cash_account_policy: "always",
+        requires_settlement_account: true
       },
       "draft" => {
         label: "Bank Draft",
@@ -49,7 +65,11 @@ module Teller
         entry_profile: "draft",
         amount_input_mode: "draft_amount",
         effective_amount_source: "amount_field",
-        cash_impact_profile: "draft_funding"
+        cash_impact_profile: "draft_funding",
+        requires_primary_account: true,
+        requires_counterparty_account: false,
+        cash_account_policy: "draft_cash_only",
+        requires_settlement_account: false
       },
       "vault_transfer" => {
         label: "Vault Transfer",
@@ -59,7 +79,11 @@ module Teller
         entry_profile: "vault_transfer",
         amount_input_mode: "manual",
         effective_amount_source: "amount_field",
-        cash_impact_profile: "vault_directional"
+        cash_impact_profile: "vault_directional",
+        requires_primary_account: false,
+        requires_counterparty_account: false,
+        cash_account_policy: "never",
+        requires_settlement_account: false
       }
     }.freeze
 
@@ -82,7 +106,11 @@ module Teller
             entry_profile: definition.fetch(:entry_profile).to_s,
             amount_input_mode: definition.fetch(:amount_input_mode).to_s,
             effective_amount_source: definition.fetch(:effective_amount_source).to_s,
-            cash_impact_profile: definition.fetch(:cash_impact_profile).to_s
+            cash_impact_profile: definition.fetch(:cash_impact_profile).to_s,
+            requires_primary_account: definition.fetch(:requires_primary_account),
+            requires_counterparty_account: definition.fetch(:requires_counterparty_account),
+            cash_account_policy: definition.fetch(:cash_account_policy).to_s,
+            requires_settlement_account: definition.fetch(:requires_settlement_account)
           }
         end
       end
