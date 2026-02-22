@@ -147,7 +147,6 @@ export default class extends Controller {
     const checkCashingAmounts = this.checkCashingAmounts()
     const draftAmounts = this.draftAmounts()
     const vaultTransferDetails = this.vaultTransferDetails()
-    const requiredFields = this.workflowRequiredFields(transactionType)
     const schemaSections = this.workflowSections(transactionType)
     const showCheckSection = this.workflowHasSection(transactionType, "checks", schemaSections)
     const showDraftSection = this.workflowHasSection(transactionType, "draft", schemaSections)
@@ -161,13 +160,10 @@ export default class extends Controller {
     }
     const totalAmountCents = this.effectiveAmountCents()
     const hasPrimaryAccount = this.primaryAccountReferenceTarget.value.trim().length > 0
-    const schemaRequiresPrimary = requiredFields.includes("primary_account_reference")
-    const requiresPrimaryAccount = schemaRequiresPrimary || this.workflowRequiresPrimaryAccount(transactionType)
-    const schemaRequiresCounterparty = requiredFields.includes("counterparty_account_reference")
-    const requiresCounterparty = schemaRequiresCounterparty || this.workflowRequiresCounterpartyAccount(transactionType)
+    const requiresPrimaryAccount = this.workflowRequiresPrimaryAccount(transactionType)
+    const requiresCounterparty = this.workflowRequiresCounterpartyAccount(transactionType)
     const requiresCashAccount = this.workflowRequiresCashAccount(transactionType)
-    const schemaRequiresSettlement = requiredFields.includes("settlement_account_reference")
-    const requiresSettlementAccount = schemaRequiresSettlement || this.workflowRequiresSettlementAccount(transactionType)
+    const requiresSettlementAccount = this.workflowRequiresSettlementAccount(transactionType)
     const requiresDraftDetails = showDraftSection
     const requiresVaultTransferDetails = showVaultTransferSection
     const hasCounterparty = this.counterpartyAccountReferenceTarget.value.trim().length > 0
@@ -693,10 +689,6 @@ export default class extends Controller {
     }
 
     return transactionType.charAt(0).toUpperCase() + transactionType.slice(1)
-  }
-
-  workflowRequiredFields(transactionType) {
-    return Array(this.workflowSchema?.[transactionType]?.required_fields)
   }
 
   workflowSections(transactionType) {
