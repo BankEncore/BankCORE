@@ -1,8 +1,8 @@
 
 # L7-WF-01 — OPS-010 Teller Activity Report
 
-**Status:** Not aligned with current codebase
-**Current Implementation Mapping:** `GET /ops/reports/teller_activity` route/controller is not implemented yet.
+**Status:** Partially aligned with current codebase
+**Current Implementation Mapping:** `GET /ops` shell landing exists; `GET /ops/reports/teller_activity` route/controller is not implemented yet.
 
 ## 1) Purpose
 

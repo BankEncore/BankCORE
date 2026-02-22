@@ -9,8 +9,8 @@ Scope is limited to these existing endpoints:
 - `POST /teller/posting`
 - `GET /teller/receipts/:request_id`
 
-Current transaction types (implemented): **deposit, withdrawal, transfer, check_cashing**.  
-Planned transaction types (not implemented): **draft_issuance, bill_payment, misc_receipt, vault_transfer**.
+Current transaction types (implemented): **deposit, withdrawal, transfer, check_cashing, draft, vault_transfer**.  
+Planned transaction types (not implemented): **bill_payment, misc_receipt**.
 
 ---
 

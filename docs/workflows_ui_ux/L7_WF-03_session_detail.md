@@ -1,8 +1,8 @@
 
 # L7-WF-03 — OPS-030 Session Detail (Read-Only)
 
-**Status:** Not aligned with current codebase
-**Current Implementation Mapping:** `GET /ops/sessions/:id` route/controller is not implemented yet.
+**Status:** Partially aligned with current codebase
+**Current Implementation Mapping:** `GET /ops` shell landing exists; `GET /ops/sessions/:id` route/controller is not implemented yet.
 
 ## 1) Purpose
 

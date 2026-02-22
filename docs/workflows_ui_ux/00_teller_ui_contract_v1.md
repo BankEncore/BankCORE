@@ -12,10 +12,10 @@
 | Withdrawal (cash flow) | `GET /teller/transactions/withdrawal`, `POST /teller/posting` | Implemented |
 | Transfer | `GET /teller/transactions/transfer`, `POST /teller/posting` | Implemented |
 | Check Cashing | `GET /teller/transactions/check_cashing`, `POST /teller/posting` | Implemented |
-| Draft Issuance | — | Planned |
+| Draft Issuance | `GET /teller/transactions/draft`, `POST /teller/posting` | Implemented (naming differs) |
 | Bill Payment | — | Planned |
 | Misc Receipt | — | Planned |
-| Vault Transfer | — | Planned |
+| Vault Transfer | `GET /teller/transactions/vault_transfer`, `POST /teller/posting` | Implemented (path differs) |
 | Validation API | `POST /teller/transactions/validate` | Implemented |
 | Approval API | `POST /teller/approvals` | Implemented (token-based approval) |
 | Receipt viewer | `GET /teller/receipts/:request_id` | Implemented |
