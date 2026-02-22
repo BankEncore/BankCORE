@@ -99,19 +99,45 @@ export default class extends Controller {
     validateUrl: String,
     accountReferenceUrl: String,
     accountHistoryUrl: String,
+    workflowSchemaUrl: String,
     receiptUrlTemplate: String
   }
 
   connect() {
     this.postedLocked = false
+    this.workflowSchema = null
     this.defaultCashAccountReference = this.cashAccountReferenceTarget.value
     if (this.hasDefaultTransactionTypeValue && this.defaultTransactionTypeValue) {
       this.transactionTypeTarget.value = this.defaultTransactionTypeValue
     }
+    this.loadWorkflowSchema()
     this.ensureRequestId()
     this.resetReceipt()
     this.clearMessage()
     this.recalculate()
+  }
+
+  async loadWorkflowSchema() {
+    if (!this.hasWorkflowSchemaUrlValue || !this.workflowSchemaUrlValue) {
+      return
+    }
+
+    try {
+      const response = await fetch(this.workflowSchemaUrlValue, {
+        headers: {
+          Accept: "application/json"
+        },
+        credentials: "same-origin"
+      })
+      if (!response.ok) {
+        return
+      }
+
+      const payload = await response.json()
+      this.workflowSchema = payload.workflows || {}
+      this.recalculate()
+    } catch {
+    }
   }
 
   recalculate() {
@@ -649,6 +675,11 @@ export default class extends Controller {
 
   transactionTypeLabel() {
     const transactionType = this.transactionTypeTarget.value || "transaction"
+    const schemaLabel = this.workflowSchema?.[transactionType]?.label
+    if (schemaLabel) {
+      return schemaLabel
+    }
+
     return transactionType.charAt(0).toUpperCase() + transactionType.slice(1)
   }
 

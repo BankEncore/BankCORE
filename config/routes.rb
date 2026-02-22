@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     get "transactions/check_cashing", to: "transaction_pages#check_cashing", as: :check_cashing_transaction
     get "account_reference", to: "account_references#show", as: :account_reference
     get "account_history", to: "account_references#history", as: :account_history
+    get "workflow_schema", to: "workflow_schemas#show", as: :workflow_schema
     post "transactions/validate", to: "transactions#validate", as: :validate_transaction
     post "approvals", to: "approvals#create", as: :approvals
     post "posting/check", to: "posting_checks#create", as: :posting_check

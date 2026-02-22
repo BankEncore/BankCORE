@@ -41,6 +41,16 @@ module Teller
       def supported_transaction_type?(transaction_type)
         WORKFLOWS.key?(transaction_type.to_s)
       end
+
+      def workflow_schema
+        WORKFLOWS.transform_values do |definition|
+          {
+            label: definition.fetch(:label),
+            required_fields: Array(definition[:required_fields]).map(&:to_s),
+            funding_modes: Array(definition[:funding_modes]).map(&:to_s)
+          }
+        end
+      end
     end
   end
 end
