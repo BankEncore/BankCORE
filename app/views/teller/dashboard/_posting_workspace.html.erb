@@ -12,10 +12,10 @@
   data-reference-panel-account-reference-url-value="<%= teller_account_reference_path %>"
   data-reference-panel-account-history-url-value="<%= teller_account_history_path %>">
   <% fixed_flow = !local_assigns.fetch(:show_transaction_type, true) %>
-  <% flow_type = local_assigns.fetch(:default_transaction_type, "deposit") %>
+  <% flow_type = local_assigns.fetch(:default_transaction_type, "deposit").presence || "deposit" %>
   <% show_counterparty = fixed_flow && flow_type == "transfer" %>
   <% show_cash_account = local_assigns.fetch(:show_transaction_type, true) %>
-  <% show_checks = fixed_flow && flow_type == "deposit" %>
+  <% show_checks = flow_type == "deposit" %>
   <% show_vault_transfer = fixed_flow && flow_type == "vault_transfer" %>
   <% show_draft = fixed_flow && flow_type == "draft" %>
   <% show_check_cashing = fixed_flow && flow_type == "check_cashing" %>
@@ -39,9 +39,9 @@
             </p>
           <% else %>
             <%= hidden_field_tag :transaction_type,
-              local_assigns.fetch(:default_transaction_type, "deposit"),
+              flow_type,
               data: { posting_form_target: "transactionType" } %>
-            <p><strong>Transaction Type:</strong> <%= local_assigns.fetch(:default_transaction_type, "deposit").titleize %></p>
+            <p><strong>Transaction Type:</strong> <%= flow_type.titleize %></p>
           <% end %>
 
           <p class="form-control">

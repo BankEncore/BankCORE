@@ -271,8 +271,11 @@ module Teller
     end
 
     test "typed new transaction pages render without cash location errors" do
+      get new_teller_deposit_path
+      assert_response :success
+      assert_select "section[data-posting-form-target='checkSection']:not([hidden])", count: 1
+
       [
-        new_teller_deposit_path,
         new_teller_withdrawal_path,
         new_teller_transfer_path,
         new_teller_check_cashing_path,
