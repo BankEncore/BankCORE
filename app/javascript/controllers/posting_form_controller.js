@@ -149,10 +149,10 @@ export default class extends Controller {
     const vaultTransferDetails = this.vaultTransferDetails()
     const requiredFields = this.workflowRequiredFields(transactionType)
     const schemaSections = this.workflowSections(transactionType)
-    const showCheckSection = schemaSections.length > 0 ? schemaSections.includes("checks") : transactionType === "deposit"
-    const showDraftSection = schemaSections.length > 0 ? schemaSections.includes("draft") : transactionType === "draft"
-    const showVaultTransferSection = schemaSections.length > 0 ? schemaSections.includes("vault_transfer") : transactionType === "vault_transfer"
-    const showCheckCashingSection = schemaSections.length > 0 ? schemaSections.includes("check_cashing") : transactionType === "check_cashing"
+    const showCheckSection = this.workflowHasSection(transactionType, "checks", schemaSections)
+    const showDraftSection = this.workflowHasSection(transactionType, "draft", schemaSections)
+    const showVaultTransferSection = this.workflowHasSection(transactionType, "vault_transfer", schemaSections)
+    const showCheckCashingSection = this.workflowHasSection(transactionType, "check_cashing", schemaSections)
     if (transactionType === "check_cashing") {
       this.amountCentsTarget.value = checkCashingAmounts.netCashPayoutCents.toString()
     } else if (transactionType === "draft") {
@@ -163,11 +163,11 @@ export default class extends Controller {
     const schemaRequiresPrimary = requiredFields.includes("primary_account_reference")
     const defaultRequiresPrimary = !["check_cashing", "vault_transfer"].includes(transactionType)
     const requiresPrimaryAccount = (schemaRequiresPrimary || defaultRequiresPrimary) && !(transactionType === "draft" && this.draftCashFunding())
-    const requiresCounterparty = requiredFields.includes("counterparty_account_reference") || transactionType === "transfer"
+    const requiresCounterparty = requiredFields.includes("counterparty_account_reference") || (!this.hasWorkflowSchemaLoaded() && transactionType === "transfer")
     const requiresCashAccount = transactionType !== "transfer" && transactionType !== "vault_transfer" && !(transactionType === "draft" && this.draftAccountFunding())
-    const requiresSettlementAccount = requiredFields.includes("settlement_account_reference") || transactionType === "check_cashing"
-    const requiresDraftDetails = transactionType === "draft"
-    const requiresVaultTransferDetails = transactionType === "vault_transfer"
+    const requiresSettlementAccount = requiredFields.includes("settlement_account_reference") || (!this.hasWorkflowSchemaLoaded() && transactionType === "check_cashing")
+    const requiresDraftDetails = showDraftSection
+    const requiresVaultTransferDetails = showVaultTransferSection
     const hasCounterparty = this.counterpartyAccountReferenceTarget.value.trim().length > 0
     const hasCashAccount = this.cashAccountReferenceTarget.value.trim().length > 0
     const hasSettlementAccount = this.hasSettlementAccountReferenceTarget && this.settlementAccountReferenceTarget.value.trim().length > 0
@@ -243,10 +243,10 @@ export default class extends Controller {
       this.settlementAccountReferenceTarget.required = requiresSettlementAccount
     }
     if (this.hasIdNumberTarget) {
-      this.idNumberTarget.required = transactionType === "check_cashing"
+      this.idNumberTarget.required = showCheckCashingSection
     }
 
-    const displayedCashAmount = transactionType === "check_cashing" ? checkCashingAmounts.netCashPayoutCents : Math.max(cashAmountCents, 0)
+    const displayedCashAmount = showCheckCashingSection ? checkCashingAmounts.netCashPayoutCents : Math.max(cashAmountCents, 0)
     this.cashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
     this.checkSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
     this.debitTotalTarget.textContent = this.formatCents(debitTotal)
@@ -699,6 +699,26 @@ export default class extends Controller {
     return Array(this.workflowSchema?.[transactionType]?.ui_sections)
   }
 
+  hasWorkflowSchemaLoaded() {
+    return this.workflowSchema !== null
+  }
+
+  workflowHasSection(transactionType, sectionKey, schemaSections = null) {
+    const sections = schemaSections || this.workflowSections(transactionType)
+    if (sections.length > 0) {
+      return sections.includes(sectionKey)
+    }
+
+    const fallbackSections = {
+      deposit: ["checks"],
+      draft: ["draft"],
+      vault_transfer: ["vault_transfer"],
+      check_cashing: ["check_cashing"]
+    }
+
+    return (fallbackSections[transactionType] || []).includes(sectionKey)
+  }
+
   clearMessage() {
     this.renderMessage("", "info")
   }
@@ -996,7 +1016,7 @@ export default class extends Controller {
   }
 
   hasInvalidVaultTransferFields(details) {
-    if (this.transactionTypeTarget.value !== "vault_transfer") {
+    if (!this.workflowHasSection(this.transactionTypeTarget.value, "vault_transfer")) {
       return false
     }
 
@@ -1079,7 +1099,7 @@ export default class extends Controller {
   }
 
   hasInvalidDraftFields({ draftAmountCents, draftFeeCents }) {
-    if (this.transactionTypeTarget.value !== "draft") {
+    if (!this.workflowHasSection(this.transactionTypeTarget.value, "draft")) {
       return false
     }
 
@@ -1133,7 +1153,7 @@ export default class extends Controller {
   }
 
   hasInvalidCheckCashingFields({ checkAmountCents, feeCents, netCashPayoutCents }) {
-    if (this.transactionTypeTarget.value !== "check_cashing") {
+    if (!this.workflowHasSection(this.transactionTypeTarget.value, "check_cashing")) {
       return false
     }
 
@@ -1229,7 +1249,7 @@ export default class extends Controller {
   }
 
   hasInvalidCheckRows() {
-    if (this.transactionTypeTarget.value !== "deposit") {
+    if (!this.workflowHasSection(this.transactionTypeTarget.value, "checks")) {
       return false
     }
 
