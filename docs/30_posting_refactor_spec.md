@@ -130,6 +130,8 @@ The following workflow contracts define required transaction prompts and data ex
 ## 5.3 Authority model
 - Server-side workflow rules are canonical.
 - UI is generated/mirrors server rules; UI is never the source of truth.
+- Canonical workflow contract keys are policy-oriented fields (e.g., primary/counterparty/cash/settlement requirement policies, section visibility, entry profile, amount source, and cash-impact profile).
+- `required_fields` remains in workflow schema as a compatibility projection derived from canonical policy keys plus workflow-specific payload requirements; it must not be treated as an independently-authored source.
 
 ---
 
