@@ -154,80 +154,13 @@ module Posting
             )
           end
 
-          create_cash_movement!(teller_transaction, legs)
+          Posting::Effects::CashMovementRecorder.new(
+            request: request,
+            legs: legs,
+            teller_transaction: teller_transaction
+          ).call
 
           posting_batch
-        end
-      end
-
-      def create_cash_movement!(teller_transaction, legs)
-        cash_account_prefix = "cash:"
-        cash_legs = legs.select { |leg| leg.fetch(:account_reference).start_with?(cash_account_prefix) }
-        return if cash_legs.empty?
-
-        transaction_type = request.fetch(:transaction_type)
-        direction = case transaction_type
-        when "deposit", "draft"
-          "in"
-        when "withdrawal", "check_cashing"
-          "out"
-        when "vault_transfer"
-          vault_transfer_cash_direction(cash_legs)
-        else
-          nil
-        end
-
-        return if direction.blank?
-
-        cash_amount_cents = case transaction_type
-        when "deposit"
-          cash_legs.select { |leg| leg.fetch(:side) == "debit" }.sum { |leg| leg.fetch(:amount_cents) }
-        when "withdrawal", "check_cashing"
-          cash_legs.select { |leg| leg.fetch(:side) == "credit" }.sum { |leg| leg.fetch(:amount_cents) }
-        when "draft"
-          cash_legs.select { |leg| leg.fetch(:side) == "debit" }.sum { |leg| leg.fetch(:amount_cents) }
-        when "vault_transfer"
-          vault_transfer_cash_amount(cash_legs, direction)
-        else
-          0
-        end
-
-        return unless cash_amount_cents.positive?
-
-        CashMovement.create!(
-          teller_transaction: teller_transaction,
-          teller_session: request.fetch(:teller_session),
-          cash_location: request.fetch(:teller_session).cash_location,
-          direction: direction,
-          amount_cents: cash_amount_cents
-        )
-      end
-
-      def vault_transfer_cash_direction(cash_legs)
-        drawer_reference = drawer_cash_reference
-        return nil if drawer_reference.blank?
-
-        if cash_legs.any? { |leg| leg.fetch(:side) == "credit" && leg.fetch(:account_reference) == drawer_reference }
-          "out"
-        elsif cash_legs.any? { |leg| leg.fetch(:side) == "debit" && leg.fetch(:account_reference) == drawer_reference }
-          "in"
-        end
-      end
-
-      def vault_transfer_cash_amount(cash_legs, direction)
-        drawer_reference = drawer_cash_reference
-        return 0 if drawer_reference.blank?
-
-        if direction == "out"
-          cash_legs
-            .select { |leg| leg.fetch(:side) == "credit" && leg.fetch(:account_reference) == drawer_reference }
-            .sum { |leg| leg.fetch(:amount_cents) }
-        elsif direction == "in"
-          cash_legs
-            .select { |leg| leg.fetch(:side) == "debit" && leg.fetch(:account_reference) == drawer_reference }
-            .sum { |leg| leg.fetch(:amount_cents) }
-        else
-          0
         end
       end
   end
