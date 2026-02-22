@@ -41,3 +41,42 @@ BankCORE now uses a clearer teller setup progression with dedicated workstation-
 - `test/controllers/teller/transaction_pages_controller_test.rb`
 - `test/controllers/teller/posting_checks_controller_test.rb`
 - `test/controllers/teller/teller_sessions_controller_test.rb`
+
+### Commit 183b1ab
+Fixed a teller context regression where selecting a branch did not make workstation selection usable. The context form now supplies branch-to-workstation mappings to Stimulus, repopulates workstation options when branch changes, and preserves valid saved context when available. A controller regression test was added to ensure the client payload is present for dependent workstation selection.
+
+#### Files touched
+- `app/controllers/teller/contexts_controller.rb`
+- `app/javascript/controllers/teller_context_controller.js`
+- `app/views/teller/contexts/show.html.erb`
+- `app/views/teller/dashboard/_session_context_card.html.erb`
+- `test/controllers/teller/contexts_controller_test.rb`
+
+### Commit 6c0b4d1
+Implemented Phase 1 Vault Transfer end-to-end in teller workflows, including typed route/controller support, direction-aware validation and posting generation, policy/permission wiring, UI entry forms, receipt metadata rendering, and regression coverage. The flow supports drawer-to-vault, vault-to-drawer, and vault-to-vault transfers with idempotent posting behavior, cash impact handling, and compatibility with existing approval and posting infrastructure.
+
+#### Files touched
+- `app/controllers/concerns/posting_prerequisites.rb`
+- `app/controllers/concerns/posting_request_builder.rb`
+- `app/controllers/concerns/teller_posting_execution.rb`
+- `app/controllers/teller/dashboard_controller.rb`
+- `app/controllers/teller/transaction_pages_controller.rb`
+- `app/controllers/teller/transactions_controller.rb`
+- `app/controllers/teller/vault_transfers_controller.rb`
+- `app/javascript/controllers/posting_form_controller.js`
+- `app/models/teller_transaction.rb`
+- `app/policies/teller/posting_batch_policy.rb`
+- `app/policies/teller/posting_policy.rb`
+- `app/services/posting/engine.rb`
+- `app/views/teller/dashboard/_posting_workspace.html.erb`
+- `app/views/teller/dashboard/index.html.erb`
+- `app/views/teller/receipts/show.html.erb`
+- `app/views/teller/shared/_command_bar.html.erb`
+- `app/views/teller/transaction_pages/show.html.erb`
+- `config/routes.rb`
+- `db/seeds.rb`
+- `docs/10_phase1_status.md`
+- `test/controllers/teller/receipts_controller_test.rb`
+- `test/controllers/teller/transaction_pages_controller_test.rb`
+- `test/controllers/teller/transactions_controller_test.rb`
+- `test/controllers/teller/typed_creates_controller_test.rb`

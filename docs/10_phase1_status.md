@@ -122,3 +122,5 @@ This document is **non-authoritative** and exists only to track implementation p
   - **Decision:** `CashMovement` only affects physical cash in/out.
 - **Hold metadata:** Decide where hold data lives (posting metadata, check instrument table, or dedicated hold record) and how it impacts available vs ledger.
   - **Decision:** Hold data lives in posting metadata.
+- **Posting decomposition:** Define an incremental refactor specification to split posting responsibilities while preserving behavior.
+  - **Spec:** [docs/30_posting_refactor_spec.md](docs/30_posting_refactor_spec.md)
