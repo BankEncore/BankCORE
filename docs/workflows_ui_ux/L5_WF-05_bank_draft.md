@@ -1,7 +1,7 @@
 ## L5-WF-05 — Bank Draft (WS-240)
 
-**Status:** **Not aligned with current codebase**
-**Current Implementation Mapping:** Bank Draft workflow/routes/controllers are not implemented in teller routes today.
+**Status:** **Partially aligned with current codebase**
+**Current Implementation Mapping:** Bank Draft is implemented under the `draft` workflow surfaces: `GET /teller/transactions/draft`, `GET /teller/drafts/new`, `POST /teller/drafts`.
 
 ---
 

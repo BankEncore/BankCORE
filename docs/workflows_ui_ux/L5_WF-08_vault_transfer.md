@@ -1,7 +1,7 @@
 ## L5-WF-08 — Vault Transfer (WS-300)
 
-**Status:** **Not aligned with current codebase**
-**Current Implementation Mapping:** Vault Transfer workflow/routes/controllers are not implemented in teller routes today.
+**Status:** **Partially aligned with current codebase**
+**Current Implementation Mapping:** Vault Transfer is implemented via `GET /teller/transactions/vault_transfer` and typed routes `GET /teller/vault_transfers/new`, `POST /teller/vault_transfers`.
 
 ---
 
