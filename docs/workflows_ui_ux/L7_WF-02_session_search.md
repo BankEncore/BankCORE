@@ -1,7 +1,7 @@
 # L7-WF-02 — OPS-020 Session Search
 
-**Status:** Not aligned with current codebase
-**Current Implementation Mapping:** `GET /ops/sessions` route/controller is not implemented yet.
+**Status:** Partially aligned with current codebase
+**Current Implementation Mapping:** `GET /ops` shell landing exists; `GET /ops/sessions` route/controller is not implemented yet.
 
 ## 1) Purpose
 

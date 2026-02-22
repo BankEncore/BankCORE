@@ -34,10 +34,10 @@ Use this as the authoritative crosswalk between workflow proposal IDs and the en
 | WS-210 Withdrawal | `/teller/transactions/withdrawal` | `GET /teller/transactions/withdrawal`, `GET /teller/withdrawals/new`, `POST /teller/withdrawals` | Implemented | Dedicated page + typed create endpoint both exist. |
 | WS-220 Transfer | `/teller/transactions/transfer` | `GET /teller/transactions/transfer`, `GET /teller/transfers/new`, `POST /teller/transfers` | Implemented | Dedicated page + typed create endpoint both exist. |
 | WS-230 Check Cashing | `/teller/transactions/check_cashing` | `GET /teller/transactions/check_cashing`, `GET /teller/check_cashings/new`, `POST /teller/check_cashings` | Implemented | Dedicated page + typed create endpoint both exist. |
-| WS-240 Bank Draft | `/teller/transactions/bank_draft` | — | Planned | Not in routes/controllers yet. |
+| WS-240 Bank Draft | `/teller/transactions/bank_draft` | `GET /teller/transactions/draft`, `GET /teller/drafts/new`, `POST /teller/drafts` | Implemented (naming differs) | Workflow exists as `draft` in current routes/controllers. |
 | WS-250 Bill Payment | `/teller/transactions/bill_payment` | — | Planned | Not in routes/controllers yet. |
 | WS-260 Misc Receipt | `/teller/transactions/misc_receipt` | — | Planned | Not in routes/controllers yet. |
-| WS-300 Vault Transfer | `/teller/vault_transfer` | — | Planned | Not in routes/controllers yet. |
+| WS-300 Vault Transfer | `/teller/vault_transfer` | `GET /teller/transactions/vault_transfer`, `GET /teller/vault_transfers/new`, `POST /teller/vault_transfers` | Implemented (path differs) | Workflow exists with `transactions/vault_transfer` page + typed resource routes. |
 
 ## Shared Posting / Approval / Receipt APIs
 
@@ -53,7 +53,7 @@ Use this as the authoritative crosswalk between workflow proposal IDs and the en
 
 | Workflow | Proposed Endpoint | Current Endpoint(s) | Status | Notes |
 |---|---|---|---|---|
-| WS-030 Recent Activity (My Transactions) | dedicated page | — | Planned | No dedicated recent-activity route yet. |
+| WS-030 Recent Activity (My Transactions) | dedicated page | `GET /teller/history` | Partial | Recent history exists, but route naming/contract differs. |
 | WS-031 Receipt Viewer (Read-only) | dedicated WS-031 route | `GET /teller/receipts/:request_id` | Partial | Receipt reading exists, but not as WS-031 screen contract. |
 
 ## Corrections / Reversals
