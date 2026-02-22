@@ -50,6 +50,13 @@ module Teller
           :primary_account_reference,
           :counterparty_account_reference,
           :cash_account_reference,
+          :draft_funding_source,
+          :draft_amount_cents,
+          :draft_fee_cents,
+          :draft_payee_name,
+          :draft_instrument_number,
+          :draft_liability_account_reference,
+          :draft_fee_income_account_reference,
           entries: [ :side, :account_reference, :amount_cents ]
         )
       end
@@ -69,6 +76,18 @@ module Teller
           end
         when "check_cashing"
           if Array(posting_params[:entries]).blank?
+            errors << "Primary account reference is required" if posting_params[:primary_account_reference].blank?
+          end
+        when "draft"
+          funding_source = posting_params[:draft_funding_source].to_s
+          errors << "Draft amount must be greater than zero" unless posting_params[:draft_amount_cents].to_i.positive?
+          errors << "Payee name is required" if posting_params[:draft_payee_name].blank?
+          errors << "Instrument number is required" if posting_params[:draft_instrument_number].blank?
+          errors << "Liability account reference is required" if posting_params[:draft_liability_account_reference].blank?
+
+          if funding_source == "cash"
+            errors << "Cash account reference is required" if posting_params[:cash_account_reference].blank?
+          else
             errors << "Primary account reference is required" if posting_params[:primary_account_reference].blank?
           end
         end

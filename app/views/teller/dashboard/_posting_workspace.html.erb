@@ -15,6 +15,7 @@
   <% show_counterparty = fixed_flow && flow_type == "transfer" %>
   <% show_cash_account = local_assigns.fetch(:show_transaction_type, true) %>
   <% show_checks = fixed_flow && flow_type == "deposit" %>
+  <% show_draft = fixed_flow && flow_type == "draft" %>
   <% show_check_cashing = fixed_flow && flow_type == "check_cashing" %>
   <% cash_account_reference_value = teller_session.cash_location.present? ? "cash:#{teller_session.cash_location.code}" : "" %>
 
@@ -29,7 +30,7 @@
             <p class="form-control">
               <%= form.label :transaction_type, "Transaction Type" %><br>
               <%= form.select :transaction_type,
-                options_for_select([["Deposit", "deposit"], ["Withdrawal", "withdrawal"], ["Transfer", "transfer"], ["Check Cashing", "check_cashing"]]),
+                options_for_select([["Deposit", "deposit"], ["Withdrawal", "withdrawal"], ["Transfer", "transfer"], ["Bank Draft", "draft"], ["Check Cashing", "check_cashing"]]),
                 {},
                 { data: { posting_form_target: "transactionType", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
             </p>
@@ -167,6 +168,44 @@
             <%= form.hidden_field :fee_income_account_reference,
               value: "income:check_cashing_fee",
               data: { posting_form_target: "feeIncomeAccountReference" } %>
+          </section>
+
+          <section data-posting-form-target="draftSection" <%= "hidden" unless show_draft %>>
+            <div class="divider my-3"></div>
+            <div class="font-medium">Bank Draft Details</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+              <p class="form-control">
+                <%= form.label :draft_funding_source, "Funding Source" %><br>
+                <%= form.select :draft_funding_source,
+                  options_for_select([["Account", "account"], ["Cash", "cash"]], "account"),
+                  {},
+                  { data: { posting_form_target: "draftFundingSource", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
+              </p>
+              <p class="form-control">
+                <%= form.label :draft_amount_cents, "Draft Amount" %><br>
+                <%= form.number_field :draft_amount_cents, min: 1, step: 1, value: 0, data: { posting_form_target: "draftAmountCents", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+              <p class="form-control">
+                <%= form.label :draft_fee_cents, "Fee" %><br>
+                <%= form.number_field :draft_fee_cents, min: 0, step: 1, value: 0, data: { posting_form_target: "draftFeeCents", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+              <p class="form-control md:col-span-2">
+                <%= form.label :draft_payee_name, "Payee" %><br>
+                <%= form.text_field :draft_payee_name, data: { posting_form_target: "draftPayeeName", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+              <p class="form-control">
+                <%= form.label :draft_instrument_number, "Instrument Number" %><br>
+                <%= form.text_field :draft_instrument_number, data: { posting_form_target: "draftInstrumentNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              </p>
+            </div>
+
+            <%= form.hidden_field :draft_liability_account_reference,
+              value: "official_check:outstanding",
+              data: { posting_form_target: "draftLiabilityAccountReference" } %>
+            <%= form.hidden_field :draft_fee_income_account_reference,
+              value: "income:draft_fee",
+              data: { posting_form_target: "draftFeeIncomeAccountReference" } %>
           </section>
 
           <%= form.hidden_field :request_id, value: "", data: { posting_form_target: "requestId" } %>

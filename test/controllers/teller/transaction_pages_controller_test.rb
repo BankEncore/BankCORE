@@ -88,6 +88,12 @@ module Teller
       assert_select "input[name='transaction_type'][value='check_cashing']", count: 1
       assert_select "section[data-posting-form-target='checkSection'][hidden]", count: 1
       assert_select "section[data-posting-form-target='checkCashingSection']:not([hidden])", count: 1
+
+      get teller_draft_transaction_path
+      assert_response :success
+      assert_select "h2", "Draft Issuance"
+      assert_select "input[name='transaction_type'][value='draft']", count: 1
+      assert_select "section[data-posting-form-target='draftSection']:not([hidden])", count: 1
     end
 
     test "allows transfer page without assigned drawer" do
@@ -114,6 +120,18 @@ module Teller
       assert_redirected_to new_teller_teller_session_path
       follow_redirect!
       assert_select "div", /Assign a drawer before continuing\./i
+    end
+
+    test "allows draft page without assigned drawer" do
+      grant_posting_access(@user, @branch, @workstation)
+      sign_in_as(@user)
+      patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000 }
+
+      get teller_draft_transaction_path
+
+      assert_response :success
+      assert_select "h2", "Draft Issuance"
     end
 
     private

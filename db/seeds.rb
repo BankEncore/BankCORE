@@ -15,6 +15,7 @@ permissions = {
   "transactions.deposit.create" => "Create deposits",
   "transactions.withdrawal.create" => "Create withdrawals",
   "transactions.transfer.create" => "Create transfers",
+  "transactions.draft.create" => "Create draft issuances",
   "transactions.check_cashing.create" => "Create check cashing transactions",
   "approvals.override.execute" => "Execute supervisor override"
 }
@@ -35,6 +36,7 @@ roles = {
       "transactions.deposit.create",
       "transactions.withdrawal.create",
       "transactions.transfer.create",
+      "transactions.draft.create",
       "transactions.check_cashing.create"
     ]
   },
@@ -47,6 +49,7 @@ roles = {
       "transactions.deposit.create",
       "transactions.withdrawal.create",
       "transactions.transfer.create",
+      "transactions.draft.create",
       "transactions.check_cashing.create",
       "approvals.override.execute"
     ]

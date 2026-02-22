@@ -6,6 +6,7 @@ module PostingRequestBuilder
       transaction_type = posting_params[:transaction_type].to_s
 
       return check_cashing_metadata(posting_params) if transaction_type == "check_cashing"
+      return draft_metadata(posting_params) if transaction_type == "draft"
       return {} unless transaction_type == "deposit"
 
       check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
@@ -46,6 +47,20 @@ module PostingRequestBuilder
           presenter_type: posting_params[:presenter_type].to_s,
           id_type: posting_params[:id_type].to_s,
           id_number: posting_params[:id_number].to_s
+        }
+      }
+    end
+
+    def draft_metadata(posting_params)
+      {
+        draft: {
+          funding_source: draft_funding_source(posting_params),
+          draft_amount_cents: posting_params[:draft_amount_cents].to_i,
+          fee_cents: posting_params[:draft_fee_cents].to_i,
+          payee_name: posting_params[:draft_payee_name].to_s,
+          instrument_number: posting_params[:draft_instrument_number].to_s,
+          liability_account_reference: draft_liability_account_reference(posting_params),
+          fee_income_account_reference: draft_fee_income_account_reference(posting_params)
         }
       }
     end
@@ -125,6 +140,35 @@ module PostingRequestBuilder
         end
 
         entries
+      when "draft"
+        draft_amount_cents = posting_params[:draft_amount_cents].to_i
+        draft_fee_cents = posting_params[:draft_fee_cents].to_i
+        funding_source = draft_funding_source(posting_params)
+        liability_account_reference = draft_liability_account_reference(posting_params)
+
+        return [] unless draft_amount_cents.positive?
+        return [] if liability_account_reference.blank?
+
+        funding_reference = if funding_source == "cash"
+          default_cash_account_reference
+        else
+          primary_account_reference
+        end
+
+        return [] if funding_reference.blank?
+
+        entries = [
+          { side: "debit", account_reference: funding_reference, amount_cents: draft_amount_cents },
+          { side: "credit", account_reference: liability_account_reference, amount_cents: draft_amount_cents }
+        ]
+
+        if draft_fee_cents.positive?
+          fee_income_reference = draft_fee_income_account_reference(posting_params)
+          entries << { side: "debit", account_reference: funding_reference, amount_cents: draft_fee_cents }
+          entries << { side: "credit", account_reference: fee_income_reference, amount_cents: draft_fee_cents }
+        end
+
+        entries
       else
         []
       end
@@ -132,6 +176,21 @@ module PostingRequestBuilder
 
     def fee_income_account_reference(posting_params)
       posting_params[:fee_income_account_reference].presence || "income:check_cashing_fee"
+    end
+
+    def draft_funding_source(posting_params)
+      source = posting_params[:draft_funding_source].to_s
+      return "cash" if source == "cash"
+
+      "account"
+    end
+
+    def draft_liability_account_reference(posting_params)
+      posting_params[:draft_liability_account_reference].presence || "official_check:outstanding"
+    end
+
+    def draft_fee_income_account_reference(posting_params)
+      posting_params[:draft_fee_income_account_reference].presence || "income:draft_fee"
     end
 
     def default_cash_account_reference

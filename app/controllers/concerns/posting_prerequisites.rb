@@ -25,6 +25,8 @@ module PostingPrerequisites
 
     def drawer_required_for_request?
       transaction_type = params[:transaction_type].to_s.presence || inferred_transaction_type
+      return params[:draft_funding_source].to_s == "cash" if transaction_type == "draft"
+
       %w[deposit withdrawal check_cashing].include?(transaction_type)
     end
 
@@ -36,6 +38,8 @@ module PostingPrerequisites
         "withdrawal"
       when "teller/transfers"
         "transfer"
+      when "teller/drafts"
+        "draft"
       when "teller/check_cashings"
         "check_cashing"
       when "teller/transaction_pages"
@@ -46,6 +50,8 @@ module PostingPrerequisites
           "withdrawal"
         when "transfer"
           "transfer"
+        when "draft"
+          "draft"
         when "check_cashing"
           "check_cashing"
         end

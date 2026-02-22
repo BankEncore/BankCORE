@@ -18,6 +18,10 @@ module Teller
       render_page(transaction_type: "transfer", title: "Transfer")
     end
 
+    def draft
+      render_page(transaction_type: "draft", title: "Draft Issuance")
+    end
+
     def check_cashing
       render_page(transaction_type: "check_cashing", title: "Check Cashing")
     end
@@ -41,6 +45,8 @@ module Teller
           teller_withdrawals_path
         when "transfer"
           teller_transfers_path
+        when "draft"
+          teller_drafts_path
         when "check_cashing"
           teller_check_cashings_path
         else

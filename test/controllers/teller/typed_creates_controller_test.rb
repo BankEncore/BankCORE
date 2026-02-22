@@ -113,9 +113,81 @@ module Teller
       assert_equal "drivers_license", metadata.dig("check_cashing", "id_type")
     end
 
+    test "draft create enforces draft transaction type" do
+      post teller_drafts_path, params: {
+        request_id: "typed-dr-1",
+        transaction_type: "deposit",
+        amount_cents: 8_000,
+        draft_funding_source: "account",
+        draft_amount_cents: 8_000,
+        draft_fee_cents: 0,
+        draft_payee_name: "Acme Title",
+        draft_instrument_number: "D-1001",
+        primary_account_reference: "acct:customer"
+      }
+
+      assert_response :success
+      assert_equal "draft", TellerTransaction.find_by!(request_id: "typed-dr-1").transaction_type
+    end
+
+    test "draft create builds metadata and account-funded entries" do
+      post teller_drafts_path, params: {
+        request_id: "typed-dr-2",
+        transaction_type: "draft",
+        amount_cents: 10_250,
+        draft_funding_source: "account",
+        draft_amount_cents: 10_000,
+        draft_fee_cents: 250,
+        draft_payee_name: "City Utilities",
+        draft_instrument_number: "OD-2001",
+        primary_account_reference: "acct:customer",
+        draft_liability_account_reference: "official_check:outstanding",
+        draft_fee_income_account_reference: "income:draft_fee"
+      }
+
+      assert_response :success
+      transaction = TellerTransaction.find_by!(request_id: "typed-dr-2")
+      assert_equal "draft", transaction.transaction_type
+
+      posting_batch = transaction.posting_batch
+      assert_equal 4, posting_batch.posting_legs.count
+      assert_equal 10_000, posting_batch.posting_legs.find_by!(side: "debit", account_reference: "acct:customer").amount_cents
+      assert_equal 10_000, posting_batch.posting_legs.find_by!(side: "credit", account_reference: "official_check:outstanding").amount_cents
+      assert_equal 250, posting_batch.posting_legs.find_by!(side: "credit", account_reference: "income:draft_fee").amount_cents
+
+      metadata = posting_batch.metadata
+      assert_equal "account", metadata.dig("draft", "funding_source")
+      assert_equal 10_000, metadata.dig("draft", "draft_amount_cents")
+      assert_equal 250, metadata.dig("draft", "fee_cents")
+      assert_equal "City Utilities", metadata.dig("draft", "payee_name")
+      assert_equal "OD-2001", metadata.dig("draft", "instrument_number")
+    end
+
+    test "draft create with cash funding records cash movement in" do
+      post teller_drafts_path, params: {
+        request_id: "typed-dr-3",
+        transaction_type: "draft",
+        amount_cents: 5_150,
+        draft_funding_source: "cash",
+        draft_amount_cents: 5_000,
+        draft_fee_cents: 150,
+        draft_payee_name: "County Clerk",
+        draft_instrument_number: "OD-3001",
+        draft_liability_account_reference: "official_check:outstanding",
+        draft_fee_income_account_reference: "income:draft_fee"
+      }
+
+      assert_response :success
+      transaction = TellerTransaction.find_by!(request_id: "typed-dr-3")
+      cash_movement = transaction.cash_movements.last
+      assert_not_nil cash_movement
+      assert_equal "in", cash_movement.direction
+      assert_equal 5_150, cash_movement.amount_cents
+    end
+
     private
       def grant_permissions(user, branch, workstation)
-        [ "teller.dashboard.view", "transactions.deposit.create", "transactions.check_cashing.create", "sessions.open" ].each do |permission_key|
+        [ "teller.dashboard.view", "transactions.deposit.create", "transactions.check_cashing.create", "transactions.draft.create", "sessions.open" ].each do |permission_key|
           permission = Permission.find_or_create_by!(key: permission_key) do |record|
             record.description = permission_key.humanize
           end

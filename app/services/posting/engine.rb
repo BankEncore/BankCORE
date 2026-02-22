@@ -145,8 +145,13 @@ module Posting
       end
 
       def create_cash_movement!(teller_transaction, legs)
-        direction = case request.fetch(:transaction_type)
-        when "deposit"
+        cash_account_prefix = "cash:"
+        cash_legs = legs.select { |leg| leg.fetch(:account_reference).start_with?(cash_account_prefix) }
+        return if cash_legs.empty?
+
+        transaction_type = request.fetch(:transaction_type)
+        direction = case transaction_type
+        when "deposit", "draft"
           "in"
         when "withdrawal", "check_cashing"
           "out"
@@ -156,13 +161,13 @@ module Posting
 
         return if direction.blank?
 
-        cash_account_prefix = "cash:"
-        cash_legs = legs.select { |leg| leg.fetch(:account_reference).start_with?(cash_account_prefix) }
-        cash_amount_cents = case request.fetch(:transaction_type)
+        cash_amount_cents = case transaction_type
         when "deposit"
           cash_legs.select { |leg| leg.fetch(:side) == "debit" }.sum { |leg| leg.fetch(:amount_cents) }
         when "withdrawal", "check_cashing"
           cash_legs.select { |leg| leg.fetch(:side) == "credit" }.sum { |leg| leg.fetch(:amount_cents) }
+        when "draft"
+          cash_legs.select { |leg| leg.fetch(:side) == "debit" }.sum { |leg| leg.fetch(:amount_cents) }
         else
           0
         end

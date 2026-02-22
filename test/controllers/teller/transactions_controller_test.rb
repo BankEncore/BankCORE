@@ -83,6 +83,28 @@ module Teller
       assert_equal 0, body.dig("totals", "imbalance_cents")
     end
 
+    test "validates draft payload requirements" do
+      post teller_validate_transaction_path, params: {
+        request_id: "validate-draft-1",
+        transaction_type: "draft",
+        amount_cents: 12_500,
+        draft_funding_source: "account",
+        draft_amount_cents: 12_000,
+        draft_fee_cents: 500,
+        draft_payee_name: "County Recorder",
+        draft_instrument_number: "OD-9001",
+        draft_liability_account_reference: "official_check:outstanding",
+        primary_account_reference: "acct:customer"
+      }
+
+      assert_response :success
+      body = JSON.parse(response.body)
+
+      assert_equal true, body["ok"]
+      assert_equal false, body["approval_required"]
+      assert_equal 12_500, body.dig("totals", "amount_cents")
+    end
+
     private
       def grant_permissions(user, branch, workstation)
         [ "teller.dashboard.view", "transactions.deposit.create", "sessions.open" ].each do |permission_key|

@@ -98,6 +98,48 @@ module Teller
       assert_select "p", /ID Type:\s+Drivers license/i
     end
 
+    test "renders draft details when metadata is present" do
+      request_id = "req-receipt-draft-1"
+      Posting::Engine.new(
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: request_id,
+        transaction_type: "draft",
+        amount_cents: 10_250,
+        metadata: {
+          draft: {
+            funding_source: "account",
+            draft_amount_cents: 10_000,
+            fee_cents: 250,
+            payee_name: "City Utilities",
+            instrument_number: "OD-2001",
+            liability_account_reference: "official_check:outstanding",
+            fee_income_account_reference: "income:draft_fee"
+          }
+        },
+        entries: [
+          { side: "debit", account_reference: "acct:customer", amount_cents: 10_000 },
+          { side: "credit", account_reference: "official_check:outstanding", amount_cents: 10_000 },
+          { side: "debit", account_reference: "acct:customer", amount_cents: 250 },
+          { side: "credit", account_reference: "income:draft_fee", amount_cents: 250 }
+        ]
+      ).call
+
+      sign_in_as(@user)
+      set_signed_context(@branch.id, @workstation.id)
+      get teller_receipt_path(request_id: request_id)
+
+      assert_response :success
+      assert_select "h3", "Draft Issuance Details"
+      assert_select "p", /Funding Source:\s+Account/i
+      assert_select "p", /Draft Amount:\s+\$100\.00/
+      assert_select "p", /Fee:\s+\$2\.50/
+      assert_select "p", /Payee:\s+City Utilities/
+      assert_select "p", /Instrument Number:\s+OD-2001/
+    end
+
     private
       def set_signed_context(branch_id, workstation_id)
         ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
@@ -113,6 +155,7 @@ module Teller
           "transactions.deposit.create",
           "transactions.withdrawal.create",
           "transactions.transfer.create",
+          "transactions.draft.create",
           "transactions.check_cashing.create"
         ].each do |permission_key|
           permission = Permission.find_or_create_by!(key: permission_key) do |record|

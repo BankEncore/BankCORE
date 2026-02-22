@@ -29,6 +29,7 @@
       <h2 class="card-title text-lg">Transaction Flows</h2>
       <p class="text-sm opacity-80">Open dedicated teller flow pages.</p>
       <div class="flex flex-wrap gap-2">
+        <%= link_to "Bank Draft", new_teller_draft_path, class: "btn btn-outline btn-sm" %>
         <% if @teller_session.cash_location.present? %>
           <%= link_to "Deposit", new_teller_deposit_path, class: "btn btn-outline btn-sm" %>
           <%= link_to "Withdrawal", new_teller_withdrawal_path, class: "btn btn-outline btn-sm" %>
