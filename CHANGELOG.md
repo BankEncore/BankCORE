@@ -80,3 +80,27 @@ Implemented Phase 1 Vault Transfer end-to-end in teller workflows, including typ
 - `test/controllers/teller/transaction_pages_controller_test.rb`
 - `test/controllers/teller/transactions_controller_test.rb`
 - `test/controllers/teller/typed_creates_controller_test.rb`
+
+### Commit 0c22647
+Removed redundant frontend `required_fields` OR-gating in the teller posting Stimulus controller. Requirement gating is now handled exclusively through workflow policy helpers for primary/counterparty/cash/settlement account requirements, reducing duplicated client rule paths while preserving behavior.
+
+#### Files touched
+- `app/javascript/controllers/posting_form_controller.js`
+
+### Commit b2ddc4e
+Updated workflow schema generation to derive `required_fields` from canonical workflow policy metadata plus workflow-specific payload requirements. This removes duplicate rule declarations in the registry and reduces policy/schema drift risk while preserving compatibility for existing consumers.
+
+#### Files touched
+- `app/services/teller/workflow_registry.rb`
+
+### Commit 161cd86
+Clarified the posting decomposition architecture contract: policy-oriented workflow keys are canonical, and `required_fields` is compatibility output derived from those keys rather than an independently authored source.
+
+#### Files touched
+- `docs/30_posting_refactor_spec.md`
+
+### Commit dd081c1
+Recorded the latest posting decomposition cleanup increments in the Phase 1 status snapshot to keep implementation tracking aligned with recent schema-contract and frontend policy-gating changes.
+
+#### Files touched
+- `docs/10_phase1_status.md`
