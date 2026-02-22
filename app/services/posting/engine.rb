@@ -23,10 +23,10 @@ module Posting
       existing_batch = PostingBatch.find_by(request_id: request.fetch(:request_id))
       return existing_batch if existing_batch.present?
 
-      validate
+      validate_request
       apply_policy
       legs = generate_legs
-      balance_check(legs)
+      validate_balance(legs)
       commit(legs)
     rescue ActiveRecord::RecordNotUnique
       PostingBatch.find_by!(request_id: request.fetch(:request_id))
@@ -55,61 +55,20 @@ module Posting
         }
       end
 
-      def validate
-        required = %i[user teller_session branch workstation request_id transaction_type amount_cents currency entries]
-        required.each do |key|
-          value = request[key]
-          raise Error, "#{key} is required" if value.blank?
-        end
-
-        raise Error, "amount_cents must be greater than zero" unless request[:amount_cents].positive?
-        raise Error, "entries must be present" if request[:entries].empty?
+      def validate_request
+        Posting::RequestValidator.call(request: request, error_class: Error)
       end
 
       def apply_policy
-        teller_session = request.fetch(:teller_session)
-
-        raise Error, "teller session must be open" unless teller_session.open?
-        raise Error, "drawer must be assigned" if drawer_required? && teller_session.cash_location.blank?
-      end
-
-      def drawer_required?
-        return true if cash_affecting_transaction_type?
-
-        cash_legs_include_drawer_reference?
-      end
-
-      def cash_affecting_transaction_type?
-        %w[deposit withdrawal check_cashing].include?(request.fetch(:transaction_type))
-      end
-
-      def cash_legs_present?
-        request.fetch(:entries).any? { |entry| entry.fetch(:account_reference).start_with?("cash:") }
-      end
-
-      def cash_legs_include_drawer_reference?
-        drawer_reference = drawer_cash_reference
-        return false if drawer_reference.blank?
-
-        request.fetch(:entries).any? { |entry| entry.fetch(:account_reference) == drawer_reference }
-      end
-
-      def drawer_cash_reference
-        drawer_code = request.fetch(:teller_session).cash_location&.code
-        return "" if drawer_code.blank?
-
-        "cash:#{drawer_code}"
+        Posting::PolicyChecker.call(request: request, error_class: Error)
       end
 
       def generate_legs
         request.fetch(:entries)
       end
 
-      def balance_check(legs)
-        debit_total = legs.select { |leg| leg[:side] == "debit" }.sum { |leg| leg[:amount_cents] }
-        credit_total = legs.select { |leg| leg[:side] == "credit" }.sum { |leg| leg[:amount_cents] }
-
-        raise Error, "posting legs are unbalanced" unless debit_total == credit_total
+      def validate_balance(legs)
+        Posting::BalanceChecker.call(legs: legs, error_class: Error)
       end
 
       def commit(legs)
