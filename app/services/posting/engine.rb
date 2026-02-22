@@ -74,7 +74,9 @@ module Posting
       end
 
       def drawer_required?
-        cash_affecting_transaction_type? || cash_legs_present?
+        return true if cash_affecting_transaction_type?
+
+        cash_legs_include_drawer_reference?
       end
 
       def cash_affecting_transaction_type?
@@ -83,6 +85,20 @@ module Posting
 
       def cash_legs_present?
         request.fetch(:entries).any? { |entry| entry.fetch(:account_reference).start_with?("cash:") }
+      end
+
+      def cash_legs_include_drawer_reference?
+        drawer_reference = drawer_cash_reference
+        return false if drawer_reference.blank?
+
+        request.fetch(:entries).any? { |entry| entry.fetch(:account_reference) == drawer_reference }
+      end
+
+      def drawer_cash_reference
+        drawer_code = request.fetch(:teller_session).cash_location&.code
+        return "" if drawer_code.blank?
+
+        "cash:#{drawer_code}"
       end
 
       def generate_legs
@@ -155,6 +171,8 @@ module Posting
           "in"
         when "withdrawal", "check_cashing"
           "out"
+        when "vault_transfer"
+          vault_transfer_cash_direction(cash_legs)
         else
           nil
         end
@@ -168,6 +186,8 @@ module Posting
           cash_legs.select { |leg| leg.fetch(:side) == "credit" }.sum { |leg| leg.fetch(:amount_cents) }
         when "draft"
           cash_legs.select { |leg| leg.fetch(:side) == "debit" }.sum { |leg| leg.fetch(:amount_cents) }
+        when "vault_transfer"
+          vault_transfer_cash_amount(cash_legs, direction)
         else
           0
         end
@@ -181,6 +201,34 @@ module Posting
           direction: direction,
           amount_cents: cash_amount_cents
         )
+      end
+
+      def vault_transfer_cash_direction(cash_legs)
+        drawer_reference = drawer_cash_reference
+        return nil if drawer_reference.blank?
+
+        if cash_legs.any? { |leg| leg.fetch(:side) == "credit" && leg.fetch(:account_reference) == drawer_reference }
+          "out"
+        elsif cash_legs.any? { |leg| leg.fetch(:side) == "debit" && leg.fetch(:account_reference) == drawer_reference }
+          "in"
+        end
+      end
+
+      def vault_transfer_cash_amount(cash_legs, direction)
+        drawer_reference = drawer_cash_reference
+        return 0 if drawer_reference.blank?
+
+        if direction == "out"
+          cash_legs
+            .select { |leg| leg.fetch(:side) == "credit" && leg.fetch(:account_reference) == drawer_reference }
+            .sum { |leg| leg.fetch(:amount_cents) }
+        elsif direction == "in"
+          cash_legs
+            .select { |leg| leg.fetch(:side) == "debit" && leg.fetch(:account_reference) == drawer_reference }
+            .sum { |leg| leg.fetch(:amount_cents) }
+        else
+          0
+        end
       end
   end
 end

@@ -50,6 +50,11 @@ module Teller
           :primary_account_reference,
           :counterparty_account_reference,
           :cash_account_reference,
+          :vault_transfer_direction,
+          :vault_transfer_source_cash_account_reference,
+          :vault_transfer_destination_cash_account_reference,
+          :vault_transfer_reason_code,
+          :vault_transfer_memo,
           :draft_funding_source,
           :draft_amount_cents,
           :draft_fee_cents,
@@ -77,6 +82,32 @@ module Teller
         when "check_cashing"
           if Array(posting_params[:entries]).blank?
             errors << "Primary account reference is required" if posting_params[:primary_account_reference].blank?
+          end
+        when "vault_transfer"
+          direction = posting_params[:vault_transfer_direction].to_s
+          source_reference = posting_params[:vault_transfer_source_cash_account_reference].to_s
+          destination_reference = posting_params[:vault_transfer_destination_cash_account_reference].to_s
+          reason_code = posting_params[:vault_transfer_reason_code].to_s
+          memo = posting_params[:vault_transfer_memo].to_s
+
+          unless direction.in?([ "drawer_to_vault", "vault_to_drawer", "vault_to_vault" ])
+            errors << "Vault transfer direction is required"
+          end
+
+          errors << "Reason code is required" if reason_code.blank?
+          errors << "Memo is required for Other reason code" if reason_code == "other" && memo.blank?
+
+          if direction == "vault_to_vault"
+            errors << "Source cash account reference is required" if source_reference.blank?
+            errors << "Destination cash account reference is required" if destination_reference.blank?
+          elsif direction == "vault_to_drawer"
+            errors << "Source cash account reference is required" if source_reference.blank?
+          elsif direction == "drawer_to_vault"
+            errors << "Destination cash account reference is required" if destination_reference.blank?
+          end
+
+          if source_reference.present? && destination_reference.present? && source_reference == destination_reference
+            errors << "Source and destination cash account references must differ"
           end
         when "draft"
           funding_source = posting_params[:draft_funding_source].to_s

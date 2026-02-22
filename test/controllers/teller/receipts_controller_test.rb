@@ -140,6 +140,44 @@ module Teller
       assert_select "p", /Instrument Number:\s+OD-2001/
     end
 
+    test "renders vault transfer details when metadata is present" do
+      request_id = "req-receipt-vault-1"
+      Posting::Engine.new(
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: request_id,
+        transaction_type: "vault_transfer",
+        amount_cents: 12_000,
+        metadata: {
+          vault_transfer: {
+            direction: "drawer_to_vault",
+            source_cash_account_reference: "cash:#{@drawer.code}",
+            destination_cash_account_reference: "cash:V01",
+            reason_code: "excess_cash",
+            memo: "Evening pull"
+          }
+        },
+        entries: [
+          { side: "debit", account_reference: "cash:V01", amount_cents: 12_000 },
+          { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 12_000 }
+        ]
+      ).call
+
+      sign_in_as(@user)
+      set_signed_context(@branch.id, @workstation.id)
+      get teller_receipt_path(request_id: request_id)
+
+      assert_response :success
+      assert_select "h3", "Vault Transfer Details"
+      assert_select "p", /Direction:\s+Drawer to vault/i
+      assert_select "p", /Reason Code:\s+Excess cash/i
+      assert_select "p", /Source:\s+cash:#{@drawer.code}/i
+      assert_select "p", /Destination:\s+cash:V01/i
+      assert_select "p", /Memo:\s+Evening pull/i
+    end
+
     private
       def set_signed_context(branch_id, workstation_id)
         ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
@@ -155,6 +193,7 @@ module Teller
           "transactions.deposit.create",
           "transactions.withdrawal.create",
           "transactions.transfer.create",
+          "transactions.vault_transfer.create",
           "transactions.draft.create",
           "transactions.check_cashing.create"
         ].each do |permission_key|

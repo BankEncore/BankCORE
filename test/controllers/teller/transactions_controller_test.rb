@@ -105,6 +105,26 @@ module Teller
       assert_equal 12_500, body.dig("totals", "amount_cents")
     end
 
+    test "validates vault transfer payload requirements" do
+      post teller_validate_transaction_path, params: {
+        request_id: "validate-vault-1",
+        transaction_type: "vault_transfer",
+        amount_cents: 20_000,
+        vault_transfer_direction: "vault_to_vault",
+        vault_transfer_source_cash_account_reference: "cash:VLT1",
+        vault_transfer_destination_cash_account_reference: "cash:VLT2",
+        vault_transfer_reason_code: "end_of_day_adjustment",
+        vault_transfer_memo: "Shift balancing"
+      }
+
+      assert_response :success
+      body = JSON.parse(response.body)
+
+      assert_equal true, body["ok"]
+      assert_equal false, body["approval_required"]
+      assert_equal 20_000, body.dig("totals", "amount_cents")
+    end
+
     private
       def grant_permissions(user, branch, workstation)
         [ "teller.dashboard.view", "transactions.deposit.create", "sessions.open" ].each do |permission_key|

@@ -26,6 +26,7 @@
   </section>
 
   <% check_cashing = @posting_batch.metadata.is_a?(Hash) ? (@posting_batch.metadata["check_cashing"] || @posting_batch.metadata[:check_cashing]) : nil %>
+  <% vault_transfer = @posting_batch.metadata.is_a?(Hash) ? (@posting_batch.metadata["vault_transfer"] || @posting_batch.metadata[:vault_transfer]) : nil %>
   <% draft = @posting_batch.metadata.is_a?(Hash) ? (@posting_batch.metadata["draft"] || @posting_batch.metadata[:draft]) : nil %>
   <% if check_cashing.present? %>
     <section class="card bg-base-100 border border-base-300">
@@ -44,6 +45,21 @@
           <p><strong>Presenter Type:</strong> <%= check_cashing["presenter_type"].to_s.humanize.presence || "N/A" %></p>
           <p><strong>ID Type:</strong> <%= check_cashing["id_type"].to_s.humanize.presence || "N/A" %></p>
           <p><strong>ID Number:</strong> <%= check_cashing["id_number"].presence || "N/A" %></p>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
+  <% if vault_transfer.present? %>
+    <section class="card bg-base-100 border border-base-300">
+      <div class="card-body">
+        <h3 class="card-title text-base">Vault Transfer Details</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+          <p><strong>Direction:</strong> <%= vault_transfer["direction"].to_s.humanize.presence || "N/A" %></p>
+          <p><strong>Reason Code:</strong> <%= vault_transfer["reason_code"].to_s.humanize.presence || "N/A" %></p>
+          <p><strong>Source:</strong> <span class="font-mono text-xs"><%= vault_transfer["source_cash_account_reference"].presence || "N/A" %></span></p>
+          <p><strong>Destination:</strong> <span class="font-mono text-xs"><%= vault_transfer["destination_cash_account_reference"].presence || "N/A" %></span></p>
+          <p class="md:col-span-2"><strong>Memo:</strong> <%= vault_transfer["memo"].presence || "N/A" %></p>
         </div>
       </div>
     </section>

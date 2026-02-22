@@ -6,12 +6,14 @@ Rails.application.routes.draw do
     resources :deposits, only: [ :new, :create ]
     resources :withdrawals, only: [ :new, :create ]
     resources :transfers, only: [ :new, :create ]
+    resources :vault_transfers, only: [ :new, :create ]
     resources :drafts, only: [ :new, :create ]
     resources :check_cashings, only: [ :new, :create ]
     resource :context, only: [ :show, :update ]
     get "transactions/deposit", to: "transaction_pages#deposit", as: :deposit_transaction
     get "transactions/withdrawal", to: "transaction_pages#withdrawal", as: :withdrawal_transaction
     get "transactions/transfer", to: "transaction_pages#transfer", as: :transfer_transaction
+    get "transactions/vault_transfer", to: "transaction_pages#vault_transfer", as: :vault_transfer_transaction
     get "transactions/draft", to: "transaction_pages#draft", as: :draft_transaction
     get "transactions/check_cashing", to: "transaction_pages#check_cashing", as: :check_cashing_transaction
     get "account_reference", to: "account_references#show", as: :account_reference

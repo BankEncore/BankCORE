@@ -15,9 +15,9 @@
     <div class="h-5 w-px bg-base-300/70 mx-1"></div>
 
     <%= link_to "Bank Draft", new_teller_draft_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_draft_path)}" %>
+    <%= link_to "Vault Transfer", new_teller_vault_transfer_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_vault_transfer_path)}" %>
     <button type="button" class="btn btn-sm btn-ghost btn-disabled" disabled aria-disabled="true">Bill Payment</button>
     <button type="button" class="btn btn-sm btn-ghost btn-disabled" disabled aria-disabled="true">Misc Receipt</button>
-    <button type="button" class="btn btn-sm btn-ghost btn-disabled" disabled aria-disabled="true">Vault Transfer</button>
 
     <div class="flex-1"></div>
 

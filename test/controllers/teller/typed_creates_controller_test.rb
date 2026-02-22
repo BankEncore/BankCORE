@@ -12,6 +12,18 @@ module Teller
         name: "Typed Drawer",
         location_type: "drawer"
       )
+      @vault_a = CashLocation.create!(
+        branch: @branch,
+        code: "TV1",
+        name: "Typed Vault A",
+        location_type: "vault"
+      )
+      @vault_b = CashLocation.create!(
+        branch: @branch,
+        code: "TV2",
+        name: "Typed Vault B",
+        location_type: "vault"
+      )
 
       grant_permissions(@user, @branch, @workstation)
       sign_in_as(@user)
@@ -185,9 +197,66 @@ module Teller
       assert_equal 5_150, cash_movement.amount_cents
     end
 
+    test "vault transfer create enforces vault transfer transaction type" do
+      post teller_vault_transfers_path, params: {
+        request_id: "typed-vt-1",
+        transaction_type: "deposit",
+        amount_cents: 7_000,
+        vault_transfer_direction: "drawer_to_vault",
+        vault_transfer_destination_cash_account_reference: "cash:#{@vault_a.code}",
+        vault_transfer_reason_code: "excess_cash",
+        vault_transfer_memo: "Cash pull"
+      }
+
+      assert_response :success
+      transaction = TellerTransaction.find_by!(request_id: "typed-vt-1")
+      assert_equal "vault_transfer", transaction.transaction_type
+    end
+
+    test "vault transfer drawer to vault records cash movement out" do
+      post teller_vault_transfers_path, params: {
+        request_id: "typed-vt-2",
+        transaction_type: "vault_transfer",
+        amount_cents: 4_000,
+        vault_transfer_direction: "drawer_to_vault",
+        vault_transfer_destination_cash_account_reference: "cash:#{@vault_a.code}",
+        vault_transfer_reason_code: "excess_cash",
+        vault_transfer_memo: "Midday rebalance"
+      }
+
+      assert_response :success
+      transaction = TellerTransaction.find_by!(request_id: "typed-vt-2")
+      posting_batch = transaction.posting_batch
+      assert_equal 2, posting_batch.posting_legs.count
+      assert_equal 4_000, posting_batch.posting_legs.find_by!(side: "credit", account_reference: "cash:#{@drawer.code}").amount_cents
+      assert_equal 4_000, posting_batch.posting_legs.find_by!(side: "debit", account_reference: "cash:#{@vault_a.code}").amount_cents
+
+      cash_movement = transaction.cash_movements.last
+      assert_not_nil cash_movement
+      assert_equal "out", cash_movement.direction
+      assert_equal 4_000, cash_movement.amount_cents
+    end
+
+    test "vault transfer vault to vault records no drawer cash movement" do
+      post teller_vault_transfers_path, params: {
+        request_id: "typed-vt-3",
+        transaction_type: "vault_transfer",
+        amount_cents: 3_500,
+        vault_transfer_direction: "vault_to_vault",
+        vault_transfer_source_cash_account_reference: "cash:#{@vault_a.code}",
+        vault_transfer_destination_cash_account_reference: "cash:#{@vault_b.code}",
+        vault_transfer_reason_code: "end_of_day_adjustment",
+        vault_transfer_memo: "Vault balancing"
+      }
+
+      assert_response :success
+      transaction = TellerTransaction.find_by!(request_id: "typed-vt-3")
+      assert_empty transaction.cash_movements
+    end
+
     private
       def grant_permissions(user, branch, workstation)
-        [ "teller.dashboard.view", "transactions.deposit.create", "transactions.check_cashing.create", "transactions.draft.create", "sessions.open" ].each do |permission_key|
+        [ "teller.dashboard.view", "transactions.deposit.create", "transactions.check_cashing.create", "transactions.draft.create", "transactions.vault_transfer.create", "sessions.open" ].each do |permission_key|
           permission = Permission.find_or_create_by!(key: permission_key) do |record|
             record.description = permission_key.humanize
           end

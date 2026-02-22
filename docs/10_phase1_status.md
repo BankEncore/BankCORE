@@ -35,7 +35,7 @@ This document is **non-authoritative** and exists only to track implementation p
 
 - [x] Draft issuance
 - [x] Check cashing
-- [ ] Vault transfer (drawer <-> vault)
+- [x] Vault transfer (drawer <-> vault)
 
 ---
 

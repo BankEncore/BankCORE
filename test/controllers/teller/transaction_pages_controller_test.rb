@@ -94,6 +94,12 @@ module Teller
       assert_select "h2", "Draft Issuance"
       assert_select "input[name='transaction_type'][value='draft']", count: 1
       assert_select "section[data-posting-form-target='draftSection']:not([hidden])", count: 1
+
+      get teller_vault_transfer_transaction_path
+      assert_response :success
+      assert_select "h2", "Vault Transfer"
+      assert_select "input[name='transaction_type'][value='vault_transfer']", count: 1
+      assert_select "section[data-posting-form-target='vaultTransferSection']:not([hidden])", count: 1
     end
 
     test "allows transfer page without assigned drawer" do
@@ -132,6 +138,18 @@ module Teller
 
       assert_response :success
       assert_select "h2", "Draft Issuance"
+    end
+
+    test "allows vault transfer page without assigned drawer" do
+      grant_posting_access(@user, @branch, @workstation)
+      sign_in_as(@user)
+      patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000 }
+
+      get teller_vault_transfer_transaction_path
+
+      assert_response :success
+      assert_select "h2", "Vault Transfer"
     end
 
     private

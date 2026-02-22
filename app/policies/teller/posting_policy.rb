@@ -7,6 +7,7 @@ module Teller
         "transactions.deposit.create",
         "transactions.withdrawal.create",
         "transactions.transfer.create",
+        "transactions.vault_transfer.create",
         "transactions.draft.create",
         "transactions.check_cashing.create"
       ].any? do |permission_key|
@@ -18,6 +19,12 @@ module Teller
       return false unless user.present?
 
       user.has_permission?("transactions.draft.create", branch: Current.branch, workstation: Current.workstation)
+    end
+
+    def vault_transfer_create?
+      return false unless user.present?
+
+      user.has_permission?("transactions.vault_transfer.create", branch: Current.branch, workstation: Current.workstation)
     end
 
     def check_cashing_create?

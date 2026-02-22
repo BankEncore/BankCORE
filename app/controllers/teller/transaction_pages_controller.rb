@@ -18,6 +18,10 @@ module Teller
       render_page(transaction_type: "transfer", title: "Transfer")
     end
 
+    def vault_transfer
+      render_page(transaction_type: "vault_transfer", title: "Vault Transfer")
+    end
+
     def draft
       render_page(transaction_type: "draft", title: "Draft Issuance")
     end
@@ -38,6 +42,7 @@ module Teller
       def render_page(transaction_type:, title:)
         @transaction_type = transaction_type
         @page_title = title
+        @cash_locations = current_branch.cash_locations.active.where(location_type: "vault").order(:name)
         @form_url = case transaction_type
         when "deposit"
           teller_deposits_path
@@ -45,6 +50,8 @@ module Teller
           teller_withdrawals_path
         when "transfer"
           teller_transfers_path
+        when "vault_transfer"
+          teller_vault_transfers_path
         when "draft"
           teller_drafts_path
         when "check_cashing"

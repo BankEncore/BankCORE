@@ -11,6 +11,7 @@ module Teller
         "transactions.deposit.create",
         "transactions.withdrawal.create",
         "transactions.transfer.create",
+        "transactions.vault_transfer.create",
         "transactions.draft.create",
         "transactions.check_cashing.create"
       ].any? do |permission_key|

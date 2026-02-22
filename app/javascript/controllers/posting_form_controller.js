@@ -12,6 +12,7 @@ export default class extends Controller {
     "cashAccountRow",
     "checkSection",
     "draftSection",
+    "vaultTransferSection",
     "checkCashingSection",
     "checkRows",
     "checkTemplate",
@@ -27,6 +28,15 @@ export default class extends Controller {
     "draftInstrumentNumber",
     "draftLiabilityAccountReference",
     "draftFeeIncomeAccountReference",
+    "vaultTransferDirection",
+    "vaultTransferCounterpartyReference",
+    "vaultTransferCounterpartyRow",
+    "vaultTransferSourceReference",
+    "vaultTransferSourceRow",
+    "vaultTransferDestinationReference",
+    "vaultTransferDestinationRow",
+    "vaultTransferReasonCode",
+    "vaultTransferMemo",
     "checkNumber",
     "routingNumber",
     "accountNumber",
@@ -110,6 +120,7 @@ export default class extends Controller {
     const transactionType = this.transactionTypeTarget.value
     const checkCashingAmounts = this.checkCashingAmounts()
     const draftAmounts = this.draftAmounts()
+    const vaultTransferDetails = this.vaultTransferDetails()
     if (transactionType === "check_cashing") {
       this.amountCentsTarget.value = checkCashingAmounts.netCashPayoutCents.toString()
     } else if (transactionType === "draft") {
@@ -117,21 +128,27 @@ export default class extends Controller {
     }
     const totalAmountCents = this.effectiveAmountCents()
     const hasPrimaryAccount = this.primaryAccountReferenceTarget.value.trim().length > 0
-    const requiresPrimaryAccount = transactionType !== "check_cashing" && !(transactionType === "draft" && this.draftCashFunding())
+    const requiresPrimaryAccount = !["check_cashing", "vault_transfer"].includes(transactionType) && !(transactionType === "draft" && this.draftCashFunding())
     const requiresCounterparty = transactionType === "transfer"
-    const requiresCashAccount = transactionType !== "transfer" && !(transactionType === "draft" && this.draftAccountFunding())
+    const requiresCashAccount = transactionType !== "transfer" && transactionType !== "vault_transfer" && !(transactionType === "draft" && this.draftAccountFunding())
     const requiresSettlementAccount = transactionType === "check_cashing"
     const requiresDraftDetails = transactionType === "draft"
+    const requiresVaultTransferDetails = transactionType === "vault_transfer"
     const hasCounterparty = this.counterpartyAccountReferenceTarget.value.trim().length > 0
     const hasCashAccount = this.cashAccountReferenceTarget.value.trim().length > 0
     const hasSettlementAccount = this.hasSettlementAccountReferenceTarget && this.settlementAccountReferenceTarget.value.trim().length > 0
     const hasDraftPayee = this.hasDraftPayeeNameTarget && this.draftPayeeNameTarget.value.trim().length > 0
     const hasDraftInstrumentNumber = this.hasDraftInstrumentNumberTarget && this.draftInstrumentNumberTarget.value.trim().length > 0
     const hasDraftLiabilityAccount = this.hasDraftLiabilityAccountReferenceTarget && this.draftLiabilityAccountReferenceTarget.value.trim().length > 0
+    const hasVaultDirection = vaultTransferDetails.direction.length > 0
+    const hasVaultReasonCode = vaultTransferDetails.reasonCode.length > 0
+    const hasVaultMemo = vaultTransferDetails.reasonCode !== "other" || vaultTransferDetails.memo.length > 0
+    const hasVaultEndpoints = vaultTransferDetails.valid
     const hasInvalidCheckRows = this.hasInvalidCheckRows()
     const hasInvalidCheckCashingFields = this.hasInvalidCheckCashingFields(checkCashingAmounts)
     const hasInvalidDraftFields = this.hasInvalidDraftFields(draftAmounts)
-    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || (requiresSettlementAccount && !hasSettlementAccount) || (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) || hasInvalidCheckRows || hasInvalidCheckCashingFields || hasInvalidDraftFields
+    const hasInvalidVaultTransferFields = this.hasInvalidVaultTransferFields(vaultTransferDetails)
+    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || (requiresSettlementAccount && !hasSettlementAccount) || (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) || (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) || hasInvalidCheckRows || hasInvalidCheckCashingFields || hasInvalidDraftFields || hasInvalidVaultTransferFields
 
     const entries = this.generatedEntriesForCurrentState()
     const debitTotal = entries
@@ -157,9 +174,15 @@ export default class extends Controller {
       hasDraftPayee,
       hasDraftInstrumentNumber,
       hasDraftLiabilityAccount,
+      requiresVaultTransferDetails,
+      hasVaultDirection,
+      hasVaultReasonCode,
+      hasVaultMemo,
+      hasVaultEndpoints,
       hasInvalidCheckRows,
       hasInvalidCheckCashingFields,
       hasInvalidDraftFields,
+      hasInvalidVaultTransferFields,
       balanced
     })
 
@@ -171,10 +194,14 @@ export default class extends Controller {
     if (this.hasDraftSectionTarget) {
       this.draftSectionTarget.hidden = transactionType !== "draft"
     }
+    if (this.hasVaultTransferSectionTarget) {
+      this.vaultTransferSectionTarget.hidden = transactionType !== "vault_transfer"
+    }
     if (this.hasCheckCashingSectionTarget) {
       this.checkCashingSectionTarget.hidden = transactionType !== "check_cashing"
     }
     this.setDraftFieldState(transactionType === "draft")
+    this.setVaultTransferFieldState(transactionType === "vault_transfer")
     this.setCheckCashingFieldState(transactionType === "check_cashing")
     this.primaryAccountReferenceTarget.required = requiresPrimaryAccount
     this.amountCentsTarget.readOnly = ["check_cashing", "draft"].includes(transactionType)
@@ -263,9 +290,15 @@ export default class extends Controller {
     hasDraftPayee,
     hasDraftInstrumentNumber,
     hasDraftLiabilityAccount,
+    requiresVaultTransferDetails,
+    hasVaultDirection,
+    hasVaultReasonCode,
+    hasVaultMemo,
+    hasVaultEndpoints,
     hasInvalidCheckRows,
     hasInvalidCheckCashingFields,
     hasInvalidDraftFields,
+    hasInvalidVaultTransferFields,
     balanced
   }) {
     if (totalAmountCents <= 0) {
@@ -300,8 +333,16 @@ export default class extends Controller {
       return "Complete draft payee and instrument details."
     }
 
+    if (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) {
+      return "Complete vault transfer direction, locations, and reason details."
+    }
+
     if (hasInvalidDraftFields) {
       return "Draft amount and fee values are invalid."
+    }
+
+    if (hasInvalidVaultTransferFields) {
+      return "Vault transfer details are invalid."
     }
 
     if (!balanced) {
@@ -485,6 +526,7 @@ export default class extends Controller {
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
     this.resetDraftFields()
+    this.resetVaultTransferFields()
     this.resetCheckCashingFields()
     this.resetReceipt()
     this.clearMessage()
@@ -513,6 +555,7 @@ export default class extends Controller {
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
     this.resetDraftFields()
+    this.resetVaultTransferFields()
     this.resetCheckCashingFields()
     this.requestIdTarget.value = this.generateRequestId()
     this.element.dispatchEvent(new CustomEvent("tx:approval-cleared", { bubbles: true }))
@@ -573,6 +616,21 @@ export default class extends Controller {
     if (transactionType === "draft") {
       if (this.draftCashFunding()) {
         return this.draftAmounts().totalFundingCents
+      }
+
+      return 0
+    }
+
+    if (transactionType === "vault_transfer") {
+      const amountCents = Math.max(parseInt(this.amountCentsTarget.value || "0", 10), 0)
+      const direction = this.hasVaultTransferDirectionTarget ? this.vaultTransferDirectionTarget.value.trim() : ""
+
+      if (direction === "drawer_to_vault") {
+        return -amountCents
+      }
+
+      if (direction === "vault_to_drawer") {
+        return amountCents
       }
 
       return 0
@@ -642,6 +700,7 @@ export default class extends Controller {
     const draftLiabilityAccountReference = this.hasDraftLiabilityAccountReferenceTarget ? this.draftLiabilityAccountReferenceTarget.value.trim() : "official_check:outstanding"
     const draftFeeIncomeAccountReference = this.hasDraftFeeIncomeAccountReferenceTarget ? this.draftFeeIncomeAccountReferenceTarget.value.trim() : "income:draft_fee"
     const { draftAmountCents, draftFeeCents } = this.draftAmounts()
+    const vaultTransferDetails = this.vaultTransferDetails()
 
     if (amountCents <= 0) {
       return []
@@ -679,6 +738,17 @@ export default class extends Controller {
       return [
         { side: "debit", account_reference: primaryAccountReference, amount_cents: amountCents },
         { side: "credit", account_reference: counterpartyAccountReference, amount_cents: amountCents }
+      ]
+    }
+
+    if (transactionType === "vault_transfer") {
+      if (!vaultTransferDetails.valid) {
+        return []
+      }
+
+      return [
+        { side: "debit", account_reference: vaultTransferDetails.destinationReference, amount_cents: amountCents },
+        { side: "credit", account_reference: vaultTransferDetails.sourceReference, amount_cents: amountCents }
       ]
     }
 
@@ -735,6 +805,7 @@ export default class extends Controller {
 
     this.appendCheckItems(formData)
     this.appendDraftPayload(formData)
+    this.appendVaultTransferPayload(formData)
     this.appendCheckCashingPayload(formData)
   }
 
@@ -770,6 +841,19 @@ export default class extends Controller {
     formData.set("presenter_type", this.hasPresenterTypeTarget ? this.presenterTypeTarget.value.trim() : "")
     formData.set("id_type", this.hasIdTypeTarget ? this.idTypeTarget.value.trim() : "")
     formData.set("id_number", this.hasIdNumberTarget ? this.idNumberTarget.value.trim() : "")
+  }
+
+  appendVaultTransferPayload(formData) {
+    if (this.transactionTypeTarget.value !== "vault_transfer") {
+      return
+    }
+
+    const details = this.vaultTransferDetails()
+    formData.set("vault_transfer_direction", details.direction)
+    formData.set("vault_transfer_source_cash_account_reference", details.sourceReference)
+    formData.set("vault_transfer_destination_cash_account_reference", details.destinationReference)
+    formData.set("vault_transfer_reason_code", details.reasonCode)
+    formData.set("vault_transfer_memo", details.memo)
   }
 
   appendCheckItems(formData) {
@@ -829,6 +913,122 @@ export default class extends Controller {
 
   draftAccountFunding() {
     return !this.draftCashFunding()
+  }
+
+  vaultTransferDetails() {
+    const direction = this.hasVaultTransferDirectionTarget ? this.vaultTransferDirectionTarget.value.trim() : ""
+    const counterpartyReference = this.hasVaultTransferCounterpartyReferenceTarget ? this.vaultTransferCounterpartyReferenceTarget.value.trim() : ""
+    const sourceReference = this.hasVaultTransferSourceReferenceTarget ? this.vaultTransferSourceReferenceTarget.value.trim() : ""
+    const destinationReference = this.hasVaultTransferDestinationReferenceTarget ? this.vaultTransferDestinationReferenceTarget.value.trim() : ""
+    const drawerReference = this.cashAccountReferenceTarget.value.trim()
+    const reasonCode = this.hasVaultTransferReasonCodeTarget ? this.vaultTransferReasonCodeTarget.value.trim() : ""
+    const memo = this.hasVaultTransferMemoTarget ? this.vaultTransferMemoTarget.value.trim() : ""
+
+    const resolved = {
+      direction,
+      sourceReference: "",
+      destinationReference: "",
+      reasonCode,
+      memo,
+      valid: false
+    }
+
+    if (direction === "drawer_to_vault") {
+      resolved.sourceReference = drawerReference
+      resolved.destinationReference = counterpartyReference
+    } else if (direction === "vault_to_drawer") {
+      resolved.sourceReference = counterpartyReference
+      resolved.destinationReference = drawerReference
+    } else if (direction === "vault_to_vault") {
+      resolved.sourceReference = sourceReference
+      resolved.destinationReference = destinationReference
+    }
+
+    resolved.valid = resolved.sourceReference.length > 0 && resolved.destinationReference.length > 0 && resolved.sourceReference !== resolved.destinationReference
+    return resolved
+  }
+
+  hasInvalidVaultTransferFields(details) {
+    if (this.transactionTypeTarget.value !== "vault_transfer") {
+      return false
+    }
+
+    if (!["drawer_to_vault", "vault_to_drawer", "vault_to_vault"].includes(details.direction)) {
+      return true
+    }
+
+    if (!details.reasonCode) {
+      return true
+    }
+
+    if (details.reasonCode === "other" && !details.memo) {
+      return true
+    }
+
+    return !details.valid
+  }
+
+  resetVaultTransferFields() {
+    if (this.hasVaultTransferDirectionTarget) {
+      this.vaultTransferDirectionTarget.value = "drawer_to_vault"
+    }
+
+    if (this.hasVaultTransferCounterpartyReferenceTarget) {
+      this.vaultTransferCounterpartyReferenceTarget.value = ""
+    }
+
+    if (this.hasVaultTransferSourceReferenceTarget) {
+      this.vaultTransferSourceReferenceTarget.value = ""
+    }
+
+    if (this.hasVaultTransferDestinationReferenceTarget) {
+      this.vaultTransferDestinationReferenceTarget.value = ""
+    }
+
+    if (this.hasVaultTransferReasonCodeTarget) {
+      this.vaultTransferReasonCodeTarget.value = ""
+    }
+
+    if (this.hasVaultTransferMemoTarget) {
+      this.vaultTransferMemoTarget.value = ""
+    }
+  }
+
+  setVaultTransferFieldState(enabled) {
+    if (!this.hasVaultTransferSectionTarget) {
+      return
+    }
+
+    this.vaultTransferSectionTarget
+      .querySelectorAll("input, select, textarea")
+      .forEach((field) => {
+        field.disabled = !enabled
+      })
+
+    if (!enabled) {
+      return
+    }
+
+    const direction = this.hasVaultTransferDirectionTarget ? this.vaultTransferDirectionTarget.value.trim() : ""
+    const usesCounterparty = ["drawer_to_vault", "vault_to_drawer"].includes(direction)
+    const usesSourceDestination = direction === "vault_to_vault"
+
+    if (this.hasVaultTransferCounterpartyRowTarget) {
+      this.vaultTransferCounterpartyRowTarget.hidden = !usesCounterparty
+    }
+
+    if (this.hasVaultTransferSourceRowTarget) {
+      this.vaultTransferSourceRowTarget.hidden = !usesSourceDestination
+    }
+
+    if (this.hasVaultTransferDestinationRowTarget) {
+      this.vaultTransferDestinationRowTarget.hidden = !usesSourceDestination
+    }
+
+    if (this.hasVaultTransferMemoTarget) {
+      const reasonCode = this.hasVaultTransferReasonCodeTarget ? this.vaultTransferReasonCodeTarget.value.trim() : ""
+      this.vaultTransferMemoTarget.required = reasonCode === "other"
+    }
   }
 
   hasInvalidDraftFields({ draftAmountCents, draftFeeCents }) {

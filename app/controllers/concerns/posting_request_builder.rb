@@ -6,6 +6,7 @@ module PostingRequestBuilder
       transaction_type = posting_params[:transaction_type].to_s
 
       return check_cashing_metadata(posting_params) if transaction_type == "check_cashing"
+      return vault_transfer_metadata(posting_params) if transaction_type == "vault_transfer"
       return draft_metadata(posting_params) if transaction_type == "draft"
       return {} unless transaction_type == "deposit"
 
@@ -47,6 +48,18 @@ module PostingRequestBuilder
           presenter_type: posting_params[:presenter_type].to_s,
           id_type: posting_params[:id_type].to_s,
           id_number: posting_params[:id_number].to_s
+        }
+      }
+    end
+
+    def vault_transfer_metadata(posting_params)
+      {
+        vault_transfer: {
+          direction: vault_transfer_direction(posting_params),
+          source_cash_account_reference: vault_transfer_source_reference(posting_params),
+          destination_cash_account_reference: vault_transfer_destination_reference(posting_params),
+          reason_code: posting_params[:vault_transfer_reason_code].to_s,
+          memo: posting_params[:vault_transfer_memo].to_s
         }
       }
     end
@@ -118,6 +131,17 @@ module PostingRequestBuilder
         [
           { side: "debit", account_reference: primary_account_reference, amount_cents: amount_cents },
           { side: "credit", account_reference: counterparty_account_reference, amount_cents: amount_cents }
+        ]
+      when "vault_transfer"
+        source_reference = vault_transfer_source_reference(posting_params)
+        destination_reference = vault_transfer_destination_reference(posting_params)
+
+        return [] if source_reference.blank? || destination_reference.blank?
+        return [] if source_reference == destination_reference
+
+        [
+          { side: "debit", account_reference: destination_reference, amount_cents: amount_cents },
+          { side: "credit", account_reference: source_reference, amount_cents: amount_cents }
         ]
       when "check_cashing"
         check_amount_cents = posting_params[:check_amount_cents].to_i
@@ -191,6 +215,43 @@ module PostingRequestBuilder
 
     def draft_fee_income_account_reference(posting_params)
       posting_params[:draft_fee_income_account_reference].presence || "income:draft_fee"
+    end
+
+    def vault_transfer_direction(posting_params)
+      direction = posting_params[:vault_transfer_direction].to_s
+      return direction if direction.in?([ "drawer_to_vault", "vault_to_drawer", "vault_to_vault" ])
+
+      ""
+    end
+
+    def vault_transfer_source_reference(posting_params)
+      direction = vault_transfer_direction(posting_params)
+
+      case direction
+      when "drawer_to_vault"
+        default_cash_account_reference
+      when "vault_to_drawer"
+        posting_params[:vault_transfer_source_cash_account_reference].to_s
+      when "vault_to_vault"
+        posting_params[:vault_transfer_source_cash_account_reference].to_s
+      else
+        ""
+      end
+    end
+
+    def vault_transfer_destination_reference(posting_params)
+      direction = vault_transfer_direction(posting_params)
+
+      case direction
+      when "drawer_to_vault"
+        posting_params[:vault_transfer_destination_cash_account_reference].to_s
+      when "vault_to_drawer"
+        default_cash_account_reference
+      when "vault_to_vault"
+        posting_params[:vault_transfer_destination_cash_account_reference].to_s
+      else
+        ""
+      end
     end
 
     def default_cash_account_reference
