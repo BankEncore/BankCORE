@@ -40,6 +40,8 @@ module Teller
       assert_includes body.dig("workflows", "draft", "funding_modes"), "cash"
       assert_includes body.dig("workflows", "deposit", "ui_sections"), "checks"
       assert_includes body.dig("workflows", "vault_transfer", "ui_sections"), "vault_transfer"
+      assert_equal "deposit", body.dig("workflows", "deposit", "entry_profile")
+      assert_equal "check_cashing", body.dig("workflows", "check_cashing", "entry_profile")
     end
 
     private

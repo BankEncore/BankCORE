@@ -699,6 +699,15 @@ export default class extends Controller {
     return Array(this.workflowSchema?.[transactionType]?.ui_sections)
   }
 
+  workflowEntryProfile(transactionType) {
+    const profile = this.workflowSchema?.[transactionType]?.entry_profile
+    if (profile) {
+      return profile
+    }
+
+    return transactionType
+  }
+
   hasWorkflowSchemaLoaded() {
     return this.workflowSchema !== null
   }
@@ -754,6 +763,7 @@ export default class extends Controller {
 
   generatedEntriesForCurrentState() {
     const transactionType = this.transactionTypeTarget.value
+    const entryProfile = this.workflowEntryProfile(transactionType)
     const amountCents = this.effectiveAmountCents()
     const cashAmountCents = parseInt(this.amountCentsTarget.value || "0", 10)
     const { checkAmountCents, feeCents, netCashPayoutCents } = this.checkCashingAmounts()
@@ -773,7 +783,7 @@ export default class extends Controller {
       return []
     }
 
-    if (transactionType === "deposit") {
+    if (entryProfile === "deposit") {
       const entries = []
 
       if (cashAmountCents > 0) {
@@ -794,21 +804,21 @@ export default class extends Controller {
       return entries
     }
 
-    if (transactionType === "withdrawal") {
+    if (entryProfile === "withdrawal") {
       return [
         { side: "debit", account_reference: primaryAccountReference, amount_cents: amountCents },
         { side: "credit", account_reference: cashAccountReference, amount_cents: amountCents }
       ]
     }
 
-    if (transactionType === "transfer") {
+    if (entryProfile === "transfer") {
       return [
         { side: "debit", account_reference: primaryAccountReference, amount_cents: amountCents },
         { side: "credit", account_reference: counterpartyAccountReference, amount_cents: amountCents }
       ]
     }
 
-    if (transactionType === "vault_transfer") {
+    if (entryProfile === "vault_transfer") {
       if (!vaultTransferDetails.valid) {
         return []
       }
@@ -819,7 +829,7 @@ export default class extends Controller {
       ]
     }
 
-    if (transactionType === "draft") {
+    if (entryProfile === "draft") {
       if (draftAmountCents <= 0 || !draftLiabilityAccountReference) {
         return []
       }
@@ -842,7 +852,7 @@ export default class extends Controller {
       return entries
     }
 
-    if (transactionType === "check_cashing") {
+    if (entryProfile === "check_cashing") {
       if (checkAmountCents <= 0 || netCashPayoutCents <= 0 || !settlementAccountReference) {
         return []
       }
