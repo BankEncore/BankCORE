@@ -254,6 +254,22 @@ module Teller
       assert_empty transaction.cash_movements
     end
 
+    test "vault transfer create returns validation error when reason is missing" do
+      post teller_vault_transfers_path, params: {
+        request_id: "typed-vt-4",
+        transaction_type: "vault_transfer",
+        amount_cents: 4_000,
+        vault_transfer_direction: "drawer_to_vault",
+        vault_transfer_destination_cash_account_reference: "cash:#{@vault_a.code}",
+        vault_transfer_reason_code: ""
+      }
+
+      assert_response :unprocessable_entity
+      body = JSON.parse(response.body)
+      assert_equal false, body["ok"]
+      assert_equal "Reason code is required", body["error"]
+    end
+
     private
       def grant_permissions(user, branch, workstation)
         [ "teller.dashboard.view", "transactions.deposit.create", "transactions.check_cashing.create", "transactions.draft.create", "transactions.vault_transfer.create", "sessions.open" ].each do |permission_key|

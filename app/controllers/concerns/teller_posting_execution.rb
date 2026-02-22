@@ -8,6 +8,12 @@ module TellerPostingExecution
       request_params = posting_params.to_h.symbolize_keys
       request_params[:transaction_type] = forced_transaction_type if forced_transaction_type.present?
 
+      validation_errors = Posting::WorkflowValidator.errors(request_params, mode: :post)
+      if validation_errors.present?
+        render json: { ok: false, error: validation_errors.first }, status: :unprocessable_entity
+        return
+      end
+
       if approval_required?(request_params)
         token = request_params[:approval_token].to_s
         if token.blank?
