@@ -1,0 +1,50 @@
+<%= render "teller/shared/page_header",
+  title: "Transaction History",
+  description: "Recent posted transactions for this teller and workstation.",
+  secondary_button_path: teller_root_path,
+  secondary_button_label: "Back to Workspace" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-lg">Recent Transactions</h2>
+
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Posted</th>
+            <th>Type</th>
+            <th class="text-right">Amount</th>
+            <th>Status</th>
+            <th>Reference</th>
+            <th class="text-right">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @transactions.any? %>
+            <% @transactions.each do |transaction| %>
+              <tr>
+                <td><%= transaction.posted_at.strftime("%Y-%m-%d %H:%M:%S") %></td>
+                <td><%= transaction.transaction_type.titleize %></td>
+                <td class="text-right"><%= number_to_currency(transaction.amount_cents.to_f / 100.0) %></td>
+                <td><span class="badge badge-outline"><%= transaction.status %></span></td>
+                <td class="font-mono text-xs"><%= transaction.request_id %></td>
+                <td class="text-right">
+                  <% if transaction.posting_batch.present? %>
+                    <%= link_to "View Receipt", teller_receipt_path(request_id: transaction.request_id), class: "btn btn-outline btn-xs" %>
+                  <% else %>
+                    <span class="opacity-70 text-xs">Unavailable</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="6" class="text-center opacity-70 py-4">No posted transactions available yet.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

@@ -1,6 +1,6 @@
 # BankCORE — Phase 1 Implementation Status (Snapshot)
 
-**As of:** 2026-02-21  
+**As of:** 2026-02-22  
 **Scope authority:** [docs/10_phase1_spec.md](docs/10_phase1_spec.md)  
 
 This document is **non-authoritative** and exists only to track implementation progress against the authoritative Phase 1 specification.
@@ -46,6 +46,7 @@ This document is **non-authoritative** and exists only to track implementation p
 - [x] Cash source (drawer) is visible in context and not editable per-transaction
 - [x] Server enforces drawer-derived cash leg for deposit/withdrawal
 - [x] Receipt/audit view for posted transactions (a dedicated view/page rendering context + legs)
+- [x] Transaction history list with receipt drilldown for posted transactions
 
 ## 3.4 Supervisory approvals (Phase 1)
 
@@ -98,6 +99,12 @@ This document is **non-authoritative** and exists only to track implementation p
   - [x] transaction type and references
   - [x] posting legs summary
   - [x] timestamps and correlation/request id
+
+### 5.9 Transaction history / drilldown
+
+- [x] Teller can view a chronological list of recent posted transactions
+- [x] Each history row links to existing receipt/audit detail view
+- [x] History list is scoped to current teller + branch/workstation context
 
 ### 5.8 Close-out
 

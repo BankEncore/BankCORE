@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     post "approvals", to: "approvals#create", as: :approvals
     post "posting/check", to: "posting_checks#create", as: :posting_check
     post "posting", to: "postings#create", as: :posting
+    get "history", to: "transaction_history#index", as: :history
     get "receipts/:request_id", to: "receipts#show", as: :receipt
     resource :teller_session, only: [ :new, :create ] do
       patch :assign_drawer
