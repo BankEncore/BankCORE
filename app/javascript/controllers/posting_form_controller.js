@@ -148,6 +148,11 @@ export default class extends Controller {
     const draftAmounts = this.draftAmounts()
     const vaultTransferDetails = this.vaultTransferDetails()
     const requiredFields = this.workflowRequiredFields(transactionType)
+    const schemaSections = this.workflowSections(transactionType)
+    const showCheckSection = schemaSections.length > 0 ? schemaSections.includes("checks") : transactionType === "deposit"
+    const showDraftSection = schemaSections.length > 0 ? schemaSections.includes("draft") : transactionType === "draft"
+    const showVaultTransferSection = schemaSections.length > 0 ? schemaSections.includes("vault_transfer") : transactionType === "vault_transfer"
+    const showCheckCashingSection = schemaSections.length > 0 ? schemaSections.includes("check_cashing") : transactionType === "check_cashing"
     if (transactionType === "check_cashing") {
       this.amountCentsTarget.value = checkCashingAmounts.netCashPayoutCents.toString()
     } else if (transactionType === "draft") {
@@ -219,21 +224,21 @@ export default class extends Controller {
     if (this.hasCashAccountRowTarget) {
       this.cashAccountRowTarget.hidden = !requiresCashAccount
     }
-    this.checkSectionTarget.hidden = transactionType !== "deposit"
+    this.checkSectionTarget.hidden = !showCheckSection
     if (this.hasDraftSectionTarget) {
-      this.draftSectionTarget.hidden = transactionType !== "draft"
+      this.draftSectionTarget.hidden = !showDraftSection
     }
     if (this.hasVaultTransferSectionTarget) {
-      this.vaultTransferSectionTarget.hidden = transactionType !== "vault_transfer"
+      this.vaultTransferSectionTarget.hidden = !showVaultTransferSection
     }
     if (this.hasCheckCashingSectionTarget) {
-      this.checkCashingSectionTarget.hidden = transactionType !== "check_cashing"
+      this.checkCashingSectionTarget.hidden = !showCheckCashingSection
     }
-    this.setDraftFieldState(transactionType === "draft")
-    this.setVaultTransferFieldState(transactionType === "vault_transfer")
-    this.setCheckCashingFieldState(transactionType === "check_cashing")
+    this.setDraftFieldState(showDraftSection)
+    this.setVaultTransferFieldState(showVaultTransferSection)
+    this.setCheckCashingFieldState(showCheckCashingSection)
     this.primaryAccountReferenceTarget.required = requiresPrimaryAccount
-    this.amountCentsTarget.readOnly = ["check_cashing", "draft"].includes(transactionType)
+    this.amountCentsTarget.readOnly = showCheckCashingSection || showDraftSection
     if (this.hasSettlementAccountReferenceTarget) {
       this.settlementAccountReferenceTarget.required = requiresSettlementAccount
     }
@@ -688,6 +693,10 @@ export default class extends Controller {
 
   workflowRequiredFields(transactionType) {
     return Array(this.workflowSchema?.[transactionType]?.required_fields)
+  }
+
+  workflowSections(transactionType) {
+    return Array(this.workflowSchema?.[transactionType]?.ui_sections)
   }
 
   clearMessage() {
