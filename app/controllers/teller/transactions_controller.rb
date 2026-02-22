@@ -1,5 +1,5 @@
 module Teller
-  class TransactionsController < ApplicationController
+  class TransactionsController < BaseController
     include PostingPrerequisites
     include PostingRequestBuilder
 

@@ -33,7 +33,7 @@ module Teller
 
       assert_response :success
       assert_select "h2", "Teller Transaction Flows"
-      assert_select "form[action='#{session_path}'] button", text: "Log out"
+      assert_select "a[href='#{new_teller_teller_session_path}']", "Session"
     end
 
     test "shows transaction flow launcher when session and drawer are available" do
@@ -70,8 +70,8 @@ module Teller
       get teller_context_path
 
       assert_response :success
-      assert_select "h2", "Workstation Context"
-      assert_select "h2", "Session Context"
+      assert_select "h2", "Branch & Workstation Settings"
+      assert_select "a[href='#{new_teller_teller_session_path}']", "Go to Session"
       assert_select "form[action='#{teller_context_path}'][method='post']"
     end
 
@@ -84,11 +84,7 @@ module Teller
 
       patch teller_context_path, params: { branch_id: branch.id, workstation_id: workstation.id }
 
-      assert_redirected_to teller_context_path
-      follow_redirect!
-      assert_response :success
-      assert_select "p", /Branch:\s+Main Branch/
-      assert_select "p", /Workstation:\s+Teller 01/
+      assert_redirected_to new_teller_teller_session_path
     end
 
     test "rejects workstation from another branch" do

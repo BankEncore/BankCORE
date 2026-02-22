@@ -1,5 +1,5 @@
 module Teller
-  class TellerSessionsController < ApplicationController
+  class TellerSessionsController < BaseController
     def new
       authorize([ :teller, :teller_session ], :new?)
       @teller_session = current_teller_session
@@ -38,7 +38,7 @@ module Teller
         occurred_at: Time.current
       )
 
-      redirect_to new_teller_teller_session_path, notice: "Teller session opened."
+      redirect_to new_teller_teller_session_path, notice: "Teller session opened. Assign a drawer to continue."
     end
 
     def assign_drawer
@@ -68,7 +68,7 @@ module Teller
         occurred_at: Time.current
       )
 
-      redirect_to new_teller_teller_session_path, notice: "Drawer assigned."
+      redirect_to consume_teller_return_to(teller_root_path), notice: "Drawer assigned."
     end
 
     def close

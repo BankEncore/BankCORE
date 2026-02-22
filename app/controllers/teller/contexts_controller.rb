@@ -1,5 +1,5 @@
 module Teller
-  class ContextsController < ApplicationController
+  class ContextsController < BaseController
     def show
       authorize([ :teller, :dashboard ], :index?)
 
@@ -35,7 +35,7 @@ module Teller
       session[:current_branch_id] = branch.id
       session[:current_workstation_id] = workstation&.id
 
-      redirect_to(session.delete(:teller_context_return_to).presence || teller_context_path, notice: "Session context updated.")
+      redirect_to consume_teller_return_to(new_teller_teller_session_path), notice: "Context updated. Continue with teller session setup."
     end
 
     private

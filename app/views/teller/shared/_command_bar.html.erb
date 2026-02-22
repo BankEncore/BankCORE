@@ -1,0 +1,16 @@
+<nav aria-label="Teller Commands" class="border border-base-300 bg-base-100 px-3 py-2" data-testid="command-bar">
+  <div class="flex flex-wrap gap-2">
+    <%= link_to "Dashboard", teller_root_path, class: "btn btn-sm btn-ghost" %>
+    <%= link_to "Deposit", new_teller_deposit_path, class: "btn btn-sm btn-ghost" %>
+    <%= link_to "Withdrawal", new_teller_withdrawal_path, class: "btn btn-sm btn-ghost" %>
+    <%= link_to "Transfer", new_teller_transfer_path, class: "btn btn-sm btn-ghost" %>
+    <%= link_to "Check Cashing", new_teller_check_cashing_path, class: "btn btn-sm btn-ghost" %>
+
+    <button type="button" class="btn btn-sm btn-ghost btn-disabled" disabled aria-disabled="true">Bank Draft</button>
+    <button type="button" class="btn btn-sm btn-ghost btn-disabled" disabled aria-disabled="true">Bill Payment</button>
+    <button type="button" class="btn btn-sm btn-ghost btn-disabled" disabled aria-disabled="true">Misc Receipt</button>
+    <button type="button" class="btn btn-sm btn-ghost btn-disabled" disabled aria-disabled="true">Vault Transfer</button>
+
+    <%= link_to "Session", new_teller_teller_session_path, class: "btn btn-sm btn-ghost" %>
+  </div>
+</nav>

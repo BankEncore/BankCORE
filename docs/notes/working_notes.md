@@ -6,261 +6,118 @@
 * Branch and workstation assignment stored in cookie
 * Persists across teller sessions/drawers
 
-Below is a **visual ASCII mockup of the full BankCORE application chrome**, reflecting the Traditional / Workstation-first feel we agreed on.
+Top Bar:
+- Logo [root]
+- Main Nav
+    - Teller
+    - Ops
+- User Name
+    - Log Out
+    - Change Branch/Workstation
 
-This includes:
+Context:
+- Branch
+- Workstation
+- Session
+- Drawer
 
-* Global app layer
-* Teller shell
-* Ops shell
-* CIF (future) separation
-* Lock state
-* Approval modal state
+Transactions (Workflows):
+- Deposit
+- Withdrawal
+- Transfer
+- Check Cashing
 
----
+## Current Implementation Status (2026-02-22)
 
-# 1️⃣ Global Application Chrome (Authenticated)
+Completed:
+- Dedicated teller shell layout with shared top bar + command bar.
+- Teller controllers now inherit from a teller base controller with teller-specific context gating.
+- Context and Session workflows are separated:
+    - Context page: branch/workstation only.
+    - Session page: teller session open/close + drawer assignment.
+- Posting prerequisites now route users to Session setup with return-to behavior.
+- Dashboard messaging updated with readiness guidance.
+- Ops shell scaffold added (`/ops`) for future expansion.
 
-```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ BANKCORE                                      User: TSM  | Role: Teller     │
-│ Branch: 001 – Main St                          03/18/2026  10:42 AM  | Logout│
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+Navigation contract implemented in teller command bar:
+- Dashboard
+- Deposit
+- Withdrawal
+- Transfer
+- Check Cashing
+- Bank Draft (disabled)
+- Bill Payment (disabled)
+- Misc Receipt (disabled)
+- Vault Transfer (disabled)
+- Session
 
-Thin, muted, operational.
-No branding theatrics. No gradients.
+## PR Summary (ready-to-use)
 
----
+Title:
+- Teller setup flow split: Context first, Session/Drawer second, with unified teller shell navigation
 
-# 2️⃣ Teller Shell Chrome (`/teller/*`)
+Highlights:
+- Moved teller-specific flow control into teller base controller; removed teller route gating from global application controller.
+- Standardized teller return-to flow so users continue to the next logical prerequisite and then resume requested work.
+- Introduced teller shell layout and command bar ordering aligned to workstation UX.
+- Split setup responsibilities across Context and Session pages.
+- Added minimal Ops namespace scaffold and app-nav link.
 
-## A. Normal Transaction State
+## QA Checklist
 
-```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ BANKCORE | Teller: T001 | Session: S045 | Branch: 001 | 10:42 AM           │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ [Dashboard] [Deposit] [Withdrawal] [Transfer] [Check Cashing] [Draft]      │
-│ [Bill Payment] [Misc Receipt] [Vault Transfer]                              │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  DEPOSIT                                                                     │
-│  ─────────────────────────────────────────────────────────────────────────   │
-│                                                                              │
-│  ┌──────────────────────────────┐   ┌────────────────────────────────────┐   │
-│  │ TRANSACTION ENTRY            │   │ ACCOUNT REFERENCE (Read-Only)      │   │
-│  │                              │   │                                    │   │
-│  │ Account: [ Search Field ]    │   │ Thomas Miller                      │   │
-│  │ Cash Amount: [     500.00 ]  │   │ Account #: ****1234                │   │
-│  │ Check Amount: [     200.00 ] │   │ Status: Active                     │   │
-│  │ Memo: [____________________] │   │ Ledger Balance:   $4,250.00        │   │
-│  │                              │   │ Available:        $4,100.00        │   │
-│  │ [Cancel]        [Post]       │   │                                    │   │
-│  └──────────────────────────────┘   └────────────────────────────────────┘   │
-│                                                                              │
-│  ┌────────────────────────────────────────────────────────────────────────┐   │
-│  │ TOTALS                                                                │   │
-│  │   Cash In:         $500.00                                            │   │
-│  │   Checks In:       $200.00                                            │   │
-│  │   Net Deposit:     $700.00                                            │   │
-│  │   Status: BALANCED                                                    │   │
-│  └────────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ Drawer Before: $3,200.00  |  + Cash In: $500.00  |  Drawer After: $3,700.00│
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+- Login and shell
+    - Sign in and confirm app nav shows Home / Teller / Ops.
+    - Enter teller area and confirm teller shell chrome renders.
 
-Key characteristics:
+- Teller command bar
+    - Confirm order: Dashboard, Deposit, Withdrawal, Transfer, Check Cashing, Bank Draft, Bill Payment, Misc Receipt, Vault Transfer, Session.
+    - Confirm planned items are visible and disabled.
 
-* Strong structural borders
-* Two-column operational layout
-* Totals always visible
-* Drawer impact always visible
-* No cards
-* No floating UI
+- Context → Session progression
+    - With no branch/workstation set, opening teller transaction URL redirects to Context.
+    - Context page shows branch/workstation setup only.
+    - Valid context update redirects to Session setup.
 
----
+- Session/drawer progression
+    - Open teller session and assign drawer on Session page.
+    - After drawer assignment, confirm return-to behavior routes to requested page (or dashboard default).
 
-## B. Approval Required State
+- Transaction gating
+    - No session: redirect to Session with "Open a teller session before continuing."
+    - No drawer for cash flows: redirect to Session with "Assign a drawer before continuing."
+    - Transfer remains available without drawer assignment.
 
-```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  [APPROVAL REQUIRED]                                                         │
-│  Withdrawal exceeds $5,000 limit. Supervisor authorization required.        │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+- Dashboard readiness
+    - Confirm readiness section reflects session/drawer state.
+    - Confirm Deposit/Withdrawal/Check Cashing are disabled on dashboard when drawer is not assigned.
 
-Then modal:
+## Validation Results
 
-```text
-              ┌────────────────────────────────────────────┐
-              │ SUPERVISOR APPROVAL REQUIRED               │
-              │                                            │
-              │ Supervisor ID: [__________]                │
-              │ Password:      [__________]                │
-              │                                            │
-              │ [Cancel]                 [Approve]         │
-              └────────────────────────────────────────────┘
-```
+- Focused teller flow tests: passing.
+- Full teller controller suite: passing.
+- `bin/ci`: passing (lint, security scans, tests, seed replant).
 
-* Background interaction disabled
-* No animation
-* Procedural tone
+## Release Note / Changelog Draft
 
----
+### Added
+- Dedicated teller workstation layout with shared teller top context bar, command bar, and teller-scoped flash rendering.
+- Ops shell scaffold at `/ops` with initial dashboard placeholder.
 
-## C. Receipt State (Post-Success)
+### Changed
+- Teller workflow now follows a clearer setup progression:
+    - Context page manages branch/workstation only.
+    - Session page manages teller session open/close and drawer assignment.
+- Teller command bar order standardized to:
+    - Dashboard, Deposit, Withdrawal, Transfer, Check Cashing, Bank Draft, Bill Payment, Misc Receipt, Vault Transfer, Session.
+- Posting prerequisite messaging updated to guide users to next required action:
+    - "Open a teller session before continuing."
+    - "Assign a drawer before continuing."
+- Return-to behavior improved so users can resume requested teller destination after completing setup prerequisites.
 
-```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  RECEIPT                                                                     │
-│  Ref #: 20260318-000145                                                       │
-│  Timestamp: 03/18/2026 10:44 AM                                               │
-│                                                                              │
-│  Deposit                                                                      │
-│    Cash:           $500.00                                                   │
-│    Checks:         $200.00                                                   │
-│    Net:            $700.00                                                   │
-│                                                                              │
-│  Drawer Before:    $3,200.00                                                 │
-│  Drawer After:     $3,700.00                                                 │
-│                                                                              │
-│  [Print Receipt]   [New Transaction]   [Return to Dashboard]                │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+### Internal
+- Teller controllers now inherit from a shared teller base controller for teller-specific flow enforcement.
+- Teller-related controller tests updated for new setup progression and alert copy.
 
----
-
-# 3️⃣ Workstation Locked State
-
-```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  WORKSTATION LOCKED                                                          │
-│                                                                              │
-│  This workstation is locked.                                                 │
-│                                                                              │
-│  User ID: TSM                                                                │
-│  Password: [__________]                                                      │
-│                                                                              │
-│                 [Unlock]                                                     │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
-No navigation visible.
-No transaction elements accessible.
-
----
-
-# 4️⃣ Session Status (No Open Session)
-
-```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  SESSION STATUS                                                              │
-│                                                                              │
-│  No open teller session for this workstation.                                │
-│                                                                              │
-│               [Open Session]                                                 │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
-Minimal. Clear gate.
-
----
-
-# 5️⃣ Ops Shell Chrome (`/ops/*`)
-
-Different feel — more reporting-oriented.
-
-```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ BANKCORE OPS | User: Supervisor | Branch Scope: All | 10:42 AM | Logout    │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ [Teller Activity] [Session Search]                                           │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  FILTERS                                                                     │
-│  Branch: [All ▼]  Date: [03/18/2026]  Teller: [All ▼]  [Run Report]        │
-│                                                                              │
-│  ─────────────────────────────────────────────────────────────────────────   │
-│                                                                              │
-│  Teller Activity Report                                                      │
-│                                                                              │
-│  Teller   Sessions  Cash In   Cash Out   Fees   Reversals   Net Cash       │
-│  T001     1         12,000    8,500      320    1           +3,500         │
-│  T002     1         8,200     9,000      210    0           -800           │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
-Differences from Teller:
-
-* No drawer footer
-* No transaction buttons
-* More scrolling
-* More filters
-* Data tables primary
-
----
-
-# 6️⃣ CIF (Future — Separate Tab)
-
-When teller clicks account:
-
-New browser tab:
-
-```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ BANKCORE CIF | Party: Thomas Miller | Account: 1234 | Logout               │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ [Profile] [Accounts] [Documents]                                             │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│ Account Summary                                                              │
-│                                                                              │
-│ Ledger Balance: $4,250.00                                                    │
-│ Available:      $4,100.00                                                    │
-│ Holds:          $150.00                                                      │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
-Critically:
-
-* Does NOT disrupt teller session
-* Does NOT embed inside transaction
-
----
-
-# 7️⃣ The Feel (Condensed Summary)
-
-The chrome communicates:
-
-* Institutional
-* Structured
-* Accountable
-* Deliberate
-* Controlled
-
-It avoids:
-
-* Cards
-* Rounded playful UI
-* Dashboards with widgets
-* Animation
-* Excess whitespace
-* Modern SaaS aesthetic
-
-It feels closer to:
-
-> Core banking workstation terminal
-> Modernized, but serious.
-
----
-
-If you'd like, next I can:
-
-* Convert this into a **CSS/HTML structural scaffold**
-* Or provide a **Tailwind/DaisyUI layout mapping**
-* Or show where your current layout likely diverges from this model**
+### Verification
+- Teller controller suite passing.
+- Full CI passing via `bin/ci`.

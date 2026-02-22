@@ -31,7 +31,7 @@ module Teller
 
       patch assign_drawer_teller_teller_session_path, params: { cash_location_id: @drawer.id }
 
-      assert_redirected_to new_teller_teller_session_path
+      assert_redirected_to teller_root_path
       session_record = TellerSession.last
       assert_equal @drawer.id, session_record.cash_location_id
       assert_equal "teller_session.drawer_assigned", AuditEvent.last.event_type
@@ -102,7 +102,7 @@ module Teller
       get new_teller_teller_session_path
 
       assert_response :success
-      assert_select "h2", "Teller Session & Drawer"
+      assert_select "h2", "Session"
       assert_select "h2", "Teller Session"
       assert_select "form[action='#{teller_teller_session_path}'][method='post']"
     end

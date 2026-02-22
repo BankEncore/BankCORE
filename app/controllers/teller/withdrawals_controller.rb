@@ -1,5 +1,5 @@
 module Teller
-  class WithdrawalsController < ApplicationController
+  class WithdrawalsController < BaseController
     include PostingPrerequisites
     include TellerPostingExecution
 

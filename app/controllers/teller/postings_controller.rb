@@ -1,5 +1,5 @@
 module Teller
-  class PostingsController < ApplicationController
+  class PostingsController < BaseController
     include PostingPrerequisites
     include TellerPostingExecution
 

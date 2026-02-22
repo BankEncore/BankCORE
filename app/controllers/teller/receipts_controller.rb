@@ -1,5 +1,5 @@
 module Teller
-  class ReceiptsController < ApplicationController
+  class ReceiptsController < BaseController
     before_action :load_posting_batch
     before_action :ensure_authorized
 

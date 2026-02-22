@@ -1,19 +1,16 @@
-<div class="space-y-4">
-  <%= render "teller/shared/topbar", teller_session: @teller_session %>
-  <%= render "teller/shared/page_header",
-    title: @page_title,
-    description: "#{@page_title} flow. Validate and post once balanced.",
-    show_state_badge: true,
-    initial_state: "Editing",
-    secondary_button_action: "posting-form#resetForm",
-    secondary_button_label: "Cancel",
-    show_primary_submit: true,
-    primary_submit_label: "Post Transaction",
-    primary_submit_form_id: "posting-form" %>
+<%= render "teller/shared/page_header",
+  title: @page_title,
+  description: "#{@page_title} flow. Validate and post once balanced.",
+  show_state_badge: true,
+  initial_state: "Editing",
+  secondary_button_action: "posting-form#resetForm",
+  secondary_button_label: "Cancel",
+  show_primary_submit: true,
+  primary_submit_label: "Post Transaction",
+  primary_submit_form_id: "posting-form" %>
 
-  <%= render "teller/dashboard/posting_workspace",
-    teller_session: @teller_session,
-    form_url: @form_url,
-    default_transaction_type: @transaction_type,
-    show_transaction_type: false %>
-</div>
+<%= render "teller/dashboard/posting_workspace",
+  teller_session: @teller_session,
+  form_url: @form_url,
+  default_transaction_type: @transaction_type,
+  show_transaction_type: false %>

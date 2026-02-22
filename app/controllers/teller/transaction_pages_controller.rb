@@ -1,5 +1,5 @@
 module Teller
-  class TransactionPagesController < ApplicationController
+  class TransactionPagesController < BaseController
     include PostingPrerequisites
 
     before_action :ensure_authorized

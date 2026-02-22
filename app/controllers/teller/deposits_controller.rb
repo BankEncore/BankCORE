@@ -1,5 +1,5 @@
 module Teller
-  class DepositsController < ApplicationController
+  class DepositsController < BaseController
     include PostingPrerequisites
     include TellerPostingExecution
 

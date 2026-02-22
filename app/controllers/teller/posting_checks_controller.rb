@@ -1,5 +1,5 @@
 module Teller
-  class PostingChecksController < ApplicationController
+  class PostingChecksController < BaseController
     include PostingPrerequisites
 
     before_action :ensure_authorized

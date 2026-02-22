@@ -1,36 +1,54 @@
-<div class="space-y-4">
-  <%= render "teller/shared/topbar", teller_session: @teller_session %>
-  <%= render "teller/shared/page_header",
-    title: "Teller Transaction Flows",
-    description: "Open a dedicated transaction page for Deposit, Withdrawal, Transfer, or Check Cashing.",
-    secondary_button_path: teller_context_path,
-    secondary_button_label: "Manage Workstation Context",
-    primary_button_path: new_teller_teller_session_path,
-    primary_button_label: "Manage Session & Drawer" %>
+<%= render "teller/shared/page_header",
+  title: "Teller Transaction Flows",
+  description: "Use the transaction workflows below once session and drawer setup is complete.",
+  secondary_button_path: new_teller_teller_session_path,
+  secondary_button_label: "Session Setup" %>
 
-  <% if @teller_session.present? %>
-    <section class="card bg-base-100 border border-base-300">
-      <div class="card-body">
-        <h2 class="card-title text-lg">Transaction Flows</h2>
-        <p class="text-sm opacity-80">Open dedicated teller flow pages.</p>
-        <div class="flex flex-wrap gap-2">
-          <% if @teller_session.cash_location.present? %>
-            <%= link_to "Deposit", new_teller_deposit_path, class: "btn btn-outline btn-sm" %>
-            <%= link_to "Withdrawal", new_teller_withdrawal_path, class: "btn btn-outline btn-sm" %>
-            <%= link_to "Check Cashing", new_teller_check_cashing_path, class: "btn btn-outline btn-sm" %>
-          <% end %>
-          <%= link_to "Transfer", new_teller_transfer_path, class: "btn btn-outline btn-sm" %>
-        </div>
-      </div>
-    </section>
+<% if @teller_session.present? %>
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <h2 class="card-title text-lg">Readiness</h2>
+      <p class="text-sm">
+        Session: <strong>Open</strong>
+        <% if @teller_session.cash_location.present? %>
+          · Drawer: <strong><%= @teller_session.cash_location.name %></strong>
+        <% else %>
+          · Drawer: <strong>Not assigned</strong>
+        <% end %>
+      </p>
 
-  <% else %>
-    <section class="card bg-base-100 border border-base-300">
-      <div class="card-body">
-        <h2 class="card-title text-lg">Setup Required</h2>
-        <p>Set branch/workstation and open a teller session to enable transaction entry.</p>
-        <p><%= link_to "Open Session Setup", new_teller_teller_session_path, class: "btn btn-primary btn-sm" %></p>
+      <% unless @teller_session.cash_location.present? %>
+        <p class="text-sm opacity-80">Assign a drawer from Session before starting cash workflows.</p>
+        <p><%= link_to "Open Session", new_teller_teller_session_path, class: "btn btn-primary btn-sm" %></p>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <h2 class="card-title text-lg">Transaction Flows</h2>
+      <p class="text-sm opacity-80">Open dedicated teller flow pages.</p>
+      <div class="flex flex-wrap gap-2">
+        <% if @teller_session.cash_location.present? %>
+          <%= link_to "Deposit", new_teller_deposit_path, class: "btn btn-outline btn-sm" %>
+          <%= link_to "Withdrawal", new_teller_withdrawal_path, class: "btn btn-outline btn-sm" %>
+          <%= link_to "Check Cashing", new_teller_check_cashing_path, class: "btn btn-outline btn-sm" %>
+        <% else %>
+          <button type="button" class="btn btn-outline btn-sm btn-disabled" disabled aria-disabled="true">Deposit</button>
+          <button type="button" class="btn btn-outline btn-sm btn-disabled" disabled aria-disabled="true">Withdrawal</button>
+          <button type="button" class="btn btn-outline btn-sm btn-disabled" disabled aria-disabled="true">Check Cashing</button>
+        <% end %>
+        <%= link_to "Transfer", new_teller_transfer_path, class: "btn btn-outline btn-sm" %>
       </div>
-    </section>
-  <% end %>
-</div>
+    </div>
+  </section>
+
+<% else %>
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <h2 class="card-title text-lg">Setup Required</h2>
+      <p>Open a teller session and assign drawer to enable cash transaction entry.</p>
+      <p><%= link_to "Open Session Setup", new_teller_teller_session_path, class: "btn btn-primary btn-sm" %></p>
+    </div>
+  </section>
+<% end %>

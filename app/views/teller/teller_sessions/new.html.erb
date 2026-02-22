@@ -1,12 +1,19 @@
-<div class="space-y-4">
-  <%= render "teller/shared/topbar", teller_session: @teller_session %>
-  <%= render "teller/shared/page_header",
-    title: "Teller Session & Drawer",
-    description: "Open or close teller session and assign drawer. Branch/workstation context is managed separately.",
-    secondary_button_path: teller_context_path,
-    secondary_button_label: "Manage Workstation Context",
-    primary_button_path: teller_root_path,
-    primary_button_label: "Go to Transaction Flows" %>
+<%= render "teller/shared/page_header",
+  title: "Session",
+  description: "Open or close teller session and assign drawer before starting transactions.",
+  secondary_button_path: teller_context_path,
+  secondary_button_label: "Branch / Workstation Settings",
+  primary_button_path: teller_root_path,
+  primary_button_label: "Go to Transaction Flows" %>
 
-  <%= render "teller/dashboard/teller_session_card", teller_session: @teller_session, drawers: @drawers %>
-</div>
+<%= render "teller/dashboard/teller_session_card", teller_session: @teller_session, drawers: @drawers %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-base">Context Settings</h2>
+    <p class="text-sm opacity-80">Need to change branch or workstation?</p>
+    <div>
+      <%= link_to "Open Branch / Workstation Settings", teller_context_path, class: "btn btn-ghost btn-sm" %>
+    </div>
+  </div>
+</section>

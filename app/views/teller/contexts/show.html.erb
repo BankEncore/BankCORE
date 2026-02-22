@@ -1,12 +1,7 @@
-<div class="space-y-4">
-  <%= render "teller/shared/topbar", teller_session: current_teller_session %>
-  <%= render "teller/shared/page_header",
-    title: "Workstation Context",
-    description: "Set branch and workstation for this browser. Session and drawer are managed in a separate workflow.",
-    secondary_button_path: teller_root_path,
-    secondary_button_label: "Go to Transaction Flows",
-    primary_button_path: new_teller_teller_session_path,
-    primary_button_label: "Manage Teller Session & Drawer" %>
+<%= render "teller/shared/page_header",
+  title: "Branch & Workstation Settings",
+  description: "Set branch and workstation for this browser. Teller session and drawer are managed under Session.",
+  secondary_button_path: new_teller_teller_session_path,
+  secondary_button_label: "Go to Session" %>
 
-  <%= render "teller/dashboard/session_context_card", branches: @branches, workstations: @workstations %>
-</div>
+<%= render "teller/dashboard/session_context_card", branches: @branches, workstations: @workstations %>

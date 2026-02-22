@@ -23,7 +23,7 @@ module Teller
 
       assert_redirected_to new_teller_teller_session_path
       follow_redirect!
-      assert_select "div", /Open a teller session before posting transactions/
+      assert_select "div", /Open a teller session before continuing\./i
     end
 
     test "blocks posting when drawer is not assigned" do
@@ -33,7 +33,7 @@ module Teller
 
       assert_redirected_to new_teller_teller_session_path
       follow_redirect!
-      assert_select "div", /Assign a drawer before posting transactions/
+      assert_select "div", /Assign a drawer before continuing\./i
     end
 
     test "allows posting when session is open and drawer is assigned" do
@@ -62,7 +62,7 @@ module Teller
 
       assert_redirected_to new_teller_teller_session_path
       follow_redirect!
-      assert_select "div", /Assign a drawer before posting transactions/
+      assert_select "div", /Assign a drawer before continuing\./i
     end
 
     private

@@ -38,7 +38,7 @@ module Teller
 
       assert_redirected_to new_teller_teller_session_path
       follow_redirect!
-      assert_select "div", /Open a teller session before posting transactions/i
+      assert_select "div", /Open a teller session before continuing\./i
     end
 
     test "renders split flow pages with fixed transaction type" do
@@ -113,7 +113,7 @@ module Teller
 
       assert_redirected_to new_teller_teller_session_path
       follow_redirect!
-      assert_select "div", /Assign a drawer before posting transactions/i
+      assert_select "div", /Assign a drawer before continuing\./i
     end
 
     private

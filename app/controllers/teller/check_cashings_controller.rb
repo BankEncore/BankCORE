@@ -1,5 +1,5 @@
 module Teller
-  class CheckCashingsController < ApplicationController
+  class CheckCashingsController < BaseController
     include PostingPrerequisites
     include TellerPostingExecution
 
