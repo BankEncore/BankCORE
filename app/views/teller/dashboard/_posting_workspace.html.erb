@@ -20,7 +20,7 @@
   <% show_draft = fixed_flow && flow_type == "draft" %>
   <% show_check_cashing = fixed_flow && flow_type == "check_cashing" %>
   <% cash_account_reference_value = teller_session.cash_location.present? ? "cash:#{teller_session.cash_location.code}" : "" %>
-  <% cash_locations = local_assigns.fetch(:cash_locations, []) %>
+  <% cash_locations = Array(local_assigns.fetch(:cash_locations, [])).compact %>
 
   <%= form_with url: local_assigns.fetch(:form_url, teller_posting_path), method: :post, html: { id: "posting-form", data: { action: "submit->posting-form#submit" } } do |form| %>
     <p class="alert alert-info hidden" data-posting-form-target="message" aria-live="polite" hidden></p>

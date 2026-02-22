@@ -270,6 +270,20 @@ module Teller
       assert_equal "Reason code is required", body["error"]
     end
 
+    test "typed new transaction pages render without cash location errors" do
+      [
+        new_teller_deposit_path,
+        new_teller_withdrawal_path,
+        new_teller_transfer_path,
+        new_teller_check_cashing_path,
+        new_teller_draft_path,
+        new_teller_vault_transfer_path
+      ].each do |path|
+        get path
+        assert_response :success
+      end
+    end
+
     private
       def grant_permissions(user, branch, workstation)
         [ "teller.dashboard.view", "transactions.deposit.create", "transactions.check_cashing.create", "transactions.draft.create", "transactions.vault_transfer.create", "sessions.open" ].each do |permission_key|
