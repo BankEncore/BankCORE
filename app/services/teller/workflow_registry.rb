@@ -3,7 +3,7 @@ module Teller
     WORKFLOWS = {
       "deposit" => {
         label: "Deposit",
-        required_fields: %i[primary_account_reference],
+        required_fields: [],
         funding_modes: %w[cash check mixed],
         ui_sections: %w[checks],
         entry_profile: "deposit",
@@ -17,7 +17,7 @@ module Teller
       },
       "withdrawal" => {
         label: "Withdrawal",
-        required_fields: %i[primary_account_reference],
+        required_fields: [],
         funding_modes: %w[cash],
         ui_sections: [],
         entry_profile: "withdrawal",
@@ -31,7 +31,7 @@ module Teller
       },
       "transfer" => {
         label: "Transfer",
-        required_fields: %i[primary_account_reference counterparty_account_reference],
+        required_fields: [],
         funding_modes: %w[account],
         ui_sections: [],
         entry_profile: "transfer",
@@ -100,7 +100,7 @@ module Teller
         WORKFLOWS.transform_values do |definition|
           {
             label: definition.fetch(:label),
-            required_fields: Array(definition[:required_fields]).map(&:to_s),
+            required_fields: required_fields_for(definition),
             funding_modes: Array(definition[:funding_modes]).map(&:to_s),
             ui_sections: Array(definition[:ui_sections]).map(&:to_s),
             entry_profile: definition.fetch(:entry_profile).to_s,
@@ -114,6 +114,25 @@ module Teller
           }
         end
       end
+
+      private
+        def required_fields_for(definition)
+          fields = Array(definition[:required_fields]).map(&:to_s)
+
+          if definition.fetch(:primary_account_policy).to_s == "always"
+            fields << "primary_account_reference"
+          end
+
+          if definition.fetch(:requires_counterparty_account)
+            fields << "counterparty_account_reference"
+          end
+
+          if definition.fetch(:requires_settlement_account)
+            fields << "settlement_account_reference"
+          end
+
+          fields.uniq
+        end
     end
   end
 end
