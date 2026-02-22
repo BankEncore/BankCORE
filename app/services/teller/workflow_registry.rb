@@ -6,42 +6,60 @@ module Teller
         required_fields: %i[primary_account_reference],
         funding_modes: %w[cash check mixed],
         ui_sections: %w[checks],
-        entry_profile: "deposit"
+        entry_profile: "deposit",
+        amount_input_mode: "manual",
+        effective_amount_source: "cash_plus_checks",
+        cash_impact_profile: "inflow"
       },
       "withdrawal" => {
         label: "Withdrawal",
         required_fields: %i[primary_account_reference],
         funding_modes: %w[cash],
         ui_sections: [],
-        entry_profile: "withdrawal"
+        entry_profile: "withdrawal",
+        amount_input_mode: "manual",
+        effective_amount_source: "amount_field",
+        cash_impact_profile: "outflow"
       },
       "transfer" => {
         label: "Transfer",
         required_fields: %i[primary_account_reference counterparty_account_reference],
         funding_modes: %w[account],
         ui_sections: [],
-        entry_profile: "transfer"
+        entry_profile: "transfer",
+        amount_input_mode: "manual",
+        effective_amount_source: "amount_field",
+        cash_impact_profile: "none"
       },
       "check_cashing" => {
         label: "Check Cashing",
         required_fields: %i[check_amount_cents settlement_account_reference],
         funding_modes: %w[check],
         ui_sections: %w[check_cashing],
-        entry_profile: "check_cashing"
+        entry_profile: "check_cashing",
+        amount_input_mode: "check_cashing_net_payout",
+        effective_amount_source: "check_cashing_net_payout",
+        cash_impact_profile: "outflow"
       },
       "draft" => {
         label: "Bank Draft",
         required_fields: %i[draft_amount_cents draft_payee_name draft_instrument_number draft_liability_account_reference],
         funding_modes: %w[account cash],
         ui_sections: %w[draft],
-        entry_profile: "draft"
+        entry_profile: "draft",
+        amount_input_mode: "draft_amount",
+        effective_amount_source: "amount_field",
+        cash_impact_profile: "draft_funding"
       },
       "vault_transfer" => {
         label: "Vault Transfer",
         required_fields: %i[vault_transfer_direction vault_transfer_reason_code],
         funding_modes: %w[cash],
         ui_sections: %w[vault_transfer],
-        entry_profile: "vault_transfer"
+        entry_profile: "vault_transfer",
+        amount_input_mode: "manual",
+        effective_amount_source: "amount_field",
+        cash_impact_profile: "vault_directional"
       }
     }.freeze
 
@@ -61,7 +79,10 @@ module Teller
             required_fields: Array(definition[:required_fields]).map(&:to_s),
             funding_modes: Array(definition[:funding_modes]).map(&:to_s),
             ui_sections: Array(definition[:ui_sections]).map(&:to_s),
-            entry_profile: definition.fetch(:entry_profile).to_s
+            entry_profile: definition.fetch(:entry_profile).to_s,
+            amount_input_mode: definition.fetch(:amount_input_mode).to_s,
+            effective_amount_source: definition.fetch(:effective_amount_source).to_s,
+            cash_impact_profile: definition.fetch(:cash_impact_profile).to_s
           }
         end
       end

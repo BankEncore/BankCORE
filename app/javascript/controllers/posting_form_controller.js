@@ -153,9 +153,10 @@ export default class extends Controller {
     const showDraftSection = this.workflowHasSection(transactionType, "draft", schemaSections)
     const showVaultTransferSection = this.workflowHasSection(transactionType, "vault_transfer", schemaSections)
     const showCheckCashingSection = this.workflowHasSection(transactionType, "check_cashing", schemaSections)
-    if (transactionType === "check_cashing") {
+    const amountInputMode = this.workflowAmountInputMode(transactionType)
+    if (amountInputMode === "check_cashing_net_payout") {
       this.amountCentsTarget.value = checkCashingAmounts.netCashPayoutCents.toString()
-    } else if (transactionType === "draft") {
+    } else if (amountInputMode === "draft_amount") {
       this.amountCentsTarget.value = draftAmounts.draftAmountCents.toString()
     }
     const totalAmountCents = this.effectiveAmountCents()
@@ -643,11 +644,13 @@ export default class extends Controller {
 
   calculateCashImpact(amountCents) {
     const transactionType = this.transactionTypeTarget.value
-    if (transactionType === "deposit") {
+    const cashImpactProfile = this.workflowCashImpactProfile(transactionType)
+
+    if (cashImpactProfile === "inflow") {
       return amountCents
     }
 
-    if (transactionType === "draft") {
+    if (cashImpactProfile === "draft_funding") {
       if (this.draftCashFunding()) {
         return this.draftAmounts().totalFundingCents
       }
@@ -655,7 +658,7 @@ export default class extends Controller {
       return 0
     }
 
-    if (transactionType === "vault_transfer") {
+    if (cashImpactProfile === "vault_directional") {
       const amountCents = Math.max(parseInt(this.amountCentsTarget.value || "0", 10), 0)
       const direction = this.hasVaultTransferDirectionTarget ? this.vaultTransferDirectionTarget.value.trim() : ""
 
@@ -670,7 +673,7 @@ export default class extends Controller {
       return 0
     }
 
-    if (["withdrawal", "check_cashing"].includes(transactionType)) {
+    if (cashImpactProfile === "outflow") {
       return -amountCents
     }
 
@@ -706,6 +709,54 @@ export default class extends Controller {
     }
 
     return transactionType
+  }
+
+  workflowAmountInputMode(transactionType) {
+    const mode = this.workflowSchema?.[transactionType]?.amount_input_mode
+    if (mode) {
+      return mode
+    }
+
+    const fallbackModes = {
+      check_cashing: "check_cashing_net_payout",
+      draft: "draft_amount"
+    }
+
+    return fallbackModes[transactionType] || "manual"
+  }
+
+  workflowEffectiveAmountSource(transactionType) {
+    const source = this.workflowSchema?.[transactionType]?.effective_amount_source
+    if (source) {
+      return source
+    }
+
+    if (transactionType === "deposit") {
+      return "cash_plus_checks"
+    }
+
+    if (transactionType === "check_cashing") {
+      return "check_cashing_net_payout"
+    }
+
+    return "amount_field"
+  }
+
+  workflowCashImpactProfile(transactionType) {
+    const profile = this.workflowSchema?.[transactionType]?.cash_impact_profile
+    if (profile) {
+      return profile
+    }
+
+    const fallbackProfiles = {
+      deposit: "inflow",
+      withdrawal: "outflow",
+      check_cashing: "outflow",
+      draft: "draft_funding",
+      vault_transfer: "vault_directional"
+    }
+
+    return fallbackProfiles[transactionType] || "none"
   }
 
   hasWorkflowSchemaLoaded() {
@@ -949,12 +1000,20 @@ export default class extends Controller {
   }
 
   effectiveAmountCents() {
-    if (this.transactionTypeTarget.value === "check_cashing") {
+    const transactionType = this.transactionTypeTarget.value
+    const amountSource = this.workflowEffectiveAmountSource(transactionType)
+
+    if (amountSource === "check_cashing_net_payout") {
       return this.checkCashingAmounts().netCashPayoutCents
     }
 
     const baseAmount = parseInt(this.amountCentsTarget.value || "0", 10)
-    const depositCheckSubtotal = this.transactionTypeTarget.value === "deposit" ? this.checkSubtotalCents() : 0
+
+    if (amountSource === "cash_plus_checks") {
+      return Math.max(baseAmount, 0) + this.checkSubtotalCents()
+    }
+
+    const depositCheckSubtotal = transactionType === "deposit" ? this.checkSubtotalCents() : 0
     return Math.max(baseAmount, 0) + depositCheckSubtotal
   }
 
