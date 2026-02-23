@@ -33,6 +33,7 @@ Rails.application.routes.draw do
 
   namespace :ops do
     root "dashboard#index"
+    get "ledger", to: "ledger#index", as: :ledger
   end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

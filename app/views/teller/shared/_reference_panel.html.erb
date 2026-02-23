@@ -1,41 +1,14 @@
-<section aria-label="Reference Panel" class="card bg-base-200 border border-base-300 lg:sticky lg:top-4 h-fit">
-  <div class="card-body text-sm">
-    <h2 class="card-title text-lg">Reference Summary</h2>
+<section aria-label="Reference Panel" class="ui-panel bg-base-200 border-base-300 lg:sticky lg:top-4 h-fit">
+  <div class="ui-panel-pad text-sm">
+    <h2 class="ui-section-title text-lg">Reference Summary</h2>
 
-    <p class="font-semibold mt-2">Session Context</p>
-    <dl class="space-y-1">
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Teller</dt>
-        <dd class="font-medium"><%= Current.user&.email_address || "Not signed in" %></dd>
-      </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Branch</dt>
-        <dd class="font-medium"><%= current_branch&.name || "Not set" %></dd>
-      </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Workstation</dt>
-        <dd class="font-medium"><%= current_workstation&.name || "Not set" %></dd>
-      </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Session Status</dt>
-        <dd class="font-medium"><%= teller_session&.status&.titleize || "Not open" %></dd>
-      </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Assigned Drawer</dt>
-        <dd class="font-medium"><%= teller_session&.cash_location&.name || "Not assigned" %></dd>
-      </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Cash Reference</dt>
-        <dd class="font-medium"><%= teller_session&.cash_location.present? ? "cash:#{teller_session.cash_location.code}" : "cash:unassigned" %></dd>
-      </div>
-    </dl>
 
     <div class="divider my-2"></div>
-    <p class="font-semibold">Transaction Snapshot</p>
+    <p class="ui-section-title font-semibold">Transaction Snapshot</p>
     <dl class="space-y-1">
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Type</dt>
-        <dd class="font-medium" data-posting-form-target="summaryTransactionType">N/A</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key">Type</dt>
+        <dd class="ui-kv-value" data-posting-form-target="summaryTransactionType">N/A</dd>
       </div>
       <div class="flex justify-between gap-2">
         <dt class="opacity-70">Primary Account</dt>

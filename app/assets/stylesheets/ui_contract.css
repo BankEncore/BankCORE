@@ -1,0 +1,51 @@
+/* ui_contract.css
+   BankCORE workstation primitives mapped to DaisyUI theme tokens.
+   Intentionally conservative: structure comes from neutrals + borders.
+*/
+
+.ui-panel {
+  /* DaisyUI tokens via Tailwind classes applied in markup */
+  border-radius: 0.5rem;
+  border-width: 1px;
+  border-color: var(--tw-border-opacity, #e5e7eb);
+  background-color: var(--tw-bg-opacity, #f3f4f6);
+}
+
+.ui-panel-pad {
+  /* Use Tailwind in markup: p-3 md:p-4 */
+}
+
+.ui-section-title {
+  /* Use Tailwind in markup: font-bold text-lg text-base-content */
+}
+
+.ui-muted {
+  /* Use Tailwind in markup: text-xs text-base-content/60 */
+}
+
+.ui-kv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.1rem;
+  margin-bottom: 0.1rem;
+  padding: 0;
+}
+
+.ui-kv-key {
+  font-weight: 500;
+  color: var(--tw-text-opacity, #6b7280);
+}
+
+.ui-kv-value {
+  font-family: 'Roboto Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--tw-text-opacity, #111827);
+}
+
+.ui-money {
+  font-family: 'Roboto Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--tw-text-opacity, #16a34a);
+}

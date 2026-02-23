@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ops | BankCORE</title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "application", "ui_contract", media: "all" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="bg-base-200">
+    <nav class="navbar bg-base-100 border-b border-base-300 mb-4">
+      <div class="container mx-auto flex justify-between items-center">
+        <a href="/ops" class="font-bold text-lg">Ops Dashboard</a>
+        <a href="/ops/ledger" class="btn btn-sm btn-outline">Ledger</a>
+      </div>
+    </nav>
+    <main class="container mx-auto px-4">
+      <%= yield %>
+    </main>
+  </body>
+</html>

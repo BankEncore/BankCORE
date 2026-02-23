@@ -692,7 +692,16 @@ export default class extends Controller {
   }
 
   workflowSections(transactionType) {
-    return Array(this.workflowSchema?.[transactionType]?.ui_sections)
+    const sections = this.workflowSchema?.[transactionType]?.ui_sections
+    if (Array.isArray(sections)) {
+      return sections
+    }
+
+    if (sections) {
+      return [sections]
+    }
+
+    return []
   }
 
   workflowEntryProfile(transactionType) {

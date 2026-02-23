@@ -3,22 +3,23 @@
     <h2 class="card-title text-lg">Teller Session</h2>
     <p>Status: <%= teller_session&.status || "Not open" %></p>
     <p>Drawer: <%= teller_session&.cash_location&.name || "Not assigned" %></p>
+    <% money = ->(cents) { number_to_currency((cents || 0) / 100.0) } %>
     <% if teller_session.present? && teller_session.open? %>
-      <p>Opening cash (cents): <%= teller_session.opening_cash_cents %></p>
-      <p>Net cash movements (cents): <%= teller_session.net_cash_movement_cents %></p>
-      <p>Expected cash now (cents): <%= teller_session.expected_cash_cents %></p>
+      <p>Opening cash: <span class="ui-money"><%= money[teller_session.opening_cash_cents] %></span></p>
+      <p>Net cash movements: <span class="ui-money"><%= money[teller_session.net_cash_movement_cents] %></span></p>
+      <p>Expected cash now: <span class="ui-money"><%= money[teller_session.expected_cash_cents] %></span></p>
     <% elsif teller_session.present? && teller_session.closed? %>
-      <p>Opening cash (cents): <%= teller_session.opening_cash_cents %></p>
-      <p>Expected closing cash (cents): <%= teller_session.expected_closing_cash_cents %></p>
-      <p>Declared closing cash (cents): <%= teller_session.closing_cash_cents %></p>
-      <p>Cash variance (cents): <%= teller_session.cash_variance_cents %></p>
+      <p>Opening cash: <span class="ui-money"><%= money[teller_session.opening_cash_cents] %></span></p>
+      <p>Expected closing cash: <span class="ui-money"><%= money[teller_session.expected_closing_cash_cents] %></span></p>
+      <p>Declared closing cash: <span class="ui-money"><%= money[teller_session.closing_cash_cents] %></span></p>
+      <p>Cash variance: <span class="ui-money"><%= money[teller_session.cash_variance_cents] %></span></p>
     <% end %>
 
     <% if teller_session.blank? %>
       <%= form_with url: teller_teller_session_path, method: :post do |form| %>
         <p class="form-control">
-          <%= form.label :opening_cash_cents, "Opening cash (cents)" %><br>
-          <%= form.number_field :opening_cash_cents, min: 0, value: 0, required: true, class: "input input-bordered" %>
+          <%= form.label :opening_cash_cents, "Opening cash" %><br>
+          <%= form.text_field :opening_cash_cents, min: 0, value: 0, required: true, class: "input input-bordered", data: { controller: "currency-input", currency_input_target: "input" } %>
         </p>
         <%= form.submit "Open Teller Session", class: "btn btn-primary" %>
       <% end %>
@@ -38,8 +39,8 @@
 
       <%= form_with url: close_teller_teller_session_path, method: :patch do |form| %>
         <p class="form-control">
-          <%= form.label :closing_cash_cents, "Declared closing cash (cents)" %><br>
-          <%= form.number_field :closing_cash_cents, min: 0, required: true, class: "input input-bordered" %>
+          <%= form.label :closing_cash_cents, "Declared closing cash" %><br>
+          <%= form.text_field :closing_cash_cents, min: 0, required: true, class: "input input-bordered", data: { controller: "currency-input", currency_input_target: "input" } %>
         </p>
         <p class="form-control">
           <%= form.label :cash_variance_reason, "Variance reason (optional)" %><br>

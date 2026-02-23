@@ -1,18 +1,16 @@
-<section aria-label="Live Totals" class="card bg-base-100 border border-base-300">
-  <div class="card-body">
-    <h2 class="card-title text-lg">Live Totals</h2>
-    <p>
-      Status:
-      <strong
-        data-posting-form-target="statusBadge"
-        class="badge">Out of Balance</strong>
-    </p>
-    <p>Cash subtotal: <strong data-posting-form-target="cashSubtotal">$0.00</strong></p>
-    <p>Check subtotal: <strong data-posting-form-target="checkSubtotal">$0.00</strong></p>
-    <p>Total amount: <strong data-posting-form-target="totalAmount">$0.00</strong></p>
-    <p>Debit total: <strong data-posting-form-target="debitTotal">$0.00</strong></p>
-    <p>Credit total: <strong data-posting-form-target="creditTotal">$0.00</strong></p>
-    <p>Out-of-balance delta: <strong data-posting-form-target="imbalance">$0.00</strong></p>
+<section aria-label="Live Totals" class="ui-panel bg-base-100 border-base-300">
+  <div class="ui-panel-pad">
+    <h2 class="ui-section-title text-lg">Live Totals</h2>
+    <div class="ui-kv-row">
+      <span class="ui-kv-key">Status:</span>
+      <strong data-posting-form-target="statusBadge" class="badge">Out of Balance</strong>
+    </div>
+    <div class="ui-kv-row">Cash subtotal: <span class="ui-money" data-posting-form-target="cashSubtotal">$0.00</span></div>
+    <div class="ui-kv-row">Check subtotal: <span class="ui-money" data-posting-form-target="checkSubtotal">$0.00</span></div>
+    <div class="ui-kv-row">Total amount: <span class="ui-money" data-posting-form-target="totalAmount">$0.00</span></div>
+    <div class="ui-kv-row">Debit total: <span class="ui-money" data-posting-form-target="debitTotal">$0.00</span></div>
+    <div class="ui-kv-row">Credit total: <span class="ui-money" data-posting-form-target="creditTotal">$0.00</span></div>
+    <div class="ui-kv-row">Out-of-balance delta: <span class="ui-money" data-posting-form-target="imbalance">$0.00</span></div>
     <div class="alert alert-warning mt-2" data-posting-form-target="thresholdWarning" hidden>
       <span>Supervisor threshold warning: transaction exceeds $1,000.00.</span>
     </div>

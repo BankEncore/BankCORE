@@ -1,0 +1,31 @@
+<section class="ui-panel bg-base-100 border-base-300">
+  <div class="ui-panel-pad">
+    <h2 class="ui-section-title text-lg mb-4">Journal Ledger</h2>
+    <table class="table w-full table-zebra">
+      <thead>
+        <tr>
+          <th>Posting Date</th>
+          <th>Batch ID</th>
+          <th>Leg ID</th>
+          <th>Account Reference</th>
+          <th>Side</th>
+          <th>Amount</th>
+          <th>Batch Ref</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @ledger_legs.each do |leg| %>
+          <tr>
+            <td><%= leg.posting_batch&.committed_at&.strftime('%Y-%m-%d %H:%M') %></td>
+            <td><%= leg.posting_batch_id %></td>
+            <td><%= leg.id %></td>
+            <td><%= leg.account_reference %></td>
+            <td><%= leg.side %></td>
+            <td class="ui-money"><%= number_to_currency(leg.amount_cents.to_f / 100) %></td>
+            <td><%= leg.posting_batch&.request_id %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>
