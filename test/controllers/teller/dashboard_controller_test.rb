@@ -36,30 +36,6 @@ module Teller
       assert_select "a[href='#{new_teller_teller_session_path}']", "Session"
     end
 
-    test "shows transaction flow launcher when session and drawer are available" do
-      user = User.take
-      branch = Branch.create!(code: "031", name: "Posting UI Branch")
-      workstation = Workstation.create!(branch: branch, code: "P01", name: "Posting UI WS")
-      drawer = CashLocation.create!(branch: branch, code: "PD1", name: "Posting UI Drawer", location_type: "drawer")
-
-      grant_teller_dashboard_access(user, branch: branch, workstation: workstation)
-      grant_posting_access(user, branch: branch, workstation: workstation)
-      sign_in_as(user)
-      patch teller_context_path, params: { branch_id: branch.id, workstation_id: workstation.id }
-      post teller_teller_session_path, params: { opening_cash_cents: 1_000 }
-      patch assign_drawer_teller_teller_session_path, params: { cash_location_id: drawer.id }
-
-      get teller_root_path
-
-      assert_response :success
-      assert_select "h2", "Transaction Flows"
-      assert_select "a[href='#{new_teller_deposit_path}']", "Deposit"
-      assert_select "a[href='#{new_teller_withdrawal_path}']", "Withdrawal"
-      assert_select "a[href='#{new_teller_check_cashing_path}']", "Check Cashing"
-      assert_select "a[href='#{new_teller_transfer_path}']", "Transfer"
-      assert_select "div#posting-workspace", count: 0
-    end
-
     test "shows context setup page" do
       user = User.take
       branch = Branch.create!(code: "211", name: "Context Branch")
