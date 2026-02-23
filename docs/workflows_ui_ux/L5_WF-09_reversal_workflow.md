@@ -2,6 +2,8 @@
 
 **Status:** **Not aligned with current codebase**
 **Current Implementation Mapping:** Reversal workflow/routes/controllers are not implemented in teller routes today.
+**Implementation:** Planned. See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
+
 This is the highest-control workflow in Teller Phase 1.
 
 Reversal is:

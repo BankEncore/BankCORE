@@ -2,6 +2,7 @@
 
 **Status:** **Fits but needs working changes**
 **Current Implementation Mapping:** Dashboard exists at `/teller` with links to implemented transaction pages (`/teller/transactions/deposit|withdrawal|transfer|check_cashing`) and context/session management.
+**Implementation:** Implemented. See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
 **Purpose:** A low-friction “home” for the active teller session: launch workflows, view key status, and jump to recent activity.
 
 ## 1) Preconditions

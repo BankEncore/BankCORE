@@ -1,8 +1,9 @@
 
 # L6-WF-03 — Recent Activity (WS-030)
 
-**Status:** **Not aligned with current codebase**
-**Current Implementation Mapping:** No dedicated WS-030 recent activity screen/route is implemented yet.
+**Status:** **Partially aligned with current codebase**
+**Current Implementation Mapping:** Recent history exists at `GET /teller/history`; route naming/contract differs from proposed WS-030.
+**Implementation:** Partial. See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
 **Purpose:** Let teller find prior posted transactions quickly for reprint and reversal initiation.
 
 ## 1) Default scope

@@ -3,6 +3,7 @@
 
 **Status:** **Fits but needs working changes**
 **Current Implementation Mapping:** Read-only receipt viewing exists at `GET /teller/receipts/:request_id`; reversal-linked viewer actions in this doc are not implemented.
+**Implementation:** Partial. See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
 **Purpose:** Read-only view of a posted receipt, with print and (if eligible) reversal.
 
 ## 1) Content

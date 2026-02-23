@@ -2,6 +2,7 @@
 
 **Status:** **Not aligned with current codebase**
 **Current Implementation Mapping:** Misc Receipt workflow/routes/controllers are not implemented in teller routes today.
+**Implementation:** Planned. See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
 
 ---
 
