@@ -148,15 +148,17 @@ export default class extends Controller {
     const draftAmounts = this.draftAmounts()
     const vaultTransferDetails = this.vaultTransferDetails()
     const schemaSections = this.workflowSections(transactionType)
-    const showCheckSection = this.workflowHasSection(transactionType, "checks", schemaSections)
+    const showCheckSectionFromWorkflow = this.workflowHasSection(transactionType, "checks", schemaSections)
+    const isFixedFlowDepositOrDraft = this.hasDefaultTransactionTypeValue && this.defaultTransactionTypeValue && ["deposit", "draft"].includes(this.defaultTransactionTypeValue) && (this.transactionTypeTarget.value || "") === (this.defaultTransactionTypeValue || "")
+    const showCheckSection = showCheckSectionFromWorkflow || (isFixedFlowDepositOrDraft && ["deposit", "draft"].includes(transactionType))
     const showDraftSection = this.workflowHasSection(transactionType, "draft", schemaSections)
     const showVaultTransferSection = this.workflowHasSection(transactionType, "vault_transfer", schemaSections)
     const showCheckCashingSection = this.workflowHasSection(transactionType, "check_cashing", schemaSections)
     const amountInputMode = this.workflowAmountInputMode(transactionType)
     if (amountInputMode === "check_cashing_net_payout") {
-      this.amountCentsTarget.value = checkCashingAmounts.netCashPayoutCents.toString()
+      this.setAmountCents(this.amountCentsTarget, checkCashingAmounts.netCashPayoutCents)
     } else if (amountInputMode === "draft_amount") {
-      this.amountCentsTarget.value = draftAmounts.draftAmountCents.toString()
+      this.setAmountCents(this.amountCentsTarget, draftAmounts.draftAmountCents)
     }
     const totalAmountCents = this.effectiveAmountCents()
     const hasPrimaryAccount = this.primaryAccountReferenceTarget.value.trim().length > 0
@@ -222,7 +224,9 @@ export default class extends Controller {
     if (this.hasCashAccountRowTarget) {
       this.cashAccountRowTarget.hidden = !requiresCashAccount
     }
-    this.checkSectionTarget.hidden = !showCheckSection
+    if (this.hasCheckSectionTarget) {
+      this.checkSectionTarget.hidden = !showCheckSection
+    }
     if (this.hasDraftSectionTarget) {
       this.draftSectionTarget.hidden = !showDraftSection
     }
@@ -236,12 +240,15 @@ export default class extends Controller {
     this.setVaultTransferFieldState(showVaultTransferSection)
     this.setCheckCashingFieldState(showCheckCashingSection)
     this.primaryAccountReferenceTarget.required = requiresPrimaryAccount
+    this.primaryAccountReferenceTarget.setAttribute("aria-required", requiresPrimaryAccount ? "true" : "false")
     this.amountCentsTarget.readOnly = showCheckCashingSection || showDraftSection
     if (this.hasSettlementAccountReferenceTarget) {
       this.settlementAccountReferenceTarget.required = requiresSettlementAccount
+      this.settlementAccountReferenceTarget.setAttribute("aria-required", requiresSettlementAccount ? "true" : "false")
     }
     if (this.hasIdNumberTarget) {
       this.idNumberTarget.required = showCheckCashingSection
+      this.idNumberTarget.setAttribute("aria-required", showCheckCashingSection ? "true" : "false")
     }
 
     const displayedCashAmount = showCheckCashingSection ? checkCashingAmounts.netCashPayoutCents : Math.max(cashAmountCents, 0)
@@ -554,7 +561,7 @@ export default class extends Controller {
     this.transactionTypeTarget.value = this.defaultTransactionTypeValue || "deposit"
     this.primaryAccountReferenceTarget.value = ""
     this.counterpartyAccountReferenceTarget.value = ""
-    this.amountCentsTarget.value = "0"
+    this.setAmountCents(this.amountCentsTarget, 0)
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
     this.resetDraftFields()
@@ -582,7 +589,7 @@ export default class extends Controller {
   clearTransactionFormAfterPost() {
     this.primaryAccountReferenceTarget.value = ""
     this.counterpartyAccountReferenceTarget.value = ""
-    this.amountCentsTarget.value = "0"
+    this.setAmountCents(this.amountCentsTarget, 0)
     this.cashAccountReferenceTarget.value = this.defaultCashAccountReference || ""
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
@@ -840,7 +847,7 @@ export default class extends Controller {
 
     const fallbackSections = {
       deposit: ["checks"],
-      draft: ["draft"],
+      draft: ["draft", "checks"],
       vault_transfer: ["vault_transfer"],
       check_cashing: ["check_cashing"]
     }
@@ -1231,7 +1238,9 @@ export default class extends Controller {
 
     if (this.hasVaultTransferMemoTarget) {
       const reasonCode = this.hasVaultTransferReasonCodeTarget ? this.vaultTransferReasonCodeTarget.value.trim() : ""
-      this.vaultTransferMemoTarget.required = reasonCode === "other"
+      const memoRequired = reasonCode === "other"
+      this.vaultTransferMemoTarget.required = memoRequired
+      this.vaultTransferMemoTarget.setAttribute("aria-required", memoRequired ? "true" : "false")
     }
   }
 
@@ -1249,11 +1258,11 @@ export default class extends Controller {
     }
 
     if (this.hasDraftAmountCentsTarget) {
-      this.draftAmountCentsTarget.value = "0"
+      this.setAmountCents(this.draftAmountCentsTarget, 0)
     }
 
     if (this.hasDraftFeeCentsTarget) {
-      this.draftFeeCentsTarget.value = "0"
+      this.setAmountCents(this.draftFeeCentsTarget, 0)
     }
 
     if (this.hasDraftPayeeNameTarget) {
@@ -1303,11 +1312,11 @@ export default class extends Controller {
 
   resetCheckCashingFields() {
     if (this.hasCheckAmountCentsTarget) {
-      this.checkAmountCentsTarget.value = "0"
+      this.setAmountCents(this.checkAmountCentsTarget, 0)
     }
 
     if (this.hasFeeCentsTarget) {
-      this.feeCentsTarget.value = "0"
+      this.setAmountCents(this.feeCentsTarget, 0)
     }
 
     if (this.hasSettlementAccountReferenceTarget) {
@@ -1413,6 +1422,16 @@ export default class extends Controller {
     }).format((Number(cents) || 0) / 100)
   }
 
+  setAmountCents(target, cents) {
+    const value = String(Math.max(0, parseInt(cents, 10) || 0))
+    const wrapper = target.closest?.("[data-controller~=\"currency-input\"]")
+    if (wrapper) {
+      wrapper.dispatchEvent(new CustomEvent("currency:set", { bubbles: true, detail: { cents: value } }))
+    } else {
+      target.value = value
+    }
+  }
+
   showReceipt({ postingBatchId, tellerTransactionId, requestId, postedAt }) {
     if (!this.hasReceiptPanelTarget) {
       return
@@ -1470,7 +1489,12 @@ export default class extends Controller {
 
   focusFirstField() {
     const firstField = this.primaryAccountReferenceTarget || this.amountCentsTarget
-    if (firstField && typeof firstField.focus === "function") {
+    if (!firstField || typeof firstField.focus !== "function") return
+    const wrapper = firstField.closest?.("[data-controller~=\"currency-input\"]")
+    const displayInput = wrapper?.querySelector?.("[data-currency-input-target=\"displayInput\"]")
+    if (displayInput && typeof displayInput.focus === "function") {
+      displayInput.focus()
+    } else {
       firstField.focus()
     }
   }

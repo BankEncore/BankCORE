@@ -15,7 +15,7 @@
   <% flow_type = local_assigns.fetch(:default_transaction_type, "deposit").presence || "deposit" %>
   <% show_counterparty = fixed_flow && flow_type == "transfer" %>
   <% show_cash_account = local_assigns.fetch(:show_transaction_type, true) %>
-  <% show_checks = flow_type == "deposit" %>
+  <% show_checks = flow_type == "deposit" || flow_type == "draft" %>
   <% show_vault_transfer = fixed_flow && flow_type == "vault_transfer" %>
   <% show_draft = fixed_flow && flow_type == "draft" %>
   <% show_check_cashing = fixed_flow && flow_type == "check_cashing" %>
@@ -46,7 +46,10 @@
 
           <p class="form-control">
             <%= form.label :amount_cents, "Cash Amount" %><br>
-            <%= form.number_field :amount_cents, min: 0, step: 1, value: 0, data: { posting_form_target: "amountCents", action: "input->posting-form#recalculate" }, required: true, class: "input input-bordered" %>
+            <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+              <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
+              <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
+            </div>
           </p>
 
           <p class="form-control">
@@ -87,7 +90,10 @@
                     <input type="text" class="input input-bordered" placeholder="Routing #" data-check-field="routing" data-action="input->posting-form#recalculate">
                     <input type="text" class="input input-bordered" placeholder="Account #" data-check-field="account" data-action="input->posting-form#recalculate">
                     <input type="text" class="input input-bordered" placeholder="Check #" data-check-field="number" data-action="input->posting-form#recalculate">
-                    <input type="number" min="1" step="1" class="input input-bordered" placeholder="Amount" data-check-field="amount" data-action="input->posting-form#recalculate">
+                    <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                      <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
+                      <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Check amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur">
+                    </div>
                   </div>
                   <div class="mt-3 collapse collapse-arrow bg-base-200 border border-base-300">
                     <input type="checkbox">
@@ -119,11 +125,17 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
               <p class="form-control">
                 <%= form.label :check_amount_cents, "Check Amount" %><br>
-                <%= form.number_field :check_amount_cents, min: 1, step: 1, value: 0, data: { posting_form_target: "checkAmountCents", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                  <%= form.hidden_field :check_amount_cents, value: 0, data: { posting_form_target: "checkAmountCents", currency_input_target: "hiddenInput" } %>
+                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Check Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:check_amount_cents) %>" />
+                </div>
               </p>
               <p class="form-control">
                 <%= form.label :fee_cents, "Fee" %><br>
-                <%= form.number_field :fee_cents, min: 0, step: 1, value: 0, data: { posting_form_target: "feeCents", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                  <%= form.hidden_field :fee_cents, value: 0, data: { posting_form_target: "feeCents", currency_input_target: "hiddenInput" } %>
+                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:fee_cents) %>" />
+                </div>
               </p>
               <p class="form-control">
                 <%= form.label :settlement_account_reference, "Settlement Account Reference" %><br>
@@ -187,11 +199,17 @@
               </p>
               <p class="form-control">
                 <%= form.label :draft_amount_cents, "Draft Amount" %><br>
-                <%= form.number_field :draft_amount_cents, min: 1, step: 1, value: 0, data: { posting_form_target: "draftAmountCents", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                  <%= form.hidden_field :draft_amount_cents, value: 0, data: { posting_form_target: "draftAmountCents", currency_input_target: "hiddenInput" } %>
+                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Draft Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_amount_cents) %>" />
+                </div>
               </p>
               <p class="form-control">
                 <%= form.label :draft_fee_cents, "Fee" %><br>
-                <%= form.number_field :draft_fee_cents, min: 0, step: 1, value: 0, data: { posting_form_target: "draftFeeCents", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                  <%= form.hidden_field :draft_fee_cents, value: 0, data: { posting_form_target: "draftFeeCents", currency_input_target: "hiddenInput" } %>
+                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Draft Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_fee_cents) %>" />
+                </div>
               </p>
               <p class="form-control md:col-span-2">
                 <%= form.label :draft_payee_name, "Payee" %><br>

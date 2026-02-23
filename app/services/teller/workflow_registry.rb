@@ -61,7 +61,7 @@ module Teller
         label: "Bank Draft",
         required_fields: %i[draft_amount_cents draft_payee_name draft_instrument_number draft_liability_account_reference],
         funding_modes: %w[account cash],
-        ui_sections: %w[draft],
+        ui_sections: %w[draft checks],
         entry_profile: "draft",
         amount_input_mode: "draft_amount",
         effective_amount_source: "amount_field",

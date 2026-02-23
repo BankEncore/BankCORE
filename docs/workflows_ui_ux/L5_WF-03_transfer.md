@@ -2,6 +2,7 @@
 
 **Status:** **Fits but needs working changes** — transfer workflow is implemented, but approval and request-shape sections need normalization to current token-based approval flow.
 **Current Implementation Mapping:** UI flow is `GET /teller/transactions/transfer`; validation/posting are `POST /teller/transactions/validate` and `POST /teller/posting`; receipt is `GET /teller/receipts/:request_id`.
+**Implementation:** Implemented. See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
 
 ---
 
@@ -72,6 +73,10 @@ Zones:
 
 * Amount > 0
 * From != To (blocking)
+
+### 5.1 Required and optional fields (authoritative)
+
+See [02_teller_transaction_requirements.md](02_teller_transaction_requirements.md) for the authoritative required/optional field list and server validation behavior for Transfer.
 
 ---
 
