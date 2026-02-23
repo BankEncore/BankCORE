@@ -28,13 +28,8 @@ export default class extends Controller {
     "draftInstrumentNumber",
     "draftLiabilityAccountReference",
     "draftFeeIncomeAccountReference",
-    "vaultTransferDirection",
-    "vaultTransferCounterpartyReference",
-    "vaultTransferCounterpartyRow",
-    "vaultTransferSourceReference",
-    "vaultTransferSourceRow",
-    "vaultTransferDestinationReference",
-    "vaultTransferDestinationRow",
+    "vaultTransferFromReference",
+    "vaultTransferToReference",
     "vaultTransferReasonCode",
     "vaultTransferMemo",
     "checkNumber",
@@ -100,7 +95,8 @@ export default class extends Controller {
     accountReferenceUrl: String,
     accountHistoryUrl: String,
     workflowSchemaUrl: String,
-    receiptUrlTemplate: String
+    receiptUrlTemplate: String,
+    drawerReference: String
   }
 
   connect() {
@@ -258,7 +254,9 @@ export default class extends Controller {
     this.creditTotalTarget.textContent = this.formatCents(creditTotal)
     this.imbalanceTarget.textContent = this.formatCents(imbalance)
     this.totalAmountTarget.textContent = this.formatCents(totalAmountCents)
-    this.setBalanceBadge(balanced ? "Balanced" : "Out of Balance")
+    if (this.hasStatusBadgeTarget) {
+      this.setBalanceBadge(balanced ? "Balanced" : "Out of Balance")
+    }
     if (this.hasHeaderStatusTarget) {
       this.headerStatusTarget.textContent = balanced ? "Balanced" : "Editing"
     }
@@ -617,6 +615,9 @@ export default class extends Controller {
   }
 
   setBalanceBadge(state) {
+    if (!this.hasStatusBadgeTarget) {
+      return
+    }
     this.statusBadgeTarget.textContent = state
     this.setBadgeVariant(this.statusBadgeTarget, state === "Balanced" ? "success" : "error")
   }
@@ -664,7 +665,7 @@ export default class extends Controller {
 
     if (cashImpactProfile === "vault_directional") {
       const amountCents = Math.max(parseInt(this.amountCentsTarget.value || "0", 10), 0)
-      const direction = this.hasVaultTransferDirectionTarget ? this.vaultTransferDirectionTarget.value.trim() : ""
+      const direction = this.vaultTransferDetails().direction
 
       if (direction === "drawer_to_vault") {
         return -amountCents
@@ -699,7 +700,8 @@ export default class extends Controller {
   }
 
   workflowSections(transactionType) {
-    return Array(this.workflowSchema?.[transactionType]?.ui_sections)
+    const sections = this.workflowSchema?.[transactionType]?.ui_sections
+    return Array.isArray(sections) ? sections : []
   }
 
   workflowEntryProfile(transactionType) {
@@ -1127,36 +1129,32 @@ export default class extends Controller {
   }
 
   vaultTransferDetails() {
-    const direction = this.hasVaultTransferDirectionTarget ? this.vaultTransferDirectionTarget.value.trim() : ""
-    const counterpartyReference = this.hasVaultTransferCounterpartyReferenceTarget ? this.vaultTransferCounterpartyReferenceTarget.value.trim() : ""
-    const sourceReference = this.hasVaultTransferSourceReferenceTarget ? this.vaultTransferSourceReferenceTarget.value.trim() : ""
-    const destinationReference = this.hasVaultTransferDestinationReferenceTarget ? this.vaultTransferDestinationReferenceTarget.value.trim() : ""
-    const drawerReference = this.cashAccountReferenceTarget.value.trim()
+    const fromRef = this.hasVaultTransferFromReferenceTarget ? this.vaultTransferFromReferenceTarget.value.trim() : ""
+    const toRef = this.hasVaultTransferToReferenceTarget ? this.vaultTransferToReferenceTarget.value.trim() : ""
+    const drawerRef = (this.hasDrawerReferenceValue && this.drawerReferenceValue) ? this.drawerReferenceValue.trim() : this.cashAccountReferenceTarget.value.trim()
     const reasonCode = this.hasVaultTransferReasonCodeTarget ? this.vaultTransferReasonCodeTarget.value.trim() : ""
     const memo = this.hasVaultTransferMemoTarget ? this.vaultTransferMemoTarget.value.trim() : ""
 
-    const resolved = {
+    const sourceReference = fromRef
+    const destinationReference = toRef
+    let direction = ""
+    if (sourceReference && destinationReference && sourceReference !== destinationReference) {
+      const fromIsDrawer = sourceReference === drawerRef
+      const toIsDrawer = destinationReference === drawerRef
+      if (fromIsDrawer && !toIsDrawer) direction = "drawer_to_vault"
+      else if (!fromIsDrawer && toIsDrawer) direction = "vault_to_drawer"
+      else if (!fromIsDrawer && !toIsDrawer) direction = "vault_to_vault"
+    }
+
+    const valid = direction.length > 0 && sourceReference.length > 0 && destinationReference.length > 0
+    return {
       direction,
-      sourceReference: "",
-      destinationReference: "",
+      sourceReference,
+      destinationReference,
       reasonCode,
       memo,
-      valid: false
+      valid
     }
-
-    if (direction === "drawer_to_vault") {
-      resolved.sourceReference = drawerReference
-      resolved.destinationReference = counterpartyReference
-    } else if (direction === "vault_to_drawer") {
-      resolved.sourceReference = counterpartyReference
-      resolved.destinationReference = drawerReference
-    } else if (direction === "vault_to_vault") {
-      resolved.sourceReference = sourceReference
-      resolved.destinationReference = destinationReference
-    }
-
-    resolved.valid = resolved.sourceReference.length > 0 && resolved.destinationReference.length > 0 && resolved.sourceReference !== resolved.destinationReference
-    return resolved
   }
 
   hasInvalidVaultTransferFields(details) {
@@ -1180,26 +1178,15 @@ export default class extends Controller {
   }
 
   resetVaultTransferFields() {
-    if (this.hasVaultTransferDirectionTarget) {
-      this.vaultTransferDirectionTarget.value = "drawer_to_vault"
+    if (this.hasVaultTransferFromReferenceTarget) {
+      this.vaultTransferFromReferenceTarget.value = ""
     }
-
-    if (this.hasVaultTransferCounterpartyReferenceTarget) {
-      this.vaultTransferCounterpartyReferenceTarget.value = ""
+    if (this.hasVaultTransferToReferenceTarget) {
+      this.vaultTransferToReferenceTarget.value = ""
     }
-
-    if (this.hasVaultTransferSourceReferenceTarget) {
-      this.vaultTransferSourceReferenceTarget.value = ""
-    }
-
-    if (this.hasVaultTransferDestinationReferenceTarget) {
-      this.vaultTransferDestinationReferenceTarget.value = ""
-    }
-
     if (this.hasVaultTransferReasonCodeTarget) {
       this.vaultTransferReasonCodeTarget.value = ""
     }
-
     if (this.hasVaultTransferMemoTarget) {
       this.vaultTransferMemoTarget.value = ""
     }
@@ -1220,24 +1207,8 @@ export default class extends Controller {
       return
     }
 
-    const direction = this.hasVaultTransferDirectionTarget ? this.vaultTransferDirectionTarget.value.trim() : ""
-    const usesCounterparty = ["drawer_to_vault", "vault_to_drawer"].includes(direction)
-    const usesSourceDestination = direction === "vault_to_vault"
-
-    if (this.hasVaultTransferCounterpartyRowTarget) {
-      this.vaultTransferCounterpartyRowTarget.hidden = !usesCounterparty
-    }
-
-    if (this.hasVaultTransferSourceRowTarget) {
-      this.vaultTransferSourceRowTarget.hidden = !usesSourceDestination
-    }
-
-    if (this.hasVaultTransferDestinationRowTarget) {
-      this.vaultTransferDestinationRowTarget.hidden = !usesSourceDestination
-    }
-
-    if (this.hasVaultTransferMemoTarget) {
-      const reasonCode = this.hasVaultTransferReasonCodeTarget ? this.vaultTransferReasonCodeTarget.value.trim() : ""
+    if (this.hasVaultTransferMemoTarget && this.hasVaultTransferReasonCodeTarget) {
+      const reasonCode = this.vaultTransferReasonCodeTarget.value.trim()
       const memoRequired = reasonCode === "other"
       this.vaultTransferMemoTarget.required = memoRequired
       this.vaultTransferMemoTarget.setAttribute("aria-required", memoRequired ? "true" : "false")

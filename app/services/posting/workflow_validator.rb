@@ -29,6 +29,8 @@ module Posting
           if mode == :validate
             errors << "Primary account reference is required" if entries.blank? && params[:primary_account_reference].blank?
           end
+          errors << "ID type is required" if params[:id_type].blank?
+          errors << "ID number is required" if params[:id_number].blank?
         when "draft"
           validate_draft(errors, params, mode: mode)
         when "vault_transfer"

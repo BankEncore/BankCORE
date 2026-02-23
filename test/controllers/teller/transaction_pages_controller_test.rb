@@ -52,11 +52,12 @@ module Teller
       assert_response :success
       assert_select "h2", "Deposit"
       assert_select "h2", "Reference Summary"
-      assert_select "p", /Session Context/
       assert_select "p", /Transaction Snapshot/
       assert_select "p", /Amounts/
       assert_select "p", /Cash Impact/
       assert_select "p", /Posting Readiness/
+      assert_select "h2", text: "Live Totals", count: 0
+      assert_select "h2", text: "Cash Impact Footer", count: 0
       assert_select "p", text: /Primary Account History/, count: 0
       assert_select "input[name='transaction_type'][value='deposit']", count: 1
       assert_select "section[data-posting-form-target='checkSection']:not([hidden])", count: 1

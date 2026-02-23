@@ -63,6 +63,83 @@ module Teller
       assert_posted_amount_cents 2_500
     end
 
+    test "deposit fixed-flow page has required fields and blocks post when missing" do
+      sign_in_via_ui
+      set_teller_context
+      open_teller_session_and_assign_drawer
+
+      visit teller_deposit_transaction_path
+
+      assert page.has_content?("Primary Account Reference"), "Deposit should show primary account field"
+      assert page.has_content?("Cash Amount"), "Deposit should show cash amount field"
+      assert post_button_disabled?, "Post should be blocked when required fields are empty"
+    end
+
+    test "withdrawal fixed-flow page has required fields and blocks post when missing" do
+      sign_in_via_ui
+      set_teller_context
+      open_teller_session_and_assign_drawer
+
+      visit teller_withdrawal_transaction_path
+
+      assert page.has_content?("Primary Account Reference"), "Withdrawal should show primary account field"
+      assert page.has_content?("Cash Amount"), "Withdrawal should show cash amount field"
+      assert post_button_disabled?, "Post should be blocked when required fields are empty"
+    end
+
+    test "transfer fixed-flow page has required fields and blocks post when missing" do
+      sign_in_via_ui
+      set_teller_context
+      open_teller_session_and_assign_drawer
+
+      visit teller_transfer_transaction_path
+
+      assert page.has_content?("Primary Account Reference"), "Transfer should show primary account field"
+      assert page.has_content?("Counterparty Account Reference"), "Transfer should show counterparty field"
+      assert page.has_content?("Cash Amount"), "Transfer should show amount field"
+      assert post_button_disabled?, "Post should be blocked when required fields are empty"
+    end
+
+    test "check cashing fixed-flow page has required fields and blocks post when missing" do
+      sign_in_via_ui
+      set_teller_context
+      open_teller_session_and_assign_drawer
+
+      visit teller_check_cashing_transaction_path
+
+      assert page.has_content?("Check Amount"), "Check cashing should show check amount field"
+      assert page.has_content?("Settlement Account Reference"), "Check cashing should show settlement account field"
+      assert page.has_content?("ID Type"), "Check cashing should show ID type field"
+      assert page.has_content?("ID Number"), "Check cashing should show ID number field"
+      assert post_button_disabled?, "Post should be blocked when required fields are empty"
+    end
+
+    test "draft fixed-flow page has required fields and blocks post when missing" do
+      sign_in_via_ui
+      set_teller_context
+      open_teller_session_and_assign_drawer
+
+      visit teller_draft_transaction_path
+
+      assert page.has_content?("Funding Source"), "Draft should show funding source field"
+      assert page.has_content?("Draft Amount"), "Draft should show draft amount field"
+      assert page.has_content?("Payee"), "Draft should show payee field"
+      assert page.has_content?("Instrument Number"), "Draft should show instrument number field"
+      assert post_button_disabled?, "Post should be blocked when required fields are empty"
+    end
+
+    test "vault transfer fixed-flow page has required fields and blocks post when missing" do
+      sign_in_via_ui
+      set_teller_context
+      open_teller_session_and_assign_drawer
+
+      visit teller_vault_transfer_transaction_path
+
+      assert page.has_content?("Direction"), "Vault transfer should show direction field"
+      assert page.has_content?("Reason Code"), "Vault transfer should show reason code field"
+      assert post_button_disabled?, "Post should be blocked when required fields are empty"
+    end
+
     private
 
       def sign_in_via_ui
@@ -93,6 +170,11 @@ module Teller
         tx = batch.teller_transaction
         assert tx, "Expected a teller transaction"
         assert_equal expected_cents, tx.amount_cents, "Expected amount_cents to match"
+      end
+
+      def post_button_disabled?
+        button = page.find(:button, "Post Transaction", match: :first)
+        button.disabled?
       end
 
       def grant_posting_access(user, branch, workstation)

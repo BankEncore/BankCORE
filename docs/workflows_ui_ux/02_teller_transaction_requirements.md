@@ -75,6 +75,8 @@ Implementation references:
 
 - `check_amount_cents` > 0
 - `settlement_account_reference` — account to debit for the check
+- `id_type` — presenter ID type (e.g. drivers_license, passport)
+- `id_number` — presenter ID number
 - `amount_cents` = net cash payout (check_amount_cents − fee_cents); must be positive
 - `entries` — balanced legs (debit settlement, credit cash for net payout; if fee > 0, credit fee income)
 
@@ -84,9 +86,7 @@ Implementation references:
 
 **Optional (stored in metadata):**
 
-- check_number, routing_number, account_number, payer_name, presenter_type, id_type, id_number, fee_income_account_reference
-
-**Note:** Server does not currently validate id_type or id_number. The UI blocks Post unless settlement_account_reference, id_type, and id_number are filled (stricter than server).
+- check_number, routing_number, account_number, payer_name, presenter_type, fee_income_account_reference
 
 **Posting:** Debit settlement account (check amount); credit cash account (net payout); if fee > 0, credit fee income account.
 
@@ -149,7 +149,7 @@ Implementation references:
 | Deposit        | primary_account_reference, amount_cents > 0, balanced entries (cash and/or checks) |
 | Withdrawal     | primary_account_reference, amount_cents > 0, entries    |
 | Transfer       | primary_account_reference, counterparty_account_reference, amount_cents > 0, entries (or validator applies when entries blank) |
-| Check cashing  | check_amount_cents > 0, settlement_account_reference, amount_cents = net payout > 0, entries |
+| Check cashing  | check_amount_cents > 0, settlement_account_reference, id_type, id_number, amount_cents = net payout > 0, entries |
 | Draft          | draft_amount_cents > 0, draft_payee_name, draft_instrument_number, draft_liability_account_reference; + (cash_account_reference if funding=cash) or primary_account_reference; entries |
 | Vault transfer | vault_transfer_direction, vault_transfer_reason_code, memo if reason=other, source/dest refs by direction, amount_cents > 0, entries |
 
@@ -210,8 +210,8 @@ Use this section to record gaps between the requirements above and the current f
 
 - **Form exposes:** Check amount, fee, settlement account, check number, payer name, routing/account number, presenter type, id_type, id_number.
 - **Form submits:** All of the above plus fee_income_account_reference; entries.
-- **UI blocks on:** check amount <= 0, fee < 0, net payout <= 0, settlement account blank, **id_type blank, id_number blank** (UI-only; server does not validate ID).
-- **Gaps:** **Required in UI but not server:** id_type, id_number. Either document as "UI policy: ID required for check cashing" or add server validation to match.
+- **UI blocks on:** check amount <= 0, fee < 0, net payout <= 0, settlement account blank, id_type blank, id_number blank.
+- **Gaps:** None; required fields (including id_type, id_number) are validated by server and UI.
 
 ### Draft
 

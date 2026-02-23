@@ -8,6 +8,7 @@
   data-posting-form-account-history-url-value="<%= teller_account_history_path %>"
   data-posting-form-workflow-schema-url-value="<%= teller_workflow_schema_path %>"
   data-posting-form-receipt-url-template-value="<%= teller_receipt_path(request_id: "__REQUEST_ID__") %>"
+  data-posting-form-drawer-reference-value="<%= teller_session.cash_location.present? ? "cash:#{teller_session.cash_location.code}" : "" %>"
   data-approval-panel-approval-url-value="<%= teller_approvals_path %>"
   data-reference-panel-account-reference-url-value="<%= teller_account_reference_path %>"
   data-reference-panel-account-history-url-value="<%= teller_account_history_path %>">
@@ -232,42 +233,25 @@
           <section data-posting-form-target="vaultTransferSection" <%= "hidden" unless show_vault_transfer %>>
             <div class="divider my-3"></div>
             <div class="font-medium">Vault Transfer Details</div>
+            <p class="text-sm opacity-80 mt-1">Amount above = Cash Out from Transfer From, Cash In to Transfer To.</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
               <p class="form-control">
-                <%= form.label :vault_transfer_direction, "Direction" %><br>
-                <%= form.select :vault_transfer_direction,
-                  options_for_select([
-                    ["Drawer → Vault", "drawer_to_vault"],
-                    ["Vault → Drawer", "vault_to_drawer"],
-                    ["Vault → Vault", "vault_to_vault"]
-                  ], "drawer_to_vault"),
-                  {},
-                  { data: { posting_form_target: "vaultTransferDirection", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control" data-posting-form-target="vaultTransferCounterpartyRow">
-                <%= form.label :vault_transfer_counterparty_reference, "Vault Cash Location" %><br>
-                <%= form.select :vault_transfer_counterparty_reference,
+                <%= form.label :vault_transfer_from_reference, "Transfer From" %><br>
+                <%= form.select :vault_transfer_from_reference,
                   options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
-                  { include_blank: "Select vault location" },
-                  { data: { posting_form_target: "vaultTransferCounterpartyReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control" data-posting-form-target="vaultTransferSourceRow" hidden>
-                <%= form.label :vault_transfer_source_cash_account_reference, "Source Vault" %><br>
-                <%= form.select :vault_transfer_source_cash_account_reference,
-                  options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
-                  { include_blank: "Select source vault" },
-                  { data: { posting_form_target: "vaultTransferSourceReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control" data-posting-form-target="vaultTransferDestinationRow" hidden>
-                <%= form.label :vault_transfer_destination_cash_account_reference, "Destination Vault" %><br>
-                <%= form.select :vault_transfer_destination_cash_account_reference,
-                  options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
-                  { include_blank: "Select destination vault" },
-                  { data: { posting_form_target: "vaultTransferDestinationReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
+                  { include_blank: "Select source" },
+                  { data: { posting_form_target: "vaultTransferFromReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
               </p>
               <p class="form-control">
-                <%= form.label :vault_transfer_reason_code, "Reason Code" %><br>
+                <%= form.label :vault_transfer_to_reference, "Transfer To" %><br>
+                <%= form.select :vault_transfer_to_reference,
+                  options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
+                  { include_blank: "Select destination" },
+                  { data: { posting_form_target: "vaultTransferToReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
+              </p>
+              <p class="form-control">
+                <%= form.label :vault_transfer_reason_code, "Reason" %><br>
                 <%= form.select :vault_transfer_reason_code,
                   options_for_select([
                     ["Excess cash", "excess_cash"],
@@ -279,7 +263,7 @@
                   { data: { posting_form_target: "vaultTransferReasonCode", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
               </p>
               <p class="form-control md:col-span-2">
-                <%= form.label :vault_transfer_memo, "Memo" %><br>
+                <%= form.label :vault_transfer_memo, "Remarks" %><br>
                 <%= form.text_field :vault_transfer_memo, data: { posting_form_target: "vaultTransferMemo", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
               </p>
             </div>
@@ -292,10 +276,6 @@
 
       <%= render "teller/shared/reference_panel", teller_session: teller_session %>
     </div>
-
-    <%= render "teller/shared/totals_panel" %>
-
-    <%= render "teller/shared/cash_footer" %>
 
     <%= render "teller/shared/approval_modal" %>
 
