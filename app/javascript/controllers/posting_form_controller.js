@@ -1,4 +1,19 @@
 import { Controller } from "@hotwired/stimulus"
+import { buildEntries, computeTotals } from "services/posting_balance"
+import {
+  getSections,
+  getEntryProfile,
+  getAmountInputMode,
+  getEffectiveAmountSource,
+  getCashImpactProfile,
+  getRequiresPrimaryAccount,
+  getRequiresCounterpartyAccount,
+  getRequiresCashAccount,
+  getRequiresSettlementAccount,
+  hasSection as workflowHasSectionInConfig,
+  blockedReason as workflowBlockedReason
+} from "services/posting_workflows"
+import { appendEntriesAndTypePayload } from "services/posting_payload"
 
 export default class extends Controller {
   static targets = [
@@ -58,6 +73,10 @@ export default class extends Controller {
     "receiptPostedAt",
     "receiptLink",
     "receiptNewButton",
+    "postSuccessModal",
+    "postSuccessReceiptLink",
+    "postSuccessIds",
+    "postSuccessNewButton",
     "headerStateBadge",
     "primaryReferenceValue",
     "primaryStatus",
@@ -136,40 +155,81 @@ export default class extends Controller {
     }
   }
 
-  recalculate() {
-    const cashAmountCents = parseInt(this.amountCentsTarget.value || "0", 10)
-    const checkSubtotalCents = this.checkSubtotalCents()
+  getState() {
     const transactionType = this.transactionTypeTarget.value
     const checkCashingAmounts = this.checkCashingAmounts()
     const draftAmounts = this.draftAmounts()
     const vaultTransferDetails = this.vaultTransferDetails()
-    const schemaSections = this.workflowSections(transactionType)
-    const showCheckSectionFromWorkflow = this.workflowHasSection(transactionType, "checks", schemaSections)
+    const checks = this.collectCheckRows()
+    const effectiveAmountCents = this.effectiveAmountCents()
+    const entryProfile = getEntryProfile(transactionType, this.workflowSchema)
+
+    return {
+      transactionType,
+      entryProfile,
+      primaryAccountReference: this.primaryAccountReferenceTarget.value,
+      counterpartyAccountReference: this.counterpartyAccountReferenceTarget.value,
+      cashAccountReference: this.cashAccountReferenceTarget.value,
+      amountCents: parseInt(this.amountCentsTarget.value || "0", 10),
+      effectiveAmountCents,
+      checks,
+      checkCashingAmounts,
+      settlementAccountReference: this.hasSettlementAccountReferenceTarget ? this.settlementAccountReferenceTarget.value : "",
+      feeIncomeAccountReference: this.hasFeeIncomeAccountReferenceTarget ? this.feeIncomeAccountReferenceTarget.value : "income:check_cashing_fee",
+      draftAmounts,
+      draftFundingSource: this.hasDraftFundingSourceTarget ? this.draftFundingSourceTarget.value : "account",
+      draftLiabilityAccountReference: this.hasDraftLiabilityAccountReferenceTarget ? this.draftLiabilityAccountReferenceTarget.value : "official_check:outstanding",
+      draftFeeIncomeAccountReference: this.hasDraftFeeIncomeAccountReferenceTarget ? this.draftFeeIncomeAccountReferenceTarget.value : "income:draft_fee",
+      draftPayeeName: this.hasDraftPayeeNameTarget ? this.draftPayeeNameTarget.value : "",
+      draftInstrumentNumber: this.hasDraftInstrumentNumberTarget ? this.draftInstrumentNumberTarget.value : "",
+      vaultTransferDetails,
+      drawerReference: (this.hasDrawerReferenceValue && this.drawerReferenceValue) ? this.drawerReferenceValue : this.cashAccountReferenceTarget.value,
+      checkNumber: this.hasCheckNumberTarget ? this.checkNumberTarget.value : "",
+      routingNumber: this.hasRoutingNumberTarget ? this.routingNumberTarget.value : "",
+      accountNumber: this.hasAccountNumberTarget ? this.accountNumberTarget.value : "",
+      payerName: this.hasPayerNameTarget ? this.payerNameTarget.value : "",
+      presenterType: this.hasPresenterTypeTarget ? this.presenterTypeTarget.value : "",
+      idType: this.hasIdTypeTarget ? this.idTypeTarget.value : "",
+      idNumber: this.hasIdNumberTarget ? this.idNumberTarget.value : ""
+    }
+  }
+
+  recalculate() {
+    const transactionType = this.transactionTypeTarget.value
+    const state = this.getState()
+    const schemaSections = getSections(transactionType, this.workflowSchema)
+    const showCheckSectionFromWorkflow = workflowHasSectionInConfig(transactionType, "checks", schemaSections)
     const isFixedFlowDepositOrDraft = this.hasDefaultTransactionTypeValue && this.defaultTransactionTypeValue && ["deposit", "draft"].includes(this.defaultTransactionTypeValue) && (this.transactionTypeTarget.value || "") === (this.defaultTransactionTypeValue || "")
     const showCheckSection = showCheckSectionFromWorkflow || (isFixedFlowDepositOrDraft && ["deposit", "draft"].includes(transactionType))
-    const showDraftSection = this.workflowHasSection(transactionType, "draft", schemaSections)
-    const showVaultTransferSection = this.workflowHasSection(transactionType, "vault_transfer", schemaSections)
-    const showCheckCashingSection = this.workflowHasSection(transactionType, "check_cashing", schemaSections)
-    const amountInputMode = this.workflowAmountInputMode(transactionType)
+    const showDraftSection = workflowHasSectionInConfig(transactionType, "draft", schemaSections)
+    const showVaultTransferSection = workflowHasSectionInConfig(transactionType, "vault_transfer", schemaSections)
+    const showCheckCashingSection = workflowHasSectionInConfig(transactionType, "check_cashing", schemaSections)
+    const amountInputMode = getAmountInputMode(transactionType, this.workflowSchema)
+    const checkCashingAmounts = state.checkCashingAmounts
+    const draftAmounts = state.draftAmounts
+    const vaultTransferDetails = state.vaultTransferDetails
+
     if (amountInputMode === "check_cashing_net_payout") {
       this.setAmountCents(this.amountCentsTarget, checkCashingAmounts.netCashPayoutCents)
     } else if (amountInputMode === "draft_amount") {
       this.setAmountCents(this.amountCentsTarget, draftAmounts.draftAmountCents)
     }
-    const totalAmountCents = this.effectiveAmountCents()
-    const hasPrimaryAccount = this.primaryAccountReferenceTarget.value.trim().length > 0
-    const requiresPrimaryAccount = this.workflowRequiresPrimaryAccount(transactionType)
-    const requiresCounterparty = this.workflowRequiresCounterpartyAccount(transactionType)
-    const requiresCashAccount = this.workflowRequiresCashAccount(transactionType)
-    const requiresSettlementAccount = this.workflowRequiresSettlementAccount(transactionType)
+
+    const totalAmountCents = state.effectiveAmountCents
+    const workflowContext = { draftFundingSource: state.draftFundingSource }
+    const hasPrimaryAccount = state.primaryAccountReference.trim().length > 0
+    const requiresPrimaryAccount = getRequiresPrimaryAccount(transactionType, this.workflowSchema, workflowContext)
+    const requiresCounterparty = getRequiresCounterpartyAccount(transactionType, this.workflowSchema)
+    const requiresCashAccount = getRequiresCashAccount(transactionType, this.workflowSchema, workflowContext)
+    const requiresSettlementAccount = getRequiresSettlementAccount(transactionType, this.workflowSchema)
     const requiresDraftDetails = showDraftSection
     const requiresVaultTransferDetails = showVaultTransferSection
-    const hasCounterparty = this.counterpartyAccountReferenceTarget.value.trim().length > 0
-    const hasCashAccount = this.cashAccountReferenceTarget.value.trim().length > 0
-    const hasSettlementAccount = this.hasSettlementAccountReferenceTarget && this.settlementAccountReferenceTarget.value.trim().length > 0
-    const hasDraftPayee = this.hasDraftPayeeNameTarget && this.draftPayeeNameTarget.value.trim().length > 0
-    const hasDraftInstrumentNumber = this.hasDraftInstrumentNumberTarget && this.draftInstrumentNumberTarget.value.trim().length > 0
-    const hasDraftLiabilityAccount = this.hasDraftLiabilityAccountReferenceTarget && this.draftLiabilityAccountReferenceTarget.value.trim().length > 0
+    const hasCounterparty = state.counterpartyAccountReference.trim().length > 0
+    const hasCashAccount = state.cashAccountReference.trim().length > 0
+    const hasSettlementAccount = state.settlementAccountReference.trim().length > 0
+    const hasDraftPayee = state.draftPayeeName.trim().length > 0
+    const hasDraftInstrumentNumber = state.draftInstrumentNumber.trim().length > 0
+    const hasDraftLiabilityAccount = state.draftLiabilityAccountReference.trim().length > 0
     const hasVaultDirection = vaultTransferDetails.direction.length > 0
     const hasVaultReasonCode = vaultTransferDetails.reasonCode.length > 0
     const hasVaultMemo = vaultTransferDetails.reasonCode !== "other" || vaultTransferDetails.memo.length > 0
@@ -180,17 +240,11 @@ export default class extends Controller {
     const hasInvalidVaultTransferFields = this.hasInvalidVaultTransferFields(vaultTransferDetails)
     const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || (requiresSettlementAccount && !hasSettlementAccount) || (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) || (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) || hasInvalidCheckRows || hasInvalidCheckCashingFields || hasInvalidDraftFields || hasInvalidVaultTransferFields
 
-    const entries = this.generatedEntriesForCurrentState()
-    const debitTotal = entries
-      .filter((entry) => entry.side === "debit")
-      .reduce((sum, entry) => sum + entry.amount_cents, 0)
-    const creditTotal = entries
-      .filter((entry) => entry.side === "credit")
-      .reduce((sum, entry) => sum + entry.amount_cents, 0)
-
-    const imbalance = Math.abs(debitTotal - creditTotal)
-    const balanced = debitTotal > 0 && creditTotal > 0 && imbalance === 0
-    const blockedReason = this.blockedReason({
+    const entries = buildEntries(transactionType, state)
+    const { debitTotal, creditTotal, imbalance, balanced } = computeTotals(entries)
+    const checkSubtotalCents = this.checkSubtotalCents()
+    const displayedCashAmount = showCheckCashingSection ? checkCashingAmounts.netCashPayoutCents : Math.max(state.amountCents, 0)
+    const blockedReason = workflowBlockedReason({
       totalAmountCents,
       hasPrimaryAccount,
       requiresPrimaryAccount,
@@ -247,13 +301,12 @@ export default class extends Controller {
       this.idNumberTarget.setAttribute("aria-required", showCheckCashingSection ? "true" : "false")
     }
 
-    const displayedCashAmount = showCheckCashingSection ? checkCashingAmounts.netCashPayoutCents : Math.max(cashAmountCents, 0)
-    this.cashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
-    this.checkSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
-    this.debitTotalTarget.textContent = this.formatCents(debitTotal)
-    this.creditTotalTarget.textContent = this.formatCents(creditTotal)
-    this.imbalanceTarget.textContent = this.formatCents(imbalance)
-    this.totalAmountTarget.textContent = this.formatCents(totalAmountCents)
+    if (this.hasCashSubtotalTarget) this.cashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
+    if (this.hasCheckSubtotalTarget) this.checkSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
+    if (this.hasDebitTotalTarget) this.debitTotalTarget.textContent = this.formatCents(debitTotal)
+    if (this.hasCreditTotalTarget) this.creditTotalTarget.textContent = this.formatCents(creditTotal)
+    if (this.hasImbalanceTarget) this.imbalanceTarget.textContent = this.formatCents(imbalance)
+    if (this.hasTotalAmountTarget) this.totalAmountTarget.textContent = this.formatCents(totalAmountCents)
     if (this.hasStatusBadgeTarget) {
       this.setBalanceBadge(balanced ? "Balanced" : "Out of Balance")
     }
@@ -264,8 +317,8 @@ export default class extends Controller {
     const cashImpact = this.calculateCashImpact(displayedCashAmount)
     const projectedDrawer = (this.openingCashCentsValue || 0) + cashImpact
 
-    this.cashImpactTarget.textContent = this.formatCents(cashImpact)
-    this.projectedDrawerTarget.textContent = this.formatCents(projectedDrawer)
+    if (this.hasCashImpactTarget) this.cashImpactTarget.textContent = this.formatCents(cashImpact)
+    if (this.hasProjectedDrawerTarget) this.projectedDrawerTarget.textContent = this.formatCents(projectedDrawer)
 
     if (this.hasThresholdWarningTarget) {
       this.thresholdWarningTarget.hidden = totalAmountCents < 100_000
@@ -313,84 +366,18 @@ export default class extends Controller {
     }))
   }
 
-  blockedReason({
-    totalAmountCents,
-    hasPrimaryAccount,
-    requiresPrimaryAccount,
-    requiresCounterparty,
-    hasCounterparty,
-    requiresCashAccount,
-    hasCashAccount,
-    requiresSettlementAccount,
-    hasSettlementAccount,
-    requiresDraftDetails,
-    hasDraftPayee,
-    hasDraftInstrumentNumber,
-    hasDraftLiabilityAccount,
-    requiresVaultTransferDetails,
-    hasVaultDirection,
-    hasVaultReasonCode,
-    hasVaultMemo,
-    hasVaultEndpoints,
-    hasInvalidCheckRows,
-    hasInvalidCheckCashingFields,
-    hasInvalidDraftFields,
-    hasInvalidVaultTransferFields,
-    balanced
-  }) {
-    if (totalAmountCents <= 0) {
-      return "Amount must be greater than zero."
+  submitFromHeader(event) {
+    event.preventDefault()
+    const form = this.element.querySelector("#posting-form")
+    if (form) {
+      this.submit({ target: form, preventDefault: () => {} })
     }
-
-    if (requiresPrimaryAccount && !hasPrimaryAccount) {
-      return "Primary account reference is required."
-    }
-
-    if (requiresCounterparty && !hasCounterparty) {
-      return "Counterparty account reference is required."
-    }
-
-    if (requiresSettlementAccount && !hasSettlementAccount) {
-      return "Settlement account reference is required."
-    }
-
-    if (requiresCashAccount && !hasCashAccount) {
-      return "Cash account reference is required."
-    }
-
-    if (hasInvalidCheckRows) {
-      return "Complete check routing, account, and number for each entered check."
-    }
-
-    if (hasInvalidCheckCashingFields) {
-      return "Complete check cashing amount and presenter ID details."
-    }
-
-    if (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) {
-      return "Complete draft payee and instrument details."
-    }
-
-    if (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) {
-      return "Complete vault transfer direction, locations, and reason details."
-    }
-
-    if (hasInvalidDraftFields) {
-      return "Draft amount and fee values are invalid."
-    }
-
-    if (hasInvalidVaultTransferFields) {
-      return "Vault transfer details are invalid."
-    }
-
-    if (!balanced) {
-      return "Entries are out of balance."
-    }
-
-    return ""
   }
 
   async submit(event) {
-    event.preventDefault()
+    if (event && typeof event.preventDefault === "function") {
+      event.preventDefault()
+    }
 
     if (this.postedLocked) {
       this.renderMessage("Transaction already posted. Select New Transaction to continue.", "warning")
@@ -432,9 +419,11 @@ export default class extends Controller {
       return
     }
 
+    this.ensureRequestId()
     const form = event.target
     const formData = new FormData(form)
-    const submittedRequestId = this.requestIdTarget.value
+    const submittedRequestId = this.requestIdTarget.value || this.generateRequestId()
+    formData.set("request_id", submittedRequestId)
     formData.set("amount_cents", this.effectiveAmountCents().toString())
     this.appendEntries(formData)
 
@@ -459,12 +448,12 @@ export default class extends Controller {
         return
       }
 
+      this.clearTransactionFormAfterPost()
       this.renderMessage(`${this.transactionTypeLabel()} posted.`, "success")
-      this.showReceipt({
-        postingBatchId: postingResult.postingBatchId,
-        tellerTransactionId: postingResult.tellerTransactionId,
+      this.showPostSuccessModal({
         requestId: postingResult.requestId,
-        postedAt: postingResult.postedAt
+        postingBatchId: postingResult.postingBatchId,
+        tellerTransactionId: postingResult.tellerTransactionId
       })
       this.postedLocked = true
       this.setSubmitButtonsDisabled(true)
@@ -476,15 +465,16 @@ export default class extends Controller {
   }
 
   buildValidationFormData() {
+    this.ensureRequestId()
+    const state = this.getState()
     const formData = new FormData()
-    formData.set("request_id", this.requestIdTarget.value)
-    formData.set("transaction_type", this.transactionTypeTarget.value)
-    formData.set("amount_cents", this.effectiveAmountCents().toString())
-    formData.set("primary_account_reference", this.primaryAccountReferenceTarget.value)
-    formData.set("counterparty_account_reference", this.counterpartyAccountReferenceTarget.value)
-    formData.set("cash_account_reference", this.cashAccountReferenceTarget.value)
-    this.appendEntries(formData)
-
+    formData.set("request_id", this.requestIdTarget.value || this.generateRequestId())
+    formData.set("transaction_type", state.transactionType)
+    formData.set("amount_cents", String(state.effectiveAmountCents))
+    formData.set("primary_account_reference", state.primaryAccountReference)
+    formData.set("counterparty_account_reference", state.counterpartyAccountReference)
+    formData.set("cash_account_reference", state.cashAccountReference)
+    appendEntriesAndTypePayload(formData, state.transactionType, state, this.workflowSchema)
     return formData
   }
 
@@ -584,6 +574,45 @@ export default class extends Controller {
     this.focusFirstField()
   }
 
+  showPostSuccessModal({ requestId, postingBatchId, tellerTransactionId }) {
+    if (!this.hasPostSuccessModalTarget) return
+    if (this.hasPostSuccessIdsTarget) {
+      const parts = []
+      if (postingBatchId != null) parts.push(`Batch: ${postingBatchId}`)
+      if (tellerTransactionId != null) parts.push(`Txn: ${tellerTransactionId}`)
+      this.postSuccessIdsTarget.textContent = parts.length ? parts.join(" · ") : ""
+    }
+    if (this.hasPostSuccessReceiptLinkTarget && this.hasReceiptUrlTemplateValue && requestId) {
+      this.postSuccessReceiptLinkTarget.href = this.receiptUrlTemplateValue.replace("__REQUEST_ID__", encodeURIComponent(requestId))
+    }
+    if (typeof this.postSuccessModalTarget.showModal === "function") {
+      this.postSuccessModalTarget.showModal()
+    } else {
+      this.postSuccessModalTarget.setAttribute("open", "open")
+    }
+    if (this.hasPostSuccessNewButtonTarget && typeof this.postSuccessNewButtonTarget.focus === "function") {
+      this.postSuccessNewButtonTarget.focus()
+    }
+  }
+
+  closePostSuccessAndStartNew() {
+    if (this.hasPostSuccessModalTarget) {
+      if (typeof this.postSuccessModalTarget.close === "function") {
+        this.postSuccessModalTarget.close()
+      } else {
+        this.postSuccessModalTarget.removeAttribute("open")
+      }
+    }
+    this.startNewTransaction()
+  }
+
+  handlePostSuccessModalClosed() {
+    // When dialog is closed via backdrop or escape, ensure form is ready for next transaction
+    if (this.postedLocked) {
+      this.startNewTransaction()
+    }
+  }
+
   clearTransactionFormAfterPost() {
     this.primaryAccountReferenceTarget.value = ""
     this.counterpartyAccountReferenceTarget.value = ""
@@ -649,39 +678,21 @@ export default class extends Controller {
 
   calculateCashImpact(amountCents) {
     const transactionType = this.transactionTypeTarget.value
-    const cashImpactProfile = this.workflowCashImpactProfile(transactionType)
+    const cashImpactProfile = getCashImpactProfile(transactionType, this.workflowSchema)
 
-    if (cashImpactProfile === "inflow") {
-      return amountCents
-    }
-
+    if (cashImpactProfile === "inflow") return amountCents
     if (cashImpactProfile === "draft_funding") {
-      if (this.draftCashFunding()) {
-        return this.draftAmounts().totalFundingCents
-      }
-
+      if (this.draftCashFunding()) return this.draftAmounts().totalFundingCents
       return 0
     }
-
     if (cashImpactProfile === "vault_directional") {
-      const amountCents = Math.max(parseInt(this.amountCentsTarget.value || "0", 10), 0)
+      const amt = Math.max(parseInt(this.amountCentsTarget.value || "0", 10), 0)
       const direction = this.vaultTransferDetails().direction
-
-      if (direction === "drawer_to_vault") {
-        return -amountCents
-      }
-
-      if (direction === "vault_to_drawer") {
-        return amountCents
-      }
-
+      if (direction === "drawer_to_vault") return -amt
+      if (direction === "vault_to_drawer") return amt
       return 0
     }
-
-    if (cashImpactProfile === "outflow") {
-      return -amountCents
-    }
-
+    if (cashImpactProfile === "outflow") return -amountCents
     return 0
   }
 
@@ -700,161 +711,43 @@ export default class extends Controller {
   }
 
   workflowSections(transactionType) {
-    const sections = this.workflowSchema?.[transactionType]?.ui_sections
-    return Array.isArray(sections) ? sections : []
+    return getSections(transactionType, this.workflowSchema)
   }
 
   workflowEntryProfile(transactionType) {
-    const profile = this.workflowSchema?.[transactionType]?.entry_profile
-    if (profile) {
-      return profile
-    }
-
-    return transactionType
+    return getEntryProfile(transactionType, this.workflowSchema)
   }
 
   workflowAmountInputMode(transactionType) {
-    const mode = this.workflowSchema?.[transactionType]?.amount_input_mode
-    if (mode) {
-      return mode
-    }
-
-    const fallbackModes = {
-      check_cashing: "check_cashing_net_payout",
-      draft: "draft_amount"
-    }
-
-    return fallbackModes[transactionType] || "manual"
+    return getAmountInputMode(transactionType, this.workflowSchema)
   }
 
   workflowEffectiveAmountSource(transactionType) {
-    const source = this.workflowSchema?.[transactionType]?.effective_amount_source
-    if (source) {
-      return source
-    }
-
-    if (transactionType === "deposit") {
-      return "cash_plus_checks"
-    }
-
-    if (transactionType === "check_cashing") {
-      return "check_cashing_net_payout"
-    }
-
-    return "amount_field"
+    return getEffectiveAmountSource(transactionType, this.workflowSchema)
   }
 
   workflowCashImpactProfile(transactionType) {
-    const profile = this.workflowSchema?.[transactionType]?.cash_impact_profile
-    if (profile) {
-      return profile
-    }
-
-    const fallbackProfiles = {
-      deposit: "inflow",
-      withdrawal: "outflow",
-      check_cashing: "outflow",
-      draft: "draft_funding",
-      vault_transfer: "vault_directional"
-    }
-
-    return fallbackProfiles[transactionType] || "none"
-  }
-
-  workflowPrimaryAccountPolicy(transactionType) {
-    const policy = this.workflowSchema?.[transactionType]?.primary_account_policy
-    if (policy) {
-      return policy
-    }
-
-    if (transactionType === "draft") {
-      return "draft_account_only"
-    }
-
-    if (["check_cashing", "vault_transfer"].includes(transactionType)) {
-      return "never"
-    }
-
-    return "always"
+    return getCashImpactProfile(transactionType, this.workflowSchema)
   }
 
   workflowRequiresPrimaryAccount(transactionType) {
-    const policy = this.workflowPrimaryAccountPolicy(transactionType)
-
-    if (policy === "never") {
-      return false
-    }
-
-    if (policy === "draft_account_only") {
-      return transactionType === "draft" ? this.draftAccountFunding() : false
-    }
-
-    return true
+    return getRequiresPrimaryAccount(transactionType, this.workflowSchema, { draftFundingSource: this.hasDraftFundingSourceTarget ? this.draftFundingSourceTarget.value : "account" })
   }
 
   workflowRequiresCounterpartyAccount(transactionType) {
-    const value = this.workflowSchema?.[transactionType]?.requires_counterparty_account
-    if (value !== undefined) {
-      return value === true
-    }
-
-    return transactionType === "transfer"
-  }
-
-  workflowCashAccountPolicy(transactionType) {
-    const policy = this.workflowSchema?.[transactionType]?.cash_account_policy
-    if (policy) {
-      return policy
-    }
-
-    if (["transfer", "vault_transfer"].includes(transactionType)) {
-      return "never"
-    }
-
-    if (transactionType === "draft") {
-      return "draft_cash_only"
-    }
-
-    return "always"
+    return getRequiresCounterpartyAccount(transactionType, this.workflowSchema)
   }
 
   workflowRequiresCashAccount(transactionType) {
-    const policy = this.workflowCashAccountPolicy(transactionType)
-
-    if (policy === "never") {
-      return false
-    }
-
-    if (policy === "draft_cash_only") {
-      return transactionType === "draft" ? this.draftCashFunding() : false
-    }
-
-    return true
+    return getRequiresCashAccount(transactionType, this.workflowSchema, { draftFundingSource: this.hasDraftFundingSourceTarget ? this.draftFundingSourceTarget.value : "account" })
   }
 
   workflowRequiresSettlementAccount(transactionType) {
-    const value = this.workflowSchema?.[transactionType]?.requires_settlement_account
-    if (value !== undefined) {
-      return value === true
-    }
-
-    return transactionType === "check_cashing"
+    return getRequiresSettlementAccount(transactionType, this.workflowSchema)
   }
 
   workflowHasSection(transactionType, sectionKey, schemaSections = null) {
-    const sections = schemaSections || this.workflowSections(transactionType)
-    if (sections.length > 0) {
-      return sections.includes(sectionKey)
-    }
-
-    const fallbackSections = {
-      deposit: ["checks"],
-      draft: ["draft", "checks"],
-      vault_transfer: ["vault_transfer"],
-      check_cashing: ["check_cashing"]
-    }
-
-    return (fallbackSections[transactionType] || []).includes(sectionKey)
+    return workflowHasSectionInConfig(transactionType, sectionKey, schemaSections ?? getSections(transactionType, this.workflowSchema))
   }
 
   clearMessage() {
@@ -890,196 +783,14 @@ export default class extends Controller {
     return "alert-info"
   }
 
-  generatedEntriesForCurrentState() {
-    const transactionType = this.transactionTypeTarget.value
-    const entryProfile = this.workflowEntryProfile(transactionType)
-    const amountCents = this.effectiveAmountCents()
-    const cashAmountCents = parseInt(this.amountCentsTarget.value || "0", 10)
-    const { checkAmountCents, feeCents, netCashPayoutCents } = this.checkCashingAmounts()
-    const checks = this.collectCheckRows()
-    const primaryAccountReference = this.primaryAccountReferenceTarget.value.trim()
-    const counterpartyAccountReference = this.counterpartyAccountReferenceTarget.value.trim()
-    const cashAccountReference = this.cashAccountReferenceTarget.value.trim()
-    const settlementAccountReference = this.hasSettlementAccountReferenceTarget ? this.settlementAccountReferenceTarget.value.trim() : ""
-    const feeIncomeAccountReference = this.hasFeeIncomeAccountReferenceTarget ? this.feeIncomeAccountReferenceTarget.value.trim() : "income:check_cashing_fee"
-    const draftFundingSource = this.hasDraftFundingSourceTarget ? this.draftFundingSourceTarget.value.trim() : "account"
-    const draftLiabilityAccountReference = this.hasDraftLiabilityAccountReferenceTarget ? this.draftLiabilityAccountReferenceTarget.value.trim() : "official_check:outstanding"
-    const draftFeeIncomeAccountReference = this.hasDraftFeeIncomeAccountReferenceTarget ? this.draftFeeIncomeAccountReferenceTarget.value.trim() : "income:draft_fee"
-    const { draftAmountCents, draftFeeCents } = this.draftAmounts()
-    const vaultTransferDetails = this.vaultTransferDetails()
-
-    if (amountCents <= 0) {
-      return []
-    }
-
-    if (entryProfile === "deposit") {
-      const entries = []
-
-      if (cashAmountCents > 0) {
-        entries.push({ side: "debit", account_reference: cashAccountReference, amount_cents: cashAmountCents })
-      }
-
-      checks
-        .filter((check) => check.amount_cents > 0)
-        .forEach((check, index) => {
-          entries.push({
-            side: "debit",
-            account_reference: this.checkAccountReference(check, index),
-            amount_cents: check.amount_cents
-          })
-        })
-
-      entries.push({ side: "credit", account_reference: primaryAccountReference, amount_cents: amountCents })
-      return entries
-    }
-
-    if (entryProfile === "withdrawal") {
-      return [
-        { side: "debit", account_reference: primaryAccountReference, amount_cents: amountCents },
-        { side: "credit", account_reference: cashAccountReference, amount_cents: amountCents }
-      ]
-    }
-
-    if (entryProfile === "transfer") {
-      return [
-        { side: "debit", account_reference: primaryAccountReference, amount_cents: amountCents },
-        { side: "credit", account_reference: counterpartyAccountReference, amount_cents: amountCents }
-      ]
-    }
-
-    if (entryProfile === "vault_transfer") {
-      if (!vaultTransferDetails.valid) {
-        return []
-      }
-
-      return [
-        { side: "debit", account_reference: vaultTransferDetails.destinationReference, amount_cents: amountCents },
-        { side: "credit", account_reference: vaultTransferDetails.sourceReference, amount_cents: amountCents }
-      ]
-    }
-
-    if (entryProfile === "draft") {
-      if (draftAmountCents <= 0 || !draftLiabilityAccountReference) {
-        return []
-      }
-
-      const fundingReference = draftFundingSource === "cash" ? cashAccountReference : primaryAccountReference
-      if (!fundingReference) {
-        return []
-      }
-
-      const entries = [
-        { side: "debit", account_reference: fundingReference, amount_cents: draftAmountCents },
-        { side: "credit", account_reference: draftLiabilityAccountReference, amount_cents: draftAmountCents }
-      ]
-
-      if (draftFeeCents > 0) {
-        entries.push({ side: "debit", account_reference: fundingReference, amount_cents: draftFeeCents })
-        entries.push({ side: "credit", account_reference: draftFeeIncomeAccountReference, amount_cents: draftFeeCents })
-      }
-
-      return entries
-    }
-
-    if (entryProfile === "check_cashing") {
-      if (checkAmountCents <= 0 || netCashPayoutCents <= 0 || !settlementAccountReference) {
-        return []
-      }
-
-      const entries = [
-        { side: "debit", account_reference: settlementAccountReference, amount_cents: checkAmountCents },
-        { side: "credit", account_reference: cashAccountReference, amount_cents: netCashPayoutCents }
-      ]
-
-      if (feeCents > 0) {
-        entries.push({ side: "credit", account_reference: feeIncomeAccountReference, amount_cents: feeCents })
-      }
-
-      return entries
-    }
-
-    return []
-  }
-
   appendEntries(formData) {
-    const entries = this.generatedEntriesForCurrentState()
-    entries.forEach((entry) => {
-      formData.append("entries[][side]", entry.side)
-      formData.append("entries[][account_reference]", entry.account_reference)
-      formData.append("entries[][amount_cents]", entry.amount_cents.toString())
-    })
-
-    this.appendCheckItems(formData)
-    this.appendDraftPayload(formData)
-    this.appendVaultTransferPayload(formData)
-    this.appendCheckCashingPayload(formData)
-  }
-
-  appendDraftPayload(formData) {
-    if (this.transactionTypeTarget.value !== "draft") {
-      return
-    }
-
-    const { draftAmountCents, draftFeeCents } = this.draftAmounts()
-    formData.set("draft_funding_source", this.hasDraftFundingSourceTarget ? this.draftFundingSourceTarget.value.trim() : "account")
-    formData.set("draft_amount_cents", draftAmountCents.toString())
-    formData.set("draft_fee_cents", draftFeeCents.toString())
-    formData.set("draft_payee_name", this.hasDraftPayeeNameTarget ? this.draftPayeeNameTarget.value.trim() : "")
-    formData.set("draft_instrument_number", this.hasDraftInstrumentNumberTarget ? this.draftInstrumentNumberTarget.value.trim() : "")
-    formData.set("draft_liability_account_reference", this.hasDraftLiabilityAccountReferenceTarget ? this.draftLiabilityAccountReferenceTarget.value.trim() : "official_check:outstanding")
-    formData.set("draft_fee_income_account_reference", this.hasDraftFeeIncomeAccountReferenceTarget ? this.draftFeeIncomeAccountReferenceTarget.value.trim() : "income:draft_fee")
-  }
-
-  appendCheckCashingPayload(formData) {
-    if (this.transactionTypeTarget.value !== "check_cashing") {
-      return
-    }
-
-    const amounts = this.checkCashingAmounts()
-    formData.set("check_amount_cents", amounts.checkAmountCents.toString())
-    formData.set("fee_cents", amounts.feeCents.toString())
-    formData.set("settlement_account_reference", this.hasSettlementAccountReferenceTarget ? this.settlementAccountReferenceTarget.value.trim() : "")
-    formData.set("fee_income_account_reference", this.hasFeeIncomeAccountReferenceTarget ? this.feeIncomeAccountReferenceTarget.value.trim() : "income:check_cashing_fee")
-    formData.set("check_number", this.hasCheckNumberTarget ? this.checkNumberTarget.value.trim() : "")
-    formData.set("routing_number", this.hasRoutingNumberTarget ? this.routingNumberTarget.value.trim() : "")
-    formData.set("account_number", this.hasAccountNumberTarget ? this.accountNumberTarget.value.trim() : "")
-    formData.set("payer_name", this.hasPayerNameTarget ? this.payerNameTarget.value.trim() : "")
-    formData.set("presenter_type", this.hasPresenterTypeTarget ? this.presenterTypeTarget.value.trim() : "")
-    formData.set("id_type", this.hasIdTypeTarget ? this.idTypeTarget.value.trim() : "")
-    formData.set("id_number", this.hasIdNumberTarget ? this.idNumberTarget.value.trim() : "")
-  }
-
-  appendVaultTransferPayload(formData) {
-    if (this.transactionTypeTarget.value !== "vault_transfer") {
-      return
-    }
-
-    const details = this.vaultTransferDetails()
-    formData.set("vault_transfer_direction", details.direction)
-    formData.set("vault_transfer_source_cash_account_reference", details.sourceReference)
-    formData.set("vault_transfer_destination_cash_account_reference", details.destinationReference)
-    formData.set("vault_transfer_reason_code", details.reasonCode)
-    formData.set("vault_transfer_memo", details.memo)
-  }
-
-  appendCheckItems(formData) {
-    const checks = this.collectCheckRows()
-    checks
-      .filter((check) => check.amount_cents > 0)
-      .forEach((check) => {
-        formData.append("check_items[][routing]", check.routing)
-        formData.append("check_items[][account]", check.account)
-        formData.append("check_items[][number]", check.number)
-        formData.append("check_items[][account_reference]", check.account_reference)
-        formData.append("check_items[][amount_cents]", check.amount_cents.toString())
-        formData.append("check_items[][hold_reason]", check.hold_reason || "")
-        formData.append("check_items[][hold_until]", check.hold_until || "")
-      })
+    const state = this.getState()
+    appendEntriesAndTypePayload(formData, state.transactionType, state, this.workflowSchema)
   }
 
   effectiveAmountCents() {
     const transactionType = this.transactionTypeTarget.value
-    const amountSource = this.workflowEffectiveAmountSource(transactionType)
+    const amountSource = getEffectiveAmountSource(transactionType, this.workflowSchema)
 
     if (amountSource === "check_cashing_net_payout") {
       return this.checkCashingAmounts().netCashPayoutCents
@@ -1408,25 +1119,32 @@ export default class extends Controller {
       return
     }
 
-    this.receiptBatchIdTarget.textContent = postingBatchId?.toString() || "N/A"
-    this.receiptTransactionIdTarget.textContent = tellerTransactionId?.toString() || "N/A"
-    this.receiptRequestIdTarget.textContent = requestId || "N/A"
-    this.receiptPostedAtTarget.textContent = postedAt || "N/A"
+    if (this.hasReceiptBatchIdTarget) this.receiptBatchIdTarget.textContent = postingBatchId?.toString() || "N/A"
+    if (this.hasReceiptTransactionIdTarget) this.receiptTransactionIdTarget.textContent = tellerTransactionId?.toString() || "N/A"
+    if (this.hasReceiptRequestIdTarget) this.receiptRequestIdTarget.textContent = requestId || "N/A"
+    if (this.hasReceiptPostedAtTarget) this.receiptPostedAtTarget.textContent = postedAt || "N/A"
+
+    this.receiptPanelTarget.removeAttribute("hidden")
+    this.receiptPanelTarget.style.display = ""
+    this.receiptPanelTarget.classList.remove("hidden")
 
     if (this.hasReceiptLinkTarget && this.hasReceiptUrlTemplateValue && requestId) {
-      this.receiptLinkTarget.hidden = false
+      this.receiptLinkTarget.removeAttribute("hidden")
+      this.receiptLinkTarget.style.display = ""
+      this.receiptLinkTarget.classList.remove("hidden")
       this.receiptLinkTarget.href = this.receiptUrlTemplateValue.replace("__REQUEST_ID__", encodeURIComponent(requestId))
     }
 
     if (this.hasReceiptNewButtonTarget) {
-      this.receiptNewButtonTarget.hidden = false
-    }
-
-    this.receiptPanelTarget.hidden = false
-
-    if (this.hasReceiptNewButtonTarget) {
+      this.receiptNewButtonTarget.removeAttribute("hidden")
+      this.receiptNewButtonTarget.style.display = ""
+      this.receiptNewButtonTarget.classList.remove("hidden")
       this.receiptNewButtonTarget.focus()
     }
+
+    requestAnimationFrame(() => {
+      this.receiptPanelTarget?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    })
   }
 
   resetReceipt() {

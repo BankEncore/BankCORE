@@ -7,6 +7,7 @@ module TellerPostingExecution
     def execute_posting(forced_transaction_type: nil)
       request_params = posting_params.to_h.symbolize_keys
       request_params[:transaction_type] = forced_transaction_type if forced_transaction_type.present?
+      request_params[:request_id] = request_params[:request_id].presence || "server-#{Time.current.to_i}-#{SecureRandom.hex(4)}"
 
       validation_errors = Posting::WorkflowValidator.errors(request_params, mode: :post)
       if validation_errors.present?
@@ -49,7 +50,8 @@ module TellerPostingExecution
       render json: {
         ok: true,
         posting_batch_id: posting_batch.id,
-        teller_transaction_id: posting_batch.teller_transaction_id
+        teller_transaction_id: posting_batch.teller_transaction_id,
+        request_id: request_params[:request_id]
       }
     rescue Posting::Engine::Error, ActiveRecord::RecordInvalid => error
       render json: { ok: false, error: error.message }, status: :unprocessable_entity
@@ -68,6 +70,8 @@ module TellerPostingExecution
         :vault_transfer_direction,
         :vault_transfer_source_cash_account_reference,
         :vault_transfer_destination_cash_account_reference,
+        :vault_transfer_from_reference,
+        :vault_transfer_to_reference,
         :vault_transfer_reason_code,
         :vault_transfer_memo,
         :check_amount_cents,

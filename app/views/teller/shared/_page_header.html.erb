@@ -22,7 +22,7 @@
       <% end %>
 
       <% if local_assigns[:show_primary_submit] %>
-        <button type="submit" class="btn btn-primary" form="<%= local_assigns.fetch(:primary_submit_form_id, "posting-form") %>" data-posting-form-target="headerSubmitButton"><%= local_assigns.fetch(:primary_submit_label, "Post Transaction") %></button>
+        <button type="button" id="posting-form-header-submit" class="btn btn-primary" data-action="click->posting-form#submitFromHeader" data-posting-form-target="headerSubmitButton"><%= local_assigns.fetch(:primary_submit_label, "Post Transaction") %></button>
       <% elsif local_assigns[:primary_button_path].present? %>
         <%= link_to local_assigns.fetch(:primary_button_label, "Continue"), local_assigns[:primary_button_path], class: "btn btn-primary btn-sm" %>
       <% end %>
