@@ -1,11 +1,11 @@
 **Implementation Status:** Fits but needs working changes.
 **Current Implementation Mapping:** Workstation context is managed via `/teller/context`; session/drawer management is handled on `/teller/teller_session/new` with open/assign/close actions under `/teller/teller_session`; `/ops/*`, vault, and reversal sections in this file are roadmap-only today.
 
-Some previously uploaded files have expired in this session (including `schema.rb`). If you want this review to be **schema-aligned and drop-in safe**, re-upload `schema.rb`. If not, we can proceed with the **architecture-first contract review** using what we’ve already locked.
+Some previously uploaded files have expired in this session (including `schema.rb`). If you want this review to be **schema-aligned and drop-in safe**, re-upload `schema.rb`. If not, we can proceed with the **architecture-first contract review** using what we've already locked.
 
 ## C) Review by architectural layer
 
-We’ll review workflows in this order:
+We'll review workflows in this order:
 
 1. **Context & Shell**
 
@@ -56,7 +56,7 @@ We’ll review workflows in this order:
 
 * Enforces Branch/Workstation presence before any `/teller/*` action
 * Confirms authorization for user at that workstation
-* Defines “no session” vs “session open” routing behavior
+* Defines "no session" vs "session open" routing behavior
 
 ### L1-WF-02 Workstation Lock/Unlock (WS-015)
 

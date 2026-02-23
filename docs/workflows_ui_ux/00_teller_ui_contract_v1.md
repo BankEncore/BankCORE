@@ -112,7 +112,7 @@ Does not cover:
   * show `[POSTING]`
 * Success:
 
-  * inline receipt replaces entry form
+  * receipt panel is shown (e.g. toggled into view) and entry form remains in DOM; focus moves to receipt actions (Print, New Transaction)
   * receipt shows reference #, timestamp, teller/session/branch, breakdown, drawer impact
   * actions: **Print Receipt** + **New <Transaction>**
   * focus New <Transaction>
@@ -164,8 +164,7 @@ Must be identical across Deposit/Withdrawal/Transfer:
 
 # 2) Developer Implementation Blueprint
 
-**File:** `docs/teller_ui_implementation_blueprint_v1.md`
-**Goal:** Make the contract enforceable through shared partials + Stimulus contracts + testable selectors.
+Implementation structure and shared partials are described in this document (§1–2) and in the L1–L6 workflow specs; DOM/Stimulus targets and event ownership are in [00_stimulus_event_matrix_handoff.md](00_stimulus_event_matrix_handoff.md). **Goal:** Make the contract enforceable through shared partials + Stimulus contracts + testable selectors.
 
 ## 1. View/Partial Structure
 
@@ -285,8 +284,10 @@ Standardize custom events:
 * `tx:approval_granted`
 * `tx:approval_denied`
 * `tx:posting_started`
-* `tx:posted_success`
-* `tx:posted_failed`
+* `tx:posted-success`
+* `tx:posted-failed`
+
+Canonical event list and migration (e.g. future `tx:posted` / `tx:post-failed`) is in [00_stimulus_event_matrix_handoff.md](00_stimulus_event_matrix_handoff.md).
 
 ## 5. Form Submission Contract
 
@@ -323,7 +324,7 @@ Add stable selectors for system tests:
 
 # 3) UI Visual Wireframe Spec
 
-**File:** `docs/teller_ui_wireframe_spec_v1.md`
+**Visual layout and wireframes:** See [ui_mockups_and_notes.md](ui_mockups_and_notes.md) and [ui_mockups_and_notes_2.md](ui_mockups_and_notes_2.md) in this folder for Traditional-style screen references; a formal wireframe spec may be added when created.
 **Purpose:** Provide consistent “what it looks like” references for every screen in Traditional style.
 
 ## 1. Global Layout (All Transactions)

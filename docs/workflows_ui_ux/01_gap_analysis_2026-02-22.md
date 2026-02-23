@@ -31,14 +31,14 @@ The teller UX foundation is strong (shared shell, posting workspace, validation/
 | Area | Contract expectation | Current implementation | Gap |
 |---|---|---|---|
 | Receipt actions | Receipt block should include print + new transaction actions. | Receipt panel has "View Receipt / Audit" and "New Transaction", but no print action. | Print workflow missing in in-page receipt block. |
-| Inline receipt replacement behavior | Contract describes receipt replacing entry form post-success. | Entry form remains; separate receipt confirmation panel toggled into view. | Behavior differs from target contract (may be acceptable if contract updated). |
+| Inline receipt replacement behavior | Contract aligned to current behavior: receipt panel toggled into view; entry form remains in DOM. | Entry form remains; separate receipt confirmation panel toggled into view. | **Resolved** — contract updated to match implementation. |
 | Error contract detail | Field-level ARIA invalid/description semantics in blocking states. | Global message + badges/alerts exist; no comprehensive field-level ARIA error mapping found. | Accessibility/error granularity gap. |
 
 ### 4) Documentation consistency gaps
 
 | Area | Contract expectation | Current implementation | Gap |
 |---|---|---|---|
-| Endpoint mapping freshness | Mapping docs should match implemented routes. | `00_page_endpoint_list.md` marks bank draft and vault transfer as planned, but routes/pages exist for `draft` and `vault_transfer`. | Stale mapping entries risk planning confusion. |
+| Endpoint mapping freshness | Mapping docs should match implemented routes. | `00_page_endpoint_list.md` has been refreshed: bank draft (draft) and vault transfer are listed as Implemented (naming/path differs). L5/L6 workflow docs include Implementation badges and link to the endpoint list. | **Resolved** — endpoint list and workflow badges now reflect current routes. |
 | Ops boundary status notes | Some docs state `/ops/*` not implemented. | `namespace :ops` with `ops root` exists. | Status language outdated (partially implemented vs not implemented). |
 
 ## Strengths / Already aligned

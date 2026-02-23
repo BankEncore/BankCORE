@@ -75,11 +75,13 @@ module Teller
       assert_equal "transfer", TellerTransaction.find_by!(request_id: "typed-tr-1").transaction_type
     end
 
-    test "check cashing create enforces check cashing transaction type" do
+    test "check cashing create enforces check_cashing transaction type" do
       post teller_check_cashings_path, params: {
         request_id: "typed-cc-1",
         transaction_type: "deposit",
         amount_cents: 8_000,
+        id_type: "drivers_license",
+        id_number: "ID001",
         entries: [
           { side: "debit", account_reference: "check:123", amount_cents: 8_000 },
           { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 8_000 }

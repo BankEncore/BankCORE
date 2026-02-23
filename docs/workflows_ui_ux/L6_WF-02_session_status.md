@@ -1,7 +1,8 @@
 # L6-WF-02 — Session Status (WS-100)
 
-**Status:** **Fits but needs working changes**
+**Status:** **Partially aligned with current codebase**
 **Current Implementation Mapping:** Teller session state is shown inside existing teller pages/partials, but a dedicated WS-100 screen/route is not implemented.
+**Implementation:** Planned. See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
 **Purpose:** Define the gate behavior when workstation context exists but no usable open teller session is available.
 
 ## Endpoint Mapping (Proposed → Current)

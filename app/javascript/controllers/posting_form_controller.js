@@ -28,13 +28,8 @@ export default class extends Controller {
     "draftInstrumentNumber",
     "draftLiabilityAccountReference",
     "draftFeeIncomeAccountReference",
-    "vaultTransferDirection",
-    "vaultTransferCounterpartyReference",
-    "vaultTransferCounterpartyRow",
-    "vaultTransferSourceReference",
-    "vaultTransferSourceRow",
-    "vaultTransferDestinationReference",
-    "vaultTransferDestinationRow",
+    "vaultTransferFromReference",
+    "vaultTransferToReference",
     "vaultTransferReasonCode",
     "vaultTransferMemo",
     "checkNumber",
@@ -100,7 +95,8 @@ export default class extends Controller {
     accountReferenceUrl: String,
     accountHistoryUrl: String,
     workflowSchemaUrl: String,
-    receiptUrlTemplate: String
+    receiptUrlTemplate: String,
+    drawerReference: String
   }
 
   connect() {
@@ -148,15 +144,17 @@ export default class extends Controller {
     const draftAmounts = this.draftAmounts()
     const vaultTransferDetails = this.vaultTransferDetails()
     const schemaSections = this.workflowSections(transactionType)
-    const showCheckSection = this.workflowHasSection(transactionType, "checks", schemaSections)
+    const showCheckSectionFromWorkflow = this.workflowHasSection(transactionType, "checks", schemaSections)
+    const isFixedFlowDepositOrDraft = this.hasDefaultTransactionTypeValue && this.defaultTransactionTypeValue && ["deposit", "draft"].includes(this.defaultTransactionTypeValue) && (this.transactionTypeTarget.value || "") === (this.defaultTransactionTypeValue || "")
+    const showCheckSection = showCheckSectionFromWorkflow || (isFixedFlowDepositOrDraft && ["deposit", "draft"].includes(transactionType))
     const showDraftSection = this.workflowHasSection(transactionType, "draft", schemaSections)
     const showVaultTransferSection = this.workflowHasSection(transactionType, "vault_transfer", schemaSections)
     const showCheckCashingSection = this.workflowHasSection(transactionType, "check_cashing", schemaSections)
     const amountInputMode = this.workflowAmountInputMode(transactionType)
     if (amountInputMode === "check_cashing_net_payout") {
-      this.amountCentsTarget.value = checkCashingAmounts.netCashPayoutCents.toString()
+      this.setAmountCents(this.amountCentsTarget, checkCashingAmounts.netCashPayoutCents)
     } else if (amountInputMode === "draft_amount") {
-      this.amountCentsTarget.value = draftAmounts.draftAmountCents.toString()
+      this.setAmountCents(this.amountCentsTarget, draftAmounts.draftAmountCents)
     }
     const totalAmountCents = this.effectiveAmountCents()
     const hasPrimaryAccount = this.primaryAccountReferenceTarget.value.trim().length > 0
@@ -222,7 +220,9 @@ export default class extends Controller {
     if (this.hasCashAccountRowTarget) {
       this.cashAccountRowTarget.hidden = !requiresCashAccount
     }
-    this.checkSectionTarget.hidden = !showCheckSection
+    if (this.hasCheckSectionTarget) {
+      this.checkSectionTarget.hidden = !showCheckSection
+    }
     if (this.hasDraftSectionTarget) {
       this.draftSectionTarget.hidden = !showDraftSection
     }
@@ -236,12 +236,15 @@ export default class extends Controller {
     this.setVaultTransferFieldState(showVaultTransferSection)
     this.setCheckCashingFieldState(showCheckCashingSection)
     this.primaryAccountReferenceTarget.required = requiresPrimaryAccount
+    this.primaryAccountReferenceTarget.setAttribute("aria-required", requiresPrimaryAccount ? "true" : "false")
     this.amountCentsTarget.readOnly = showCheckCashingSection || showDraftSection
     if (this.hasSettlementAccountReferenceTarget) {
       this.settlementAccountReferenceTarget.required = requiresSettlementAccount
+      this.settlementAccountReferenceTarget.setAttribute("aria-required", requiresSettlementAccount ? "true" : "false")
     }
     if (this.hasIdNumberTarget) {
       this.idNumberTarget.required = showCheckCashingSection
+      this.idNumberTarget.setAttribute("aria-required", showCheckCashingSection ? "true" : "false")
     }
 
     const displayedCashAmount = showCheckCashingSection ? checkCashingAmounts.netCashPayoutCents : Math.max(cashAmountCents, 0)
@@ -251,7 +254,9 @@ export default class extends Controller {
     this.creditTotalTarget.textContent = this.formatCents(creditTotal)
     this.imbalanceTarget.textContent = this.formatCents(imbalance)
     this.totalAmountTarget.textContent = this.formatCents(totalAmountCents)
-    this.setBalanceBadge(balanced ? "Balanced" : "Out of Balance")
+    if (this.hasStatusBadgeTarget) {
+      this.setBalanceBadge(balanced ? "Balanced" : "Out of Balance")
+    }
     if (this.hasHeaderStatusTarget) {
       this.headerStatusTarget.textContent = balanced ? "Balanced" : "Editing"
     }
@@ -554,7 +559,7 @@ export default class extends Controller {
     this.transactionTypeTarget.value = this.defaultTransactionTypeValue || "deposit"
     this.primaryAccountReferenceTarget.value = ""
     this.counterpartyAccountReferenceTarget.value = ""
-    this.amountCentsTarget.value = "0"
+    this.setAmountCents(this.amountCentsTarget, 0)
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
     this.resetDraftFields()
@@ -582,7 +587,7 @@ export default class extends Controller {
   clearTransactionFormAfterPost() {
     this.primaryAccountReferenceTarget.value = ""
     this.counterpartyAccountReferenceTarget.value = ""
-    this.amountCentsTarget.value = "0"
+    this.setAmountCents(this.amountCentsTarget, 0)
     this.cashAccountReferenceTarget.value = this.defaultCashAccountReference || ""
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
@@ -610,6 +615,9 @@ export default class extends Controller {
   }
 
   setBalanceBadge(state) {
+    if (!this.hasStatusBadgeTarget) {
+      return
+    }
     this.statusBadgeTarget.textContent = state
     this.setBadgeVariant(this.statusBadgeTarget, state === "Balanced" ? "success" : "error")
   }
@@ -657,7 +665,7 @@ export default class extends Controller {
 
     if (cashImpactProfile === "vault_directional") {
       const amountCents = Math.max(parseInt(this.amountCentsTarget.value || "0", 10), 0)
-      const direction = this.hasVaultTransferDirectionTarget ? this.vaultTransferDirectionTarget.value.trim() : ""
+      const direction = this.vaultTransferDetails().direction
 
       if (direction === "drawer_to_vault") {
         return -amountCents
@@ -693,15 +701,7 @@ export default class extends Controller {
 
   workflowSections(transactionType) {
     const sections = this.workflowSchema?.[transactionType]?.ui_sections
-    if (Array.isArray(sections)) {
-      return sections
-    }
-
-    if (sections) {
-      return [sections]
-    }
-
-    return []
+    return Array.isArray(sections) ? sections : []
   }
 
   workflowEntryProfile(transactionType) {
@@ -849,7 +849,7 @@ export default class extends Controller {
 
     const fallbackSections = {
       deposit: ["checks"],
-      draft: ["draft"],
+      draft: ["draft", "checks"],
       vault_transfer: ["vault_transfer"],
       check_cashing: ["check_cashing"]
     }
@@ -1129,36 +1129,32 @@ export default class extends Controller {
   }
 
   vaultTransferDetails() {
-    const direction = this.hasVaultTransferDirectionTarget ? this.vaultTransferDirectionTarget.value.trim() : ""
-    const counterpartyReference = this.hasVaultTransferCounterpartyReferenceTarget ? this.vaultTransferCounterpartyReferenceTarget.value.trim() : ""
-    const sourceReference = this.hasVaultTransferSourceReferenceTarget ? this.vaultTransferSourceReferenceTarget.value.trim() : ""
-    const destinationReference = this.hasVaultTransferDestinationReferenceTarget ? this.vaultTransferDestinationReferenceTarget.value.trim() : ""
-    const drawerReference = this.cashAccountReferenceTarget.value.trim()
+    const fromRef = this.hasVaultTransferFromReferenceTarget ? this.vaultTransferFromReferenceTarget.value.trim() : ""
+    const toRef = this.hasVaultTransferToReferenceTarget ? this.vaultTransferToReferenceTarget.value.trim() : ""
+    const drawerRef = (this.hasDrawerReferenceValue && this.drawerReferenceValue) ? this.drawerReferenceValue.trim() : this.cashAccountReferenceTarget.value.trim()
     const reasonCode = this.hasVaultTransferReasonCodeTarget ? this.vaultTransferReasonCodeTarget.value.trim() : ""
     const memo = this.hasVaultTransferMemoTarget ? this.vaultTransferMemoTarget.value.trim() : ""
 
-    const resolved = {
+    const sourceReference = fromRef
+    const destinationReference = toRef
+    let direction = ""
+    if (sourceReference && destinationReference && sourceReference !== destinationReference) {
+      const fromIsDrawer = sourceReference === drawerRef
+      const toIsDrawer = destinationReference === drawerRef
+      if (fromIsDrawer && !toIsDrawer) direction = "drawer_to_vault"
+      else if (!fromIsDrawer && toIsDrawer) direction = "vault_to_drawer"
+      else if (!fromIsDrawer && !toIsDrawer) direction = "vault_to_vault"
+    }
+
+    const valid = direction.length > 0 && sourceReference.length > 0 && destinationReference.length > 0
+    return {
       direction,
-      sourceReference: "",
-      destinationReference: "",
+      sourceReference,
+      destinationReference,
       reasonCode,
       memo,
-      valid: false
+      valid
     }
-
-    if (direction === "drawer_to_vault") {
-      resolved.sourceReference = drawerReference
-      resolved.destinationReference = counterpartyReference
-    } else if (direction === "vault_to_drawer") {
-      resolved.sourceReference = counterpartyReference
-      resolved.destinationReference = drawerReference
-    } else if (direction === "vault_to_vault") {
-      resolved.sourceReference = sourceReference
-      resolved.destinationReference = destinationReference
-    }
-
-    resolved.valid = resolved.sourceReference.length > 0 && resolved.destinationReference.length > 0 && resolved.sourceReference !== resolved.destinationReference
-    return resolved
   }
 
   hasInvalidVaultTransferFields(details) {
@@ -1182,26 +1178,15 @@ export default class extends Controller {
   }
 
   resetVaultTransferFields() {
-    if (this.hasVaultTransferDirectionTarget) {
-      this.vaultTransferDirectionTarget.value = "drawer_to_vault"
+    if (this.hasVaultTransferFromReferenceTarget) {
+      this.vaultTransferFromReferenceTarget.value = ""
     }
-
-    if (this.hasVaultTransferCounterpartyReferenceTarget) {
-      this.vaultTransferCounterpartyReferenceTarget.value = ""
+    if (this.hasVaultTransferToReferenceTarget) {
+      this.vaultTransferToReferenceTarget.value = ""
     }
-
-    if (this.hasVaultTransferSourceReferenceTarget) {
-      this.vaultTransferSourceReferenceTarget.value = ""
-    }
-
-    if (this.hasVaultTransferDestinationReferenceTarget) {
-      this.vaultTransferDestinationReferenceTarget.value = ""
-    }
-
     if (this.hasVaultTransferReasonCodeTarget) {
       this.vaultTransferReasonCodeTarget.value = ""
     }
-
     if (this.hasVaultTransferMemoTarget) {
       this.vaultTransferMemoTarget.value = ""
     }
@@ -1222,25 +1207,11 @@ export default class extends Controller {
       return
     }
 
-    const direction = this.hasVaultTransferDirectionTarget ? this.vaultTransferDirectionTarget.value.trim() : ""
-    const usesCounterparty = ["drawer_to_vault", "vault_to_drawer"].includes(direction)
-    const usesSourceDestination = direction === "vault_to_vault"
-
-    if (this.hasVaultTransferCounterpartyRowTarget) {
-      this.vaultTransferCounterpartyRowTarget.hidden = !usesCounterparty
-    }
-
-    if (this.hasVaultTransferSourceRowTarget) {
-      this.vaultTransferSourceRowTarget.hidden = !usesSourceDestination
-    }
-
-    if (this.hasVaultTransferDestinationRowTarget) {
-      this.vaultTransferDestinationRowTarget.hidden = !usesSourceDestination
-    }
-
-    if (this.hasVaultTransferMemoTarget) {
-      const reasonCode = this.hasVaultTransferReasonCodeTarget ? this.vaultTransferReasonCodeTarget.value.trim() : ""
-      this.vaultTransferMemoTarget.required = reasonCode === "other"
+    if (this.hasVaultTransferMemoTarget && this.hasVaultTransferReasonCodeTarget) {
+      const reasonCode = this.vaultTransferReasonCodeTarget.value.trim()
+      const memoRequired = reasonCode === "other"
+      this.vaultTransferMemoTarget.required = memoRequired
+      this.vaultTransferMemoTarget.setAttribute("aria-required", memoRequired ? "true" : "false")
     }
   }
 
@@ -1258,11 +1229,11 @@ export default class extends Controller {
     }
 
     if (this.hasDraftAmountCentsTarget) {
-      this.draftAmountCentsTarget.value = "0"
+      this.setAmountCents(this.draftAmountCentsTarget, 0)
     }
 
     if (this.hasDraftFeeCentsTarget) {
-      this.draftFeeCentsTarget.value = "0"
+      this.setAmountCents(this.draftFeeCentsTarget, 0)
     }
 
     if (this.hasDraftPayeeNameTarget) {
@@ -1312,11 +1283,11 @@ export default class extends Controller {
 
   resetCheckCashingFields() {
     if (this.hasCheckAmountCentsTarget) {
-      this.checkAmountCentsTarget.value = "0"
+      this.setAmountCents(this.checkAmountCentsTarget, 0)
     }
 
     if (this.hasFeeCentsTarget) {
-      this.feeCentsTarget.value = "0"
+      this.setAmountCents(this.feeCentsTarget, 0)
     }
 
     if (this.hasSettlementAccountReferenceTarget) {
@@ -1422,6 +1393,16 @@ export default class extends Controller {
     }).format((Number(cents) || 0) / 100)
   }
 
+  setAmountCents(target, cents) {
+    const value = String(Math.max(0, parseInt(cents, 10) || 0))
+    const wrapper = target.closest?.("[data-controller~=\"currency-input\"]")
+    if (wrapper) {
+      wrapper.dispatchEvent(new CustomEvent("currency:set", { bubbles: true, detail: { cents: value } }))
+    } else {
+      target.value = value
+    }
+  }
+
   showReceipt({ postingBatchId, tellerTransactionId, requestId, postedAt }) {
     if (!this.hasReceiptPanelTarget) {
       return
@@ -1479,7 +1460,12 @@ export default class extends Controller {
 
   focusFirstField() {
     const firstField = this.primaryAccountReferenceTarget || this.amountCentsTarget
-    if (firstField && typeof firstField.focus === "function") {
+    if (!firstField || typeof firstField.focus !== "function") return
+    const wrapper = firstField.closest?.("[data-controller~=\"currency-input\"]")
+    const displayInput = wrapper?.querySelector?.("[data-currency-input-target=\"displayInput\"]")
+    if (displayInput && typeof displayInput.focus === "function") {
+      displayInput.focus()
+    } else {
       firstField.focus()
     }
   }

@@ -19,7 +19,10 @@
       <%= form_with url: teller_teller_session_path, method: :post do |form| %>
         <p class="form-control">
           <%= form.label :opening_cash_cents, "Opening cash" %><br>
-          <%= form.text_field :opening_cash_cents, min: 0, value: 0, required: true, class: "input input-bordered", data: { controller: "currency-input", currency_input_target: "input" } %>
+          <div data-controller="currency-input">
+            <%= form.hidden_field :opening_cash_cents, value: 0, data: { currency_input_target: "hiddenInput" } %>
+            <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Opening cash" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:opening_cash_cents) %>" required />
+          </div>
         </p>
         <%= form.submit "Open Teller Session", class: "btn btn-primary" %>
       <% end %>
@@ -40,7 +43,10 @@
       <%= form_with url: close_teller_teller_session_path, method: :patch do |form| %>
         <p class="form-control">
           <%= form.label :closing_cash_cents, "Declared closing cash" %><br>
-          <%= form.text_field :closing_cash_cents, min: 0, required: true, class: "input input-bordered", data: { controller: "currency-input", currency_input_target: "input" } %>
+          <div data-controller="currency-input">
+            <%= form.hidden_field :closing_cash_cents, value: 0, data: { currency_input_target: "hiddenInput" } %>
+            <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Declared closing cash" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:closing_cash_cents) %>" required />
+          </div>
         </p>
         <p class="form-control">
           <%= form.label :cash_variance_reason, "Variance reason (optional)" %><br>

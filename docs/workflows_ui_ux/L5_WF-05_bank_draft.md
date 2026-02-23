@@ -2,6 +2,7 @@
 
 **Status:** **Partially aligned with current codebase**
 **Current Implementation Mapping:** Bank Draft is implemented under the `draft` workflow surfaces: `GET /teller/transactions/draft`, `GET /teller/drafts/new`, `POST /teller/drafts`.
+**Implementation:** Partial (naming differs). See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
 
 ---
 
@@ -84,6 +85,10 @@ Minimum Phase 1 set:
 11. Memo (internal) *(optional)*
 12. Cancel
 13. Post (Ctrl+Enter)
+
+### 5.1 Required and optional fields (authoritative)
+
+See [02_teller_transaction_requirements.md](02_teller_transaction_requirements.md) for the authoritative required/optional field list and server validation behavior for Bank Draft.
 
 **Derived rule (blocking if mixed):**
 

@@ -2,6 +2,7 @@
 
 **Status:** **Partially aligned with current codebase**
 **Current Implementation Mapping:** Vault Transfer is implemented via `GET /teller/transactions/vault_transfer` and typed routes `GET /teller/vault_transfers/new`, `POST /teller/vault_transfers`.
+**Implementation:** Partial (path differs). See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
 
 ---
 
@@ -79,6 +80,10 @@ Zones:
 4. Memo *(required if “Other”; recommended always allowed)*
 5. Cancel
 6. Post (Ctrl+Enter)
+
+### 5.1 Required and optional fields (authoritative)
+
+See [02_teller_transaction_requirements.md](02_teller_transaction_requirements.md) for the authoritative required/optional field list and server validation behavior for Vault Transfer.
 
 ---
 

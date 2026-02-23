@@ -2,6 +2,7 @@
 
 **Status:** **Fits but needs working changes** — deposit workflow is implemented, but route/posting contract wording should be normalized to current endpoints.
 **Current Implementation Mapping:** UI flow is `GET /teller/transactions/deposit`; validation/posting are `POST /teller/transactions/validate` and `POST /teller/posting`; receipt is `GET /teller/receipts/:request_id`.
+**Implementation:** Implemented. See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
 
 ---
 
@@ -81,6 +82,10 @@ If any fail:
 
 * Deposit must have **cash > 0 or at least one check row** with amount > 0
 * Removing all check rows + cash = 0 is blocking
+
+### 5.1 Required and optional fields (authoritative)
+
+See [02_teller_transaction_requirements.md](02_teller_transaction_requirements.md) for the authoritative required/optional field list and server validation behavior for Deposit.
 
 ---
 

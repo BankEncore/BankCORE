@@ -9,7 +9,7 @@ export default class extends Controller {
     this.referenceSnapshots = {}
   }
 
-  async refresh(event) {
+  refresh(event) {
     if (!event?.detail) {
       return
     }
@@ -36,14 +36,6 @@ export default class extends Controller {
     this.setHidden("counterpartyReferencePanel", transactionType !== "transfer")
     this.renderCashFlowSummary(transactionType, cashAmountCents || 0, cashImpactCents || 0, projectedDrawerCents || 0)
     this.renderReadiness(readyToPost, blockedReason)
-
-    await Promise.all([
-      this.populateReference("primary", primaryReference),
-      this.populateReference("cash", cashReference),
-      transactionType === "transfer" ? this.populateReference("counterparty", counterpartyReference) : Promise.resolve()
-    ])
-
-    this.renderReferenceInsights(transactionType)
   }
 
   async populateReference(kind, reference) {

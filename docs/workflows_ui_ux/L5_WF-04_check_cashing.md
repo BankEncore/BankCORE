@@ -2,6 +2,7 @@
 
 **Status:** **Fits but needs working changes** — check cashing workflow is implemented, but policy and contract sections should align to current approval-token model.
 **Current Implementation Mapping:** UI flow is `GET /teller/transactions/check_cashing`; validation/posting are `POST /teller/transactions/validate` and `POST /teller/posting`; receipt is `GET /teller/receipts/:request_id`.
+**Implementation:** Implemented. See [00_page_endpoint_list.md](00_page_endpoint_list.md) for route mapping.
 
 ---
 
@@ -94,6 +95,10 @@ Minimum Phase 1 set:
 11. Post (Ctrl+Enter)
 
 **Rule:** You do not allow “draft payout” for check cashing in Phase 1 unless you explicitly add it. Default is cash only.
+
+### 5.1 Required and optional fields (authoritative)
+
+See [02_teller_transaction_requirements.md](02_teller_transaction_requirements.md) for the authoritative required/optional field list and server validation behavior for Check Cashing.
 
 ---
 

@@ -8,6 +8,7 @@
   data-posting-form-account-history-url-value="<%= teller_account_history_path %>"
   data-posting-form-workflow-schema-url-value="<%= teller_workflow_schema_path %>"
   data-posting-form-receipt-url-template-value="<%= teller_receipt_path(request_id: "__REQUEST_ID__") %>"
+  data-posting-form-drawer-reference-value="<%= teller_session.cash_location.present? ? "cash:#{teller_session.cash_location.code}" : "" %>"
   data-approval-panel-approval-url-value="<%= teller_approvals_path %>"
   data-reference-panel-account-reference-url-value="<%= teller_account_reference_path %>"
   data-reference-panel-account-history-url-value="<%= teller_account_history_path %>">
@@ -15,7 +16,7 @@
   <% flow_type = local_assigns.fetch(:default_transaction_type, "deposit").presence || "deposit" %>
   <% show_counterparty = fixed_flow && flow_type == "transfer" %>
   <% show_cash_account = local_assigns.fetch(:show_transaction_type, true) %>
-  <% show_checks = flow_type == "deposit" %>
+  <% show_checks = flow_type == "deposit" || flow_type == "draft" %>
   <% show_vault_transfer = fixed_flow && flow_type == "vault_transfer" %>
   <% show_draft = fixed_flow && flow_type == "draft" %>
   <% show_check_cashing = fixed_flow && flow_type == "check_cashing" %>
@@ -46,7 +47,10 @@
 
           <p class="form-control">
             <%= form.label :amount_cents, "Cash Amount" %><br>
-            <%= form.text_field :amount_cents, min: 0, value: 0, required: true, class: "input input-bordered", data: { posting_form_target: "amountCents", action: "input->posting-form#recalculate", controller: "currency-input", currency_input_target: "input" } %>
+            <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+              <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
+              <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
+            </div>
           </p>
 
           <p class="form-control">
@@ -87,7 +91,10 @@
                     <input type="text" class="input input-bordered" placeholder="Routing #" data-check-field="routing" data-action="input->posting-form#recalculate">
                     <input type="text" class="input input-bordered" placeholder="Account #" data-check-field="account" data-action="input->posting-form#recalculate">
                     <input type="text" class="input input-bordered" placeholder="Check #" data-check-field="number" data-action="input->posting-form#recalculate">
-                    <input type="text" min="1" class="input input-bordered" placeholder="Amount" data-check-field="amount" data-action="input->posting-form#recalculate" data-controller="currency-input" data-currency-input-target="input">
+                    <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                      <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
+                      <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Check amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur">
+                    </div>
                   </div>
                   <div class="mt-3 collapse collapse-arrow bg-base-200 border border-base-300">
                     <input type="checkbox">
@@ -119,11 +126,17 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
               <p class="form-control">
                 <%= form.label :check_amount_cents, "Check Amount" %><br>
-                <%= form.text_field :check_amount_cents, min: 1, value: 0, class: "input input-bordered", data: { posting_form_target: "checkAmountCents", action: "input->posting-form#recalculate", controller: "currency-input", currency_input_target: "input" } %>
+                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                  <%= form.hidden_field :check_amount_cents, value: 0, data: { posting_form_target: "checkAmountCents", currency_input_target: "hiddenInput" } %>
+                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Check Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:check_amount_cents) %>" />
+                </div>
               </p>
               <p class="form-control">
                 <%= form.label :fee_cents, "Fee" %><br>
-                <%= form.text_field :fee_cents, min: 0, value: 0, class: "input input-bordered", data: { posting_form_target: "feeCents", action: "input->posting-form#recalculate", controller: "currency-input", currency_input_target: "input" } %>
+                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                  <%= form.hidden_field :fee_cents, value: 0, data: { posting_form_target: "feeCents", currency_input_target: "hiddenInput" } %>
+                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:fee_cents) %>" />
+                </div>
               </p>
               <p class="form-control">
                 <%= form.label :settlement_account_reference, "Settlement Account Reference" %><br>
@@ -187,11 +200,17 @@
               </p>
               <p class="form-control">
                 <%= form.label :draft_amount_cents, "Draft Amount" %><br>
-                <%= form.text_field :draft_amount_cents, min: 1, value: 0, class: "input input-bordered", data: { posting_form_target: "draftAmountCents", action: "input->posting-form#recalculate", controller: "currency-input", currency_input_target: "input" } %>
+                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                  <%= form.hidden_field :draft_amount_cents, value: 0, data: { posting_form_target: "draftAmountCents", currency_input_target: "hiddenInput" } %>
+                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Draft Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_amount_cents) %>" />
+                </div>
               </p>
               <p class="form-control">
                 <%= form.label :draft_fee_cents, "Fee" %><br>
-                <%= form.text_field :draft_fee_cents, min: 0, value: 0, class: "input input-bordered", data: { posting_form_target: "draftFeeCents", action: "input->posting-form#recalculate", controller: "currency-input", currency_input_target: "input" } %>
+                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                  <%= form.hidden_field :draft_fee_cents, value: 0, data: { posting_form_target: "draftFeeCents", currency_input_target: "hiddenInput" } %>
+                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Draft Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_fee_cents) %>" />
+                </div>
               </p>
               <p class="form-control md:col-span-2">
                 <%= form.label :draft_payee_name, "Payee" %><br>
@@ -214,42 +233,25 @@
           <section data-posting-form-target="vaultTransferSection" <%= "hidden" unless show_vault_transfer %>>
             <div class="divider my-3"></div>
             <div class="font-medium">Vault Transfer Details</div>
+            <p class="text-sm opacity-80 mt-1">Amount above = Cash Out from Transfer From, Cash In to Transfer To.</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
               <p class="form-control">
-                <%= form.label :vault_transfer_direction, "Direction" %><br>
-                <%= form.select :vault_transfer_direction,
-                  options_for_select([
-                    ["Drawer → Vault", "drawer_to_vault"],
-                    ["Vault → Drawer", "vault_to_drawer"],
-                    ["Vault → Vault", "vault_to_vault"]
-                  ], "drawer_to_vault"),
-                  {},
-                  { data: { posting_form_target: "vaultTransferDirection", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control" data-posting-form-target="vaultTransferCounterpartyRow">
-                <%= form.label :vault_transfer_counterparty_reference, "Vault Cash Location" %><br>
-                <%= form.select :vault_transfer_counterparty_reference,
+                <%= form.label :vault_transfer_from_reference, "Transfer From" %><br>
+                <%= form.select :vault_transfer_from_reference,
                   options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
-                  { include_blank: "Select vault location" },
-                  { data: { posting_form_target: "vaultTransferCounterpartyReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control" data-posting-form-target="vaultTransferSourceRow" hidden>
-                <%= form.label :vault_transfer_source_cash_account_reference, "Source Vault" %><br>
-                <%= form.select :vault_transfer_source_cash_account_reference,
-                  options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
-                  { include_blank: "Select source vault" },
-                  { data: { posting_form_target: "vaultTransferSourceReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control" data-posting-form-target="vaultTransferDestinationRow" hidden>
-                <%= form.label :vault_transfer_destination_cash_account_reference, "Destination Vault" %><br>
-                <%= form.select :vault_transfer_destination_cash_account_reference,
-                  options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
-                  { include_blank: "Select destination vault" },
-                  { data: { posting_form_target: "vaultTransferDestinationReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
+                  { include_blank: "Select source" },
+                  { data: { posting_form_target: "vaultTransferFromReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
               </p>
               <p class="form-control">
-                <%= form.label :vault_transfer_reason_code, "Reason Code" %><br>
+                <%= form.label :vault_transfer_to_reference, "Transfer To" %><br>
+                <%= form.select :vault_transfer_to_reference,
+                  options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
+                  { include_blank: "Select destination" },
+                  { data: { posting_form_target: "vaultTransferToReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
+              </p>
+              <p class="form-control">
+                <%= form.label :vault_transfer_reason_code, "Reason" %><br>
                 <%= form.select :vault_transfer_reason_code,
                   options_for_select([
                     ["Excess cash", "excess_cash"],
@@ -261,7 +263,7 @@
                   { data: { posting_form_target: "vaultTransferReasonCode", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
               </p>
               <p class="form-control md:col-span-2">
-                <%= form.label :vault_transfer_memo, "Memo" %><br>
+                <%= form.label :vault_transfer_memo, "Remarks" %><br>
                 <%= form.text_field :vault_transfer_memo, data: { posting_form_target: "vaultTransferMemo", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
               </p>
             </div>
@@ -274,10 +276,6 @@
 
       <%= render "teller/shared/reference_panel", teller_session: teller_session %>
     </div>
-
-    <%= render "teller/shared/totals_panel" %>
-
-    <%= render "teller/shared/cash_footer" %>
 
     <%= render "teller/shared/approval_modal" %>
 
