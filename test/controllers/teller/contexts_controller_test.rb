@@ -54,7 +54,56 @@ module Teller
       assert_includes response.body, second_workstation.name
     end
 
+    test "clears teller session when switching branch and workstation" do
+      grant_sessions_permissions(@user)
+      patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
+      follow_redirect!
+
+      post teller_teller_session_path, params: { opening_cash_cents: 5_000 }
+      assert TellerSession.open_sessions.exists?(user: @user, branch: @branch, workstation: @workstation)
+
+      second_branch = Branch.create!(code: "203", name: "Switch Branch")
+      second_workstation = Workstation.create!(branch: second_branch, code: "CTX3", name: "Switch WS")
+      grant_permissions(@user, second_branch, second_workstation)
+
+      patch teller_context_path, params: { branch_id: second_branch.id, workstation_id: second_workstation.id }
+      follow_redirect!
+
+      assert_response :success
+      assert_select "form[action='#{teller_teller_session_path}'][method='post']"
+    end
+
+    test "restores teller session when returning to branch and workstation" do
+      grant_sessions_permissions(@user)
+      patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
+
+      post teller_teller_session_path, params: { opening_cash_cents: 5_000 }
+      drawer = CashLocation.create!(branch: @branch, code: "DR2", name: "Drawer 2", location_type: "drawer")
+      patch assign_drawer_teller_teller_session_path, params: { cash_location_id: drawer.id }
+
+      second_branch = Branch.create!(code: "204", name: "Away Branch")
+      second_workstation = Workstation.create!(branch: second_branch, code: "CTX4", name: "Away WS")
+      grant_permissions(@user, second_branch, second_workstation)
+
+      patch teller_context_path, params: { branch_id: second_branch.id, workstation_id: second_workstation.id }
+      follow_redirect!
+
+      patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
+      follow_redirect!
+
+      assert_response :success
+      assert_select "form[action='#{close_teller_teller_session_path}'][method='post']"
+    end
+
     private
+      def grant_sessions_permissions(user)
+        [ "sessions.open", "sessions.close" ].each do |permission_key|
+          permission = Permission.find_or_create_by!(key: permission_key) { |r| r.description = permission_key }
+          role = Role.find_or_create_by!(key: "teller") { |r| r.name = "Teller" }
+          RolePermission.find_or_create_by!(role: role, permission: permission)
+          UserRole.find_or_create_by!(user: user, role: role, branch: nil, workstation: nil)
+        end
+      end
       def set_signed_cookie(key, value)
         ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
           cookie_jar.signed[key] = value

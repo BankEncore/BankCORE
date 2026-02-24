@@ -84,8 +84,27 @@ module RequestContext
       session_id = session[:current_teller_session_id]
       teller_session = TellerSession.find_by(id: session_id)
 
-      if teller_session.present? && !teller_session.open?
+      if teller_session.present? && teller_session.open?
+        if current_branch.present? && current_workstation.present? &&
+            teller_session.branch_id == current_branch.id &&
+            teller_session.workstation_id == current_workstation.id
+          @current_teller_session = teller_session
+          session[:current_teller_session_id] = teller_session.id
+          return @current_teller_session
+        end
+        session.delete(:current_teller_session_id)
         teller_session = nil
+      end
+
+      if teller_session.blank? && Current.user.present? && current_branch.present? && current_workstation.present?
+        teller_session = TellerSession.open_sessions.find_by(
+          user: Current.user,
+          branch: current_branch,
+          workstation: current_workstation
+        )
+        if teller_session.present?
+          session[:current_teller_session_id] = teller_session.id
+        end
       end
 
       @current_teller_session = teller_session
