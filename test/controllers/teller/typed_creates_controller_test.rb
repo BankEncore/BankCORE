@@ -76,14 +76,15 @@ module Teller
     end
 
     test "check cashing create enforces check_cashing transaction type" do
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Test Party", is_active: true)
       post teller_check_cashings_path, params: {
         request_id: "typed-cc-1",
         transaction_type: "deposit",
         amount_cents: 8_000,
-        id_type: "drivers_license",
-        id_number: "ID001",
+        party_id: party.id,
+        check_items: [ { routing: "021000021", account: "123456789", number: "1001", account_reference: "check:021000021:123456789:1001", amount_cents: 8_000 } ],
         entries: [
-          { side: "debit", account_reference: "check:123", amount_cents: 8_000 },
+          { side: "debit", account_reference: "check:021000021:123456789:1001", amount_cents: 8_000 },
           { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 8_000 }
         ]
       }
@@ -93,20 +94,19 @@ module Teller
     end
 
     test "check cashing create generates fee-aware entries and metadata" do
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Jordan Smith", is_active: true)
       post teller_check_cashings_path, params: {
         request_id: "typed-cc-2",
         transaction_type: "check_cashing",
         amount_cents: 9_500,
-        check_amount_cents: 10_000,
+        party_id: party.id,
         fee_cents: 500,
-        settlement_account_reference: "acct:check_settlement",
-        check_number: "1000123",
-        routing_number: "021000021",
-        account_number: "123456789",
-        payer_name: "Jordan Smith",
-        presenter_type: "non_customer",
-        id_type: "drivers_license",
-        id_number: "D1234567"
+        check_items: [ { routing: "021000021", account: "123456789", number: "1000123", account_reference: "check:021000021:123456789:1000123", amount_cents: 10_000 } ],
+        entries: [
+          { side: "debit", account_reference: "check:021000021:123456789:1000123", amount_cents: 10_000 },
+          { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 9_500 },
+          { side: "credit", account_reference: "income:check_cashing_fee", amount_cents: 500 }
+        ]
       }
 
       assert_response :success
@@ -123,8 +123,7 @@ module Teller
       assert_equal 10_000, metadata.dig("check_cashing", "check_amount_cents")
       assert_equal 500, metadata.dig("check_cashing", "fee_cents")
       assert_equal 9_500, metadata.dig("check_cashing", "net_cash_payout_cents")
-      assert_equal "non_customer", metadata.dig("check_cashing", "presenter_type")
-      assert_equal "drivers_license", metadata.dig("check_cashing", "id_type")
+      assert_equal party.id.to_s, metadata.dig("check_cashing", "party_id")
     end
 
     test "draft create enforces draft transaction type" do

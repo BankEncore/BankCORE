@@ -2,13 +2,20 @@
 
 module Teller
   class PartiesController < BaseController
-    before_action :set_party, only: [ :show, :edit, :update ]
+    before_action :set_party, only: [ :show, :edit, :update, :accounts ]
     before_action :ensure_authorized
 
     def index
       @parties = Party.where(is_active: true).order(display_name: :asc).limit(100)
       @parties = @parties.where(party_kind: params[:party_kind]) if params[:party_kind].present?
       @parties = @parties.where(relationship_kind: params[:relationship_kind]) if params[:relationship_kind].present?
+    end
+
+    def search
+      scope = Party.where(is_active: true, party_kind: "individual").order(display_name: :asc).limit(20)
+      scope = scope.where("display_name LIKE ?", "%#{sanitize_sql_like(params[:q].to_s)}%") if params[:q].present?
+      parties = scope.pluck(:id, :display_name, :party_kind).map { |id, display_name, party_kind| { id: id, display_name: display_name.presence || "Party ##{id}", party_kind: party_kind } }
+      render json: parties
     end
 
     def show
@@ -23,7 +30,15 @@ module Teller
       if @party.save
         begin
           create_party_detail
-          redirect_to teller_party_path(@party), notice: "Party created."
+          return_to = params[:return_to].presence
+          if return_to.present?
+            uri = URI.parse(return_to)
+            new_query = "party_id=#{@party.id}"
+            uri.query = uri.query.present? ? "#{uri.query}&#{new_query}" : new_query
+            redirect_to uri.to_s, notice: "Party created."
+          else
+            redirect_to teller_party_path(@party), notice: "Party created."
+          end
         rescue ActiveRecord::RecordInvalid => e
           @party.errors.add(:base, e.record.errors.full_messages.join(", "))
           render :new, status: :unprocessable_entity
@@ -43,6 +58,18 @@ module Teller
       else
         render :edit, status: :unprocessable_entity
       end
+    end
+
+    def accounts
+      accounts = @party.accounts.includes(:branch).map do |account|
+        {
+          id: account.id,
+          account_number: account.account_number,
+          account_type: account.account_type,
+          branch_code: account.branch&.code
+        }
+      end
+      render json: accounts
     end
 
     private

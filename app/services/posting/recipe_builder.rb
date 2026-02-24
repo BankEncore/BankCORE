@@ -47,22 +47,28 @@ module Posting
       attr_reader :posting_params, :default_cash_account_reference
 
       def check_cashing_metadata
-        check_amount_cents = posting_params[:check_amount_cents].to_i
+        check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
+        check_items = check_items.select { |item| item[:amount_cents].to_i.positive? }
+        check_amount_cents = check_items.sum { |item| item[:amount_cents].to_i }
         fee_cents = posting_params[:fee_cents].to_i
         net_cash_payout_cents = check_amount_cents - fee_cents
 
         {
           check_cashing: {
+            check_items: check_items.map do |item|
+              {
+                routing: item[:routing].to_s,
+                account: item[:account].to_s,
+                number: item[:number].to_s,
+                account_reference: item[:account_reference].to_s,
+                amount_cents: item[:amount_cents].to_i
+              }
+            end,
             check_amount_cents: check_amount_cents,
             fee_cents: fee_cents,
             net_cash_payout_cents: net_cash_payout_cents,
-            settlement_account_reference: posting_params[:settlement_account_reference].to_s,
+            party_id: posting_params[:party_id].to_s,
             fee_income_account_reference: fee_income_account_reference,
-            check_number: posting_params[:check_number].to_s,
-            routing_number: posting_params[:routing_number].to_s,
-            account_number: posting_params[:account_number].to_s,
-            payer_name: posting_params[:payer_name].to_s,
-            presenter_type: posting_params[:presenter_type].to_s,
             id_type: posting_params[:id_type].to_s,
             id_number: posting_params[:id_number].to_s
           }
@@ -153,24 +159,21 @@ module Posting
             { side: "credit", account_reference: source_reference, amount_cents: amount_cents }
           ]
         when "check_cashing"
-          check_amount_cents = posting_params[:check_amount_cents].to_i
+          check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
+          check_items = check_items.select { |item| item[:amount_cents].to_i.positive? }
+          check_amount_cents = check_items.sum { |item| item[:amount_cents].to_i }
           fee_cents = posting_params[:fee_cents].to_i
           net_cash_payout_cents = check_amount_cents - fee_cents
-          settlement_account_reference = posting_params[:settlement_account_reference].to_s
 
-          return [] unless check_amount_cents.positive?
+          return [] if check_items.empty?
           return [] unless net_cash_payout_cents.positive?
-          return [] if settlement_account_reference.blank?
           return [] unless amount_cents == net_cash_payout_cents
 
-          entries = [
-            { side: "debit", account_reference: settlement_account_reference, amount_cents: check_amount_cents },
-            { side: "credit", account_reference: default_cash_account_reference, amount_cents: net_cash_payout_cents }
-          ]
-
-          if fee_cents.positive?
-            entries << { side: "credit", account_reference: fee_income_account_reference, amount_cents: fee_cents }
+          entries = check_items.map do |item|
+            { side: "debit", account_reference: item[:account_reference].to_s, amount_cents: item[:amount_cents].to_i }
           end
+          entries << { side: "credit", account_reference: default_cash_account_reference, amount_cents: net_cash_payout_cents }
+          entries << { side: "credit", account_reference: fee_income_account_reference, amount_cents: fee_cents } if fee_cents.positive?
 
           entries
         when "draft"

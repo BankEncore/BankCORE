@@ -46,19 +46,41 @@
       <div class="card-body">
         <h3 class="card-title text-base">Check Cashing Details</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-          <p><strong>Check Amount:</strong> <%= number_to_currency(check_cashing["check_amount_cents"].to_f / 100.0) %></p>
+          <% if check_cashing["party_id"].present? %>
+            <p class="md:col-span-2"><strong>Party:</strong> <%= Party.find_by(id: check_cashing["party_id"])&.display_name || "ID #{check_cashing["party_id"]}" %></p>
+          <% end %>
+          <p><strong>Checks Total:</strong> <%= number_to_currency(check_cashing["check_amount_cents"].to_f / 100.0) %></p>
           <p><strong>Fee:</strong> <%= number_to_currency(check_cashing["fee_cents"].to_f / 100.0) %></p>
           <p><strong>Net Cash Payout:</strong> <%= number_to_currency(check_cashing["net_cash_payout_cents"].to_f / 100.0) %></p>
-          <p><strong>Settlement Account:</strong> <span class="font-mono text-xs"><%= check_cashing["settlement_account_reference"] %></span></p>
-          <p><strong>Fee Account:</strong> <span class="font-mono text-xs"><%= check_cashing["fee_income_account_reference"] %></span></p>
-          <p><strong>Check Number:</strong> <%= check_cashing["check_number"].presence || "N/A" %></p>
-          <p><strong>Routing Number:</strong> <%= check_cashing["routing_number"].presence || "N/A" %></p>
-          <p><strong>Account Number:</strong> <%= check_cashing["account_number"].presence || "N/A" %></p>
-          <p><strong>Payer Name:</strong> <%= check_cashing["payer_name"].presence || "N/A" %></p>
-          <p><strong>Presenter Type:</strong> <%= check_cashing["presenter_type"].to_s.humanize.presence || "N/A" %></p>
-          <p><strong>ID Type:</strong> <%= check_cashing["id_type"].to_s.humanize.presence || "N/A" %></p>
-          <p><strong>ID Number:</strong> <%= check_cashing["id_number"].presence || "N/A" %></p>
+          <p><strong>Fee Account:</strong> <span class="font-mono text-xs"><%= check_cashing["fee_income_account_reference"].presence || "N/A" %></span></p>
+          <% if check_cashing["id_type"].present? || check_cashing["id_number"].present? %>
+            <p><strong>ID Type:</strong> <%= check_cashing["id_type"].to_s.humanize.presence || "N/A" %></p>
+            <p><strong>ID Number:</strong> <%= check_cashing["id_number"].presence || "N/A" %></p>
+          <% end %>
         </div>
+        <% check_items = Array(check_cashing["check_items"] || check_cashing[:check_items]) %>
+        <% if check_items.any? %>
+          <div class="mt-3">
+            <strong class="text-sm">Checks</strong>
+            <table class="table table-sm mt-2 text-sm">
+              <thead>
+                <tr><th>Routing</th><th>Account</th><th>#</th><th class="text-right">Amount</th></tr>
+              </thead>
+              <tbody>
+                <% check_items.each do |item|
+                  item = item.with_indifferent_access if item.respond_to?(:with_indifferent_access)
+                %>
+                  <tr>
+                    <td class="font-mono text-xs"><%= item["routing"].presence || "—" %></td>
+                    <td class="font-mono text-xs"><%= item["account"].presence || "—" %></td>
+                    <td><%= item["number"].presence || "—" %></td>
+                    <td class="text-right tabular-nums"><%= number_to_currency((item["amount_cents"] || 0).to_f / 100.0) %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
       </div>
     </section>
   <% end %>

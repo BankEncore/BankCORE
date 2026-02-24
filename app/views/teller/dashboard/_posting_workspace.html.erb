@@ -3,7 +3,7 @@
   <% flow_type = local_assigns.fetch(:default_transaction_type, "deposit").presence || "deposit" %>
   <% show_counterparty = fixed_flow && flow_type == "transfer" %>
   <% show_cash_account = local_assigns.fetch(:show_transaction_type, true) %>
-  <% show_checks = flow_type == "deposit" || flow_type == "draft" %>
+  <% show_checks = flow_type == "deposit" || flow_type == "draft" || flow_type == "check_cashing" %>
   <% show_vault_transfer = fixed_flow && flow_type == "vault_transfer" %>
   <% show_draft = fixed_flow && flow_type == "draft" %>
   <% show_check_cashing = fixed_flow && flow_type == "check_cashing" %>
@@ -39,30 +39,48 @@
             <p><strong>Transaction Type:</strong> <%= flow_type.titleize %></p>
           <% end %>
 
-          <p class="form-control">
-            <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700" %><br>
-            <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-              <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
-              <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
-            </div>
-          </p>
-
-          <% if flow_type == "deposit" %>
-            <p class="form-control" data-posting-form-target="cashBackRow">
-              <%= form.label :cash_back_cents, "Cash Back", class: "text-xs font-medium text-slate-700" %><br>
+          <% unless flow_type == "check_cashing" %>
+            <p class="form-control" data-posting-form-target="cashAmountRow">
+              <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700" %><br>
               <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                <%= form.hidden_field :cash_back_cents, value: 0, data: { posting_form_target: "cashBackCents", currency_input_target: "hiddenInput" } %>
-                <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Back" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:cash_back_cents) %>" />
+                <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
+                <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
               </div>
-              <span class="text-xs text-slate-600 mt-1 block">Amount returned to customer from cash received.</span>
             </p>
           <% end %>
+          <% if flow_type == "check_cashing" %>
+            <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents" } %>
+          <% end %>
 
-          <p class="form-control">
-            <%= form.label :primary_account_reference, "Primary Account Reference", class: "text-xs font-medium text-slate-700" %><br>
-            <%= form.text_field :primary_account_reference, data: { posting_form_target: "primaryAccountReference", action: "input->posting-form#recalculate" }, required: true, class: "input input-bordered", placeholder: "Search by account # or name" %>
-            <span class="text-xs text-slate-600 mt-1 block">Example: 0001234567 or Miller, Thomas</span>
-          </p>
+          <div class="form-control overflow-visible" data-posting-form-target="primaryAccountRow" <%= "hidden" if flow_type == "check_cashing" %>>
+            <%= form.label :primary_account_reference, "Primary Account", class: "text-xs font-medium text-slate-700" %><br>
+            <div class="relative overflow-visible" data-controller="primary-account-search"
+                 data-primary-account-search-search-url-value="<%= teller_transaction_search_path %>"
+                 data-primary-account-search-party-accounts-url-template-value="<%= accounts_teller_party_path('__ID__') %>">
+              <%= form.text_field :primary_account_reference,
+                data: {
+                  posting_form_target: "primaryAccountReference",
+                  primary_account_search_target: "searchInput",
+                  action: "input->posting-form#recalculate input->primary-account-search#search input->primary-account-search#onInputFreeTyping"
+                },
+                required: true,
+                class: "input input-bordered w-full",
+                placeholder: "Search party or account #, or type account number",
+                autocomplete: "off" %>
+              <div data-primary-account-search-target="resultsList"
+                   class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
+                   hidden>
+              </div>
+              <div data-primary-account-search-target="partyAccountsRow" class="mt-2" hidden>
+                <label class="text-xs font-medium text-slate-700">Select account for <span data-primary-account-search-target="partyName"></span></label>
+                <select data-primary-account-search-target="accountSelect"
+                        data-action="change->primary-account-search#selectAccountFromDropdown"
+                        class="select select-bordered w-full mt-1">
+                </select>
+              </div>
+            </div>
+            <span class="text-xs text-slate-600 mt-1 block">Search by name or account #, or enter account number directly.</span>
+          </div>
 
           <p class="form-control" data-posting-form-target="counterpartyRow" <%= "hidden" unless show_counterparty %>>
             <%= form.label :counterparty_account_reference, "Counterparty Account Reference", class: "text-xs font-medium text-slate-700" %><br>
@@ -158,61 +176,38 @@
             <div class="divider my-3"></div>
             <div class="font-medium">Check Cashing Details</div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+            <% parties = local_assigns.fetch(:parties, []) %>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
               <p class="form-control">
-                <%= form.label :check_amount_cents, "Check Amount" %><br>
-                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                  <%= form.hidden_field :check_amount_cents, value: 0, data: { posting_form_target: "checkAmountCents", currency_input_target: "hiddenInput" } %>
-                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Check Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:check_amount_cents) %>" />
-                </div>
+                <%= form.label :party_id, "Party", class: "text-xs font-medium text-slate-700" %><br>
+                <%= form.select :party_id,
+                  options_from_collection_for_select(parties, :id, :display_name, params[:party_id]),
+                  { include_blank: "Select party" },
+                  { data: { posting_form_target: "partyId", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
+                <span class="text-xs text-slate-600 mt-1 block">Individual presenting the check(s).</span>
+                <%= link_to "Add new party", new_teller_party_path(party_kind: "individual", return_to: request.original_url), class: "link link-hover text-xs mt-1 inline-block" %>
               </p>
               <p class="form-control">
-                <%= form.label :fee_cents, "Fee" %><br>
+                <%= form.label :fee_cents, "Fee", class: "text-xs font-medium text-slate-700" %><br>
                 <div data-controller="currency-input" data-action="input->posting-form#recalculate">
                   <%= form.hidden_field :fee_cents, value: 0, data: { posting_form_target: "feeCents", currency_input_target: "hiddenInput" } %>
                   <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:fee_cents) %>" />
                 </div>
-              </p>
-              <p class="form-control">
-                <%= form.label :settlement_account_reference, "Settlement Account Reference" %><br>
-                <%= form.text_field :settlement_account_reference, data: { posting_form_target: "settlementAccountReference", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+                <span class="text-xs text-slate-600 mt-1 block">Optional fee withheld from payout.</span>
               </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3" data-posting-form-target="checkCashingIdRow">
               <p class="form-control">
-                <%= form.label :check_number, "Check Number" %><br>
-                <%= form.text_field :check_number, data: { posting_form_target: "checkNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
-              </p>
-              <p class="form-control">
-                <%= form.label :payer_name, "Payer Name" %><br>
-                <%= form.text_field :payer_name, data: { posting_form_target: "payerName", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
-              </p>
-              <p class="form-control">
-                <%= form.label :routing_number, "Routing Number" %><br>
-                <%= form.text_field :routing_number, data: { posting_form_target: "routingNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
-              </p>
-              <p class="form-control">
-                <%= form.label :account_number, "Account Number" %><br>
-                <%= form.text_field :account_number, data: { posting_form_target: "accountNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
-              </p>
-              <p class="form-control">
-                <%= form.label :presenter_type, "Presenter Type" %><br>
-                <%= form.select :presenter_type,
-                  options_for_select([["Customer", "customer"], ["Non-customer", "non_customer"]]),
-                  {},
-                  { data: { posting_form_target: "presenterType", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control">
-                <%= form.label :id_type, "ID Type" %><br>
+                <%= form.label :id_type, "ID Type", class: "text-xs font-medium text-slate-700" %><br>
                 <%= form.select :id_type,
-                  options_for_select([["Driver's License", "drivers_license"], ["Passport", "passport"], ["State ID", "state_id"], ["Other", "other"]]),
-                  {},
+                  options_for_select([["Driver's License", "drivers_license"], ["Passport", "passport"], ["State ID", "state_id"], ["Other", "other"]], ""),
+                  { include_blank: "Select type" },
                   { data: { posting_form_target: "idType", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
               </p>
-              <p class="form-control md:col-span-2">
-                <%= form.label :id_number, "ID Number" %><br>
-                <%= form.text_field :id_number, data: { posting_form_target: "idNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
+              <p class="form-control">
+                <%= form.label :id_number, "ID Number", class: "text-xs font-medium text-slate-700" %><br>
+                <%= form.text_field :id_number, data: { posting_form_target: "idNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered", placeholder: "Required when no party selected" %>
               </p>
             </div>
 

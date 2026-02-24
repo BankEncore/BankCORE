@@ -11,6 +11,8 @@ module Teller
       @transaction_type = "check_cashing"
       @page_title = "Check Cashing"
       @form_url = teller_check_cashings_path
+      @parties = Party.where(is_active: true, party_kind: "individual").order(display_name: :asc).limit(50)
+      @cash_locations = []
       render "teller/transaction_pages/show"
     end
 

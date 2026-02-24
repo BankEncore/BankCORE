@@ -82,6 +82,27 @@ module Teller
       assert_select "h2", /Show Me/
     end
 
+    test "accounts returns party accounts as json" do
+      party = Party.create!(party_kind: "individual", relationship_kind: "customer")
+      party.create_party_individual!(first_name: "Acct", last_name: "Owner")
+      account = Account.create!(
+        branch: @branch,
+        account_number: "9000000000009001",
+        account_type: "checking",
+        status: "open",
+        opened_on: Date.current
+      )
+      AccountOwner.create!(account: account, party: party, is_primary: true)
+
+      get accounts_teller_party_path(party)
+
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal 1, body.size
+      assert_equal account.account_number, body[0]["account_number"]
+      assert_equal "checking", body[0]["account_type"]
+    end
+
     private
 
       def set_signed_context(branch_id, workstation_id)

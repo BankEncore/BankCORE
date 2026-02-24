@@ -3,7 +3,14 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
   namespace :teller do
     root "dashboard#index"
-    resources :parties, only: [ :index, :show, :new, :create, :edit, :update ]
+    resources :parties, only: [ :index, :show, :new, :create, :edit, :update ] do
+      collection do
+        get :search
+      end
+      member do
+        get :accounts
+      end
+    end
     resources :accounts, only: [ :index, :show, :new, :create, :edit, :update ]
     resources :deposits, only: [ :new, :create ]
     resources :withdrawals, only: [ :new, :create ]
@@ -18,6 +25,7 @@ Rails.application.routes.draw do
     get "transactions/vault_transfer", to: "transaction_pages#vault_transfer", as: :vault_transfer_transaction
     get "transactions/draft", to: "transaction_pages#draft", as: :draft_transaction
     get "transactions/check_cashing", to: "transaction_pages#check_cashing", as: :check_cashing_transaction
+    get "transactions/search", to: "transaction_searches#index", as: :transaction_search
     get "account_reference", to: "account_references#show", as: :account_reference
     get "account_history", to: "account_references#history", as: :account_history
     get "workflow_schema", to: "workflow_schemas#show", as: :workflow_schema

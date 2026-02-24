@@ -45,9 +45,9 @@ module Teller
       },
       "check_cashing" => {
         label: "Check Cashing",
-        required_fields: %i[check_amount_cents settlement_account_reference],
+        required_fields: %i[party_id],
         funding_modes: %w[check],
-        ui_sections: %w[check_cashing],
+        ui_sections: %w[check_cashing checks],
         entry_profile: "check_cashing",
         amount_input_mode: "check_cashing_net_payout",
         effective_amount_source: "check_cashing_net_payout",
@@ -55,7 +55,7 @@ module Teller
         primary_account_policy: "never",
         requires_counterparty_account: false,
         cash_account_policy: "always",
-        requires_settlement_account: true
+        requires_settlement_account: false
       },
       "draft" => {
         label: "Bank Draft",

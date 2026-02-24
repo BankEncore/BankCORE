@@ -6,6 +6,14 @@ module Teller
       teller_dashboard?
     end
 
+    def search?
+      teller_dashboard?
+    end
+
+    def accounts?
+      teller_dashboard?
+    end
+
     def show?
       teller_dashboard?
     end
