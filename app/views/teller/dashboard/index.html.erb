@@ -1,5 +1,31 @@
 <%= render "teller/shared/page_header",
-  title: "Teller Transaction Flows",
-  description: "Use the transaction workflows below once session and drawer setup is complete.",
+  title: "Teller Workspace",
+  description: @teller_session.present? && @teller_session.open? ? "Session dashboard with drawer totals and recent activity." : "Open a session to see dashboard metrics and start transactions.",
   secondary_button_path: new_teller_teller_session_path,
   secondary_button_label: "Session Setup" %>
+
+<% if @teller_session.present? && @teller_session.open? %>
+  <div class="space-y-4">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="flex-1 min-w-0 max-w-md">
+        <%= render "teller/dashboard/drawer_totals", teller_session: @teller_session %>
+      </div>
+      <div class="flex-1 min-w-0">
+        <%= render "teller/dashboard/movements_by_type", movements_by_type: @movements_by_type %>
+      </div>
+      <div class="shrink-0 self-start">
+        <%= link_to "Close Drawer", new_teller_teller_session_path, class: "btn btn-outline btn-sm" %>
+      </div>
+    </div>
+
+    <div class="w-full">
+      <%= render "teller/dashboard/recent_transactions", recent_transactions: @recent_transactions %>
+    </div>
+  </div>
+<% else %>
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <p class="text-sm text-slate-600">Open a session to see dashboard metrics and start transactions.</p>
+    </div>
+  </section>
+<% end %>

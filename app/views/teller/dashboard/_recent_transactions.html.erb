@@ -1,0 +1,55 @@
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Recent Transactions</h2>
+        <p class="text-xs text-slate-600 mt-1">10 most recent posted transactions for this session.</p>
+      </div>
+      <%= link_to "All Transactions", teller_history_path, class: "btn btn-ghost btn-sm" %>
+    </div>
+    <div class="divider my-3"></div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="row-border t-head">
+            <th class="py-2 text-left">Timestamp</th>
+            <th class="py-2 text-left">Transaction Type</th>
+            <th class="py-2 text-right">Amount</th>
+            <th class="py-2 text-left">Status</th>
+            <th class="py-2 text-left">Reference</th>
+            <th class="no-print py-2 text-right">Receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if recent_transactions.present? && recent_transactions.any? %>
+            <% recent_transactions.each do |transaction| %>
+              <% credit_types = %w[deposit] %>
+              <% signed_cents = credit_types.include?(transaction.transaction_type) ? transaction.amount_cents : -transaction.amount_cents %>
+              <tr class="row-border">
+                <td class="py-2"><%= transaction.posted_at.strftime("%b %-d, %Y at %-l:%M %p") %></td>
+                <td class="py-2"><%= transaction.transaction_type.titleize %></td>
+                <td class="py-2 text-right mono tabular-nums <%= signed_cents.negative? ? 'text-error font-medium' : 'ui-money' %>">
+                  <%= signed_cents.negative? ? "" : "+" %><%= number_to_currency(signed_cents / 100.0) %>
+                </td>
+                <td class="py-2"><span class="badge badge-outline"><%= transaction.status %></span></td>
+                <td class="py-2 mono text-xs"><%= transaction.request_id %></td>
+                <td class="no-print py-2 text-right">
+                  <% if transaction.posting_batch.present? %>
+                    <%= link_to "View Receipt", teller_receipt_path(request_id: transaction.request_id), class: "btn btn-ghost btn-sm" %>
+                  <% else %>
+                    <span class="text-slate-500 text-xs">—</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr class="row-border">
+              <td colspan="6" class="py-8 text-center text-slate-600">No posted transactions in this session yet.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
