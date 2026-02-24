@@ -13,13 +13,20 @@
   <%= form_with url: local_assigns.fetch(:form_url, teller_posting_path), method: :post, html: { id: "posting-form", data: { action: "submit->posting-form#submit" } } do |form| %>
     <p class="alert alert-info hidden" data-posting-form-target="message" aria-live="polite" hidden></p>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <section aria-label="Entry Panel" class="card bg-base-100 border border-base-300 lg:col-span-2">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div class="lg:col-span-8 space-y-4">
+      <section aria-label="Entry Panel" class="card bg-base-100 border border-base-300">
         <div class="card-body">
-          <h2 class="card-title text-lg">Transaction Entry Panel</h2>
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="card-title text-base">Transaction Entry</h2>
+              <p class="text-xs text-slate-600 mt-1">Account reference, cash amount, checks, and totals.</p>
+            </div>
+          </div>
+          <div class="divider my-3"></div>
           <% if local_assigns.fetch(:show_transaction_type, true) %>
             <p class="form-control">
-              <%= form.label :transaction_type, "Transaction Type" %><br>
+              <%= form.label :transaction_type, "Transaction Type", class: "text-xs font-medium text-slate-700" %><br>
               <%= form.select :transaction_type,
                 options_for_select([["Deposit", "deposit"], ["Withdrawal", "withdrawal"], ["Transfer", "transfer"], ["Vault Transfer", "vault_transfer"], ["Bank Draft", "draft"], ["Check Cashing", "check_cashing"]]),
                 {},
@@ -33,7 +40,7 @@
           <% end %>
 
           <p class="form-control">
-            <%= form.label :amount_cents, "Cash Amount" %><br>
+            <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700" %><br>
             <div data-controller="currency-input" data-action="input->posting-form#recalculate">
               <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
               <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
@@ -41,12 +48,13 @@
           </p>
 
           <p class="form-control">
-            <%= form.label :primary_account_reference, "Primary Account Reference" %><br>
-            <%= form.text_field :primary_account_reference, data: { posting_form_target: "primaryAccountReference", action: "input->posting-form#recalculate" }, required: true, class: "input input-bordered" %>
+            <%= form.label :primary_account_reference, "Primary Account Reference", class: "text-xs font-medium text-slate-700" %><br>
+            <%= form.text_field :primary_account_reference, data: { posting_form_target: "primaryAccountReference", action: "input->posting-form#recalculate" }, required: true, class: "input input-bordered", placeholder: "Search by account # or name" %>
+            <span class="text-xs text-slate-600 mt-1 block">Example: 0001234567 or Miller, Thomas</span>
           </p>
 
           <p class="form-control" data-posting-form-target="counterpartyRow" <%= "hidden" unless show_counterparty %>>
-            <%= form.label :counterparty_account_reference, "Counterparty Account Reference" %><br>
+            <%= form.label :counterparty_account_reference, "Counterparty Account Reference", class: "text-xs font-medium text-slate-700" %><br>
             <%= form.text_field :counterparty_account_reference, data: { posting_form_target: "counterpartyAccountReference", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
           </p>
 
@@ -70,41 +78,66 @@
               <div class="font-medium">Checks</div>
               <button type="button" class="btn btn-sm btn-outline" data-action="line-items#addCheckRow">+ Add Check</button>
             </div>
-            <div class="mt-3 space-y-3" data-posting-form-target="checkRows" data-line-items-target="checkRows"></div>
+            <div class="mt-3 overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="row-border t-head">
+                    <th class="py-2 text-left">#</th>
+                    <th class="py-2 text-left">Routing</th>
+                    <th class="py-2 text-left">Account</th>
+                    <th class="py-2 text-left">Check #</th>
+                    <th class="py-2 text-right">Amount</th>
+                    <th class="py-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody data-posting-form-target="checkRows" data-line-items-target="checkRows"></tbody>
+              </table>
+            </div>
             <template data-posting-form-target="checkTemplate" data-line-items-target="checkTemplate">
-              <div class="card bg-base-100 border border-base-300" data-check-row>
-                <div class="card-body p-4">
-                  <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <input type="text" class="input input-bordered" placeholder="Routing #" data-check-field="routing" data-action="input->posting-form#recalculate">
-                    <input type="text" class="input input-bordered" placeholder="Account #" data-check-field="account" data-action="input->posting-form#recalculate">
-                    <input type="text" class="input input-bordered" placeholder="Check #" data-check-field="number" data-action="input->posting-form#recalculate">
-                    <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                      <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
-                      <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Check amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur">
-                    </div>
+              <tr data-check-row>
+                <td class="py-2 pr-2 mono text-xs text-slate-600" data-check-index>01</td>
+                <td class="py-2 pr-2"><input type="text" class="input input-bordered h-9 px-2 py-1 text-sm" placeholder="123456789" data-check-field="routing" data-action="input->posting-form#recalculate"></td>
+                <td class="py-2 pr-2"><input type="text" class="input input-bordered h-9 px-2 py-1 text-sm" placeholder="000123456789" data-check-field="account" data-action="input->posting-form#recalculate"></td>
+                <td class="py-2 pr-2"><input type="text" class="input input-bordered h-9 px-2 py-1 text-sm" placeholder="1042" data-check-field="number" data-action="input->posting-form#recalculate"></td>
+                <td class="py-2 pl-2">
+                  <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                    <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
+                    <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm text-right tabular-nums" inputmode="decimal" placeholder="$0.00" aria-label="Check amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur">
                   </div>
-                  <div class="mt-3 collapse collapse-arrow bg-base-200 border border-base-300">
-                    <input type="checkbox">
-                    <div class="collapse-title text-sm font-medium">Optional: Hold</div>
-                    <div class="collapse-content">
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <select class="select select-bordered" data-check-field="holdReason">
-                          <option value="">Hold reason (none)</option>
-                          <option value="new_account">New Account</option>
-                          <option value="large_item">Large Item</option>
-                          <option value="exception">Exception</option>
-                        </select>
-                        <input type="date" class="input input-bordered" data-check-field="holdUntil">
-                      </div>
-                    </div>
-                  </div>
-                  <div class="mt-3 flex justify-end">
-                    <button type="button" class="btn btn-ghost btn-sm" data-action="line-items#removeCheckRow">Remove</button>
-                  </div>
-                </div>
-              </div>
+                </td>
+                <td class="py-2 pl-2 text-right"><button type="button" class="btn btn-ghost btn-sm" data-action="line-items#removeCheckRow">Remove</button></td>
+              </tr>
             </template>
           </section>
+
+          <div class="mt-4 rounded-lg border border-base-300 bg-base-200 p-3">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div>
+                <div class="font-medium text-sm mb-2">Computed</div>
+                <dl class="space-y-1">
+                  <div class="ui-kv-row">
+                    <dt class="ui-kv-key text-xs">Cash</dt>
+                    <dd class="ui-kv-value text-sm mono" data-posting-form-target="computedCashSubtotal">$0.00</dd>
+                  </div>
+                  <div class="ui-kv-row">
+                    <dt class="ui-kv-key text-xs">Checks</dt>
+                    <dd class="ui-kv-value text-sm mono" data-posting-form-target="computedCheckSubtotal">$0.00</dd>
+                  </div>
+                  <div class="ui-kv-row">
+                    <dt class="ui-kv-key text-xs">Fee</dt>
+                    <dd class="ui-kv-value text-sm mono" data-posting-form-target="computedFeeSubtotal">$0.00</dd>
+                  </div>
+                </dl>
+              </div>
+              <div class="md:text-right">
+                <div class="font-medium text-sm mb-2">Net total</div>
+                <div class="text-lg font-semibold">
+                  <span class="ui-money" data-posting-form-target="computedNetTotal">$0.00</span>
+                </div>
+                <p class="text-xs text-slate-600 mt-1">Posted to customer account upon submit.</p>
+              </div>
+            </div>
+          </div>
 
           <section data-posting-form-target="checkCashingSection" <%= "hidden" unless show_check_cashing %>>
             <div class="divider my-3"></div>
@@ -261,7 +294,41 @@
         </div>
       </section>
 
-      <%= render "teller/shared/reference_panel", teller_session: teller_session %>
+      <section aria-label="Posting Preview" class="card bg-base-100 border border-base-300" data-posting-form-target="postingPreviewSection">
+        <div class="card-body">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="card-title text-base">Posting Preview</h2>
+              <p class="text-xs text-slate-600 mt-1">Ledger entries: debits and credits.</p>
+            </div>
+            <span class="badge badge-outline">Preview</span>
+          </div>
+          <div class="divider my-3"></div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="row-border t-head">
+                  <th class="py-2 text-left">Leg</th>
+                  <th class="py-2 text-left">GL Account</th>
+                  <th class="py-2 text-right">Debit</th>
+                  <th class="py-2 text-right">Credit</th>
+                </tr>
+              </thead>
+              <tbody data-posting-form-target="postingPreviewBody"></tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-xs text-slate-600" data-posting-form-target="postingPreviewEmpty">Enter amounts to see posting preview.</p>
+        </div>
+      </section>
+      </div>
+
+      <aside class="lg:col-span-4 space-y-4">
+        <%# TODO: restore reference panel %>
+        <%#= render "teller/shared/reference_panel", teller_session: teller_session %>
+        <%= render "teller/shared/live_account_panel" %>
+        <%= render "teller/shared/drawer_totals", teller_session: teller_session %>
+        <%= render "teller/shared/recent_activity", teller_session: teller_session %>
+      </aside>
     </div>
 
     <%= render "teller/shared/approval_modal" %>

@@ -10,8 +10,13 @@
 
 <section class="card bg-base-100 border border-base-300">
   <div class="card-body">
-    <h2 class="card-title text-base">Context Settings</h2>
-    <p class="text-sm opacity-80">Need to change branch or workstation?</p>
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Context Settings</h2>
+        <p class="text-xs text-slate-600 mt-1">Need to change branch or workstation?</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
     <div>
       <%= link_to "Open Branch / Workstation Settings", teller_context_path, class: "btn btn-ghost btn-sm" %>
     </div>

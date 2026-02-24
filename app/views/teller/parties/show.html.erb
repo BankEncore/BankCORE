@@ -8,63 +8,100 @@
 
 <section class="card bg-base-100 border border-base-300">
   <div class="card-body">
-    <h2 class="card-title text-base">Details</h2>
-    <dl class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-      <dt class="opacity-70">Display name</dt>
-      <dd><%= @party.display_name.presence || "—" %></dd>
-      <dt class="opacity-70">Kind</dt>
-      <dd><%= @party.party_kind %></dd>
-      <dt class="opacity-70">Relationship</dt>
-      <dd><%= @party.relationship_kind %></dd>
-      <dt class="opacity-70">Status</dt>
-      <dd><%= @party.is_active? ? "Active" : "Inactive" %></dd>
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Details</h2>
+        <p class="text-xs text-slate-600 mt-1"><%= @party.party_kind.titleize %> • <%= @party.relationship_kind.titleize %></p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+    <dl class="space-y-1">
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Display name</dt>
+        <dd class="ui-kv-value text-sm"><%= @party.display_name.presence || "—" %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Kind</dt>
+        <dd class="ui-kv-value text-sm"><%= @party.party_kind %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Relationship</dt>
+        <dd class="ui-kv-value text-sm"><%= @party.relationship_kind %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Status</dt>
+        <dd class="ui-kv-value text-sm"><%= @party.is_active? ? "Active" : "Inactive" %></dd>
+      </div>
       <% if @party.individual? && @party.party_individual.present? %>
-        <dt class="opacity-70">First name</dt>
-        <dd><%= @party.party_individual.first_name %></dd>
-        <dt class="opacity-70">Last name</dt>
-        <dd><%= @party.party_individual.last_name %></dd>
-        <dt class="opacity-70">DOB</dt>
-        <dd><%= @party.party_individual.dob&.strftime("%Y-%m-%d") || "—" %></dd>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">First name</dt>
+          <dd class="ui-kv-value text-sm"><%= @party.party_individual.first_name %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Last name</dt>
+          <dd class="ui-kv-value text-sm"><%= @party.party_individual.last_name %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">DOB</dt>
+          <dd class="ui-kv-value text-sm mono"><%= @party.party_individual.dob&.strftime("%Y-%m-%d") || "—" %></dd>
+        </div>
       <% elsif @party.organization? && @party.party_organization.present? %>
-        <dt class="opacity-70">Legal name</dt>
-        <dd><%= @party.party_organization.legal_name %></dd>
-        <dt class="opacity-70">DBA</dt>
-        <dd><%= @party.party_organization.dba_name.presence || "—" %></dd>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Legal name</dt>
+          <dd class="ui-kv-value text-sm"><%= @party.party_organization.legal_name %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">DBA</dt>
+          <dd class="ui-kv-value text-sm"><%= @party.party_organization.dba_name.presence || "—" %></dd>
+        </div>
       <% end %>
-      <dt class="opacity-70">Email</dt>
-      <dd><%= @party.email.presence || "—" %></dd>
-      <dt class="opacity-70">Phone</dt>
-      <dd><%= @party.phone.presence || "—" %></dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Email</dt>
+        <dd class="ui-kv-value text-sm"><%= @party.email.presence || "—" %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Phone</dt>
+        <dd class="ui-kv-value text-sm"><%= @party.phone.presence || "—" %></dd>
+      </div>
     </dl>
   </div>
 </section>
 
 <section class="card bg-base-100 border border-base-300 mt-4">
   <div class="card-body">
-    <h2 class="card-title text-base">Accounts</h2>
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Accounts</h2>
+        <p class="text-xs text-slate-600 mt-1">Accounts owned by this party.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
     <% accounts = @party.accounts %>
     <% if accounts.any? %>
       <div class="overflow-x-auto">
-        <table class="table table-sm">
+        <table class="w-full text-sm">
           <thead>
-            <tr>
-              <th>Account</th>
-              <th>Type</th>
-              <th>Branch</th>
-              <th>Status</th>
-              <th class="text-right">Actions</th>
+            <tr class="row-border t-head">
+              <th class="py-2 text-left">Account</th>
+              <th class="py-2 text-left">Type</th>
+              <th class="py-2 text-left">Branch</th>
+              <th class="py-2 text-left">Status</th>
+              <th class="py-2 text-right">Balance</th>
+              <th class="py-2 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             <% accounts.each do |account| %>
-              <tr>
-                <td class="font-mono"><%= account.account_number %></td>
-                <td><%= account.account_type %></td>
-                <td><%= account.branch.name %></td>
-                <td><span class="badge badge-outline"><%= account.status %></span></td>
-                <td class="text-right">
-                  <%= link_to "View", teller_account_path(account), class: "btn btn-ghost btn-xs" %>
-                  <%= link_to "Edit", edit_teller_account_path(account), class: "btn btn-ghost btn-xs" %>
+              <% balance_cents = account.balance_cents %>
+              <tr class="row-border">
+                <td class="py-2 mono"><%= account.account_number %></td>
+                <td class="py-2"><%= account.account_type %></td>
+                <td class="py-2"><%= account.branch.name %></td>
+                <td class="py-2"><span class="badge badge-outline"><%= account.status %></span></td>
+                <td class="py-2 text-right mono tabular-nums <%= balance_cents.negative? ? 'text-error' : 'ui-money' %>"><%= number_to_currency(balance_cents / 100.0) %></td>
+                <td class="py-2 text-right">
+                  <%= link_to "View", teller_account_path(account), class: "btn btn-ghost btn-sm" %>
+                  <%= link_to "Edit", edit_teller_account_path(account), class: "btn btn-ghost btn-sm" %>
                 </td>
               </tr>
             <% end %>
@@ -72,7 +109,7 @@
         </table>
       </div>
     <% else %>
-      <p class="text-sm opacity-70">No accounts yet.</p>
+      <p class="text-sm text-slate-600">No accounts yet.</p>
       <%= link_to "Add account", new_teller_account_path(party_id: @party.id), class: "btn btn-ghost btn-sm mt-2" %>
     <% end %>
   </div>

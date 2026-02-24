@@ -1,18 +1,21 @@
 <section class="mx-auto w-full max-w-md py-8 sm:py-12">
   <div class="card border border-base-300 bg-base-100 shadow-xl">
     <div class="card-body gap-5">
-      <header class="space-y-2 text-center">
-        <h1 class="text-2xl font-semibold">Select Branch & Workstation</h1>
-        <p class="text-sm opacity-75">Choose your branch and workstation before logging in.</p>
-      </header>
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h1 class="card-title text-base">Select Branch & Workstation</h1>
+          <p class="text-xs text-slate-600 mt-1">Choose your branch and workstation before logging in.</p>
+        </div>
+      </div>
+      <div class="divider my-3"></div>
 
       <%= form_with url: update_context_session_path, method: :post, class: "space-y-4" do |form| %>
         <label class="form-control w-full">
-          <span class="label-text mb-1 font-medium">Branch</span>
+          <span class="block text-xs font-medium text-slate-700 mb-1">Branch</span>
           <%= form.collection_select :branch_id, @branches, :id, :name, { prompt: "Select branch" }, { required: true, class: "select select-bordered w-full" } %>
         </label>
         <label class="form-control w-full">
-          <span class="label-text mb-1 font-medium">Workstation</span>
+          <span class="block text-xs font-medium text-slate-700 mb-1">Workstation</span>
           <%= form.collection_select :workstation_id, @workstations, :id, :name, { prompt: "Select workstation" }, { required: true, class: "select select-bordered w-full" } %>
         </label>
         <div class="pt-2">

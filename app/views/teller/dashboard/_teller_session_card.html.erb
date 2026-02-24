@@ -1,24 +1,62 @@
 <section class="card bg-base-100 border border-base-300">
   <div class="card-body">
-    <h2 class="card-title text-lg">Teller Session</h2>
-    <p>Status: <%= teller_session&.status || "Not open" %></p>
-    <p>Drawer: <%= teller_session&.cash_location&.name || "Not assigned" %></p>
-    <% money = ->(cents) { number_to_currency((cents || 0) / 100.0) } %>
-    <% if teller_session.present? && teller_session.open? %>
-      <p>Opening cash: <span class="ui-money"><%= money[teller_session.opening_cash_cents] %></span></p>
-      <p>Net cash movements: <span class="ui-money"><%= money[teller_session.net_cash_movement_cents] %></span></p>
-      <p>Expected cash now: <span class="ui-money"><%= money[teller_session.expected_cash_cents] %></span></p>
-    <% elsif teller_session.present? && teller_session.closed? %>
-      <p>Opening cash: <span class="ui-money"><%= money[teller_session.opening_cash_cents] %></span></p>
-      <p>Expected closing cash: <span class="ui-money"><%= money[teller_session.expected_closing_cash_cents] %></span></p>
-      <p>Declared closing cash: <span class="ui-money"><%= money[teller_session.closing_cash_cents] %></span></p>
-      <p>Cash variance: <span class="ui-money"><%= money[teller_session.cash_variance_cents] %></span></p>
-    <% end %>
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Teller Session</h2>
+        <p class="text-xs text-slate-600 mt-1">Open session, assign drawer, or close with cash count.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+
+    <dl class="space-y-1">
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Status</dt>
+        <dd class="ui-kv-value text-sm"><%= teller_session&.status || "Not open" %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Drawer</dt>
+        <dd class="ui-kv-value text-sm"><%= teller_session&.cash_location&.name || "Not assigned" %></dd>
+      </div>
+      <% money = ->(cents) { number_to_currency((cents || 0) / 100.0) } %>
+      <% if teller_session.present? && teller_session.open? %>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Opening cash</dt>
+          <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.opening_cash_cents] %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Net cash movements</dt>
+          <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.net_cash_movement_cents] %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Expected cash now</dt>
+          <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.expected_cash_cents] %></dd>
+        </div>
+      <% elsif teller_session.present? && teller_session.closed? %>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Opening cash</dt>
+          <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.opening_cash_cents] %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Expected closing cash</dt>
+          <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.expected_closing_cash_cents] %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Declared closing cash</dt>
+          <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.closing_cash_cents] %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Cash variance</dt>
+          <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.cash_variance_cents] %></dd>
+        </div>
+      <% end %>
+    </dl>
+
+    <div class="divider my-3"></div>
 
     <% if teller_session.blank? %>
       <%= form_with url: teller_teller_session_path, method: :post do |form| %>
         <p class="form-control">
-          <%= form.label :opening_cash_cents, "Opening cash" %><br>
+          <%= form.label :opening_cash_cents, "Opening cash", class: "block text-xs font-medium text-slate-700 mb-1" %>
           <div data-controller="currency-input">
             <%= form.hidden_field :opening_cash_cents, value: 0, data: { currency_input_target: "hiddenInput" } %>
             <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Opening cash" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:opening_cash_cents) %>" required />
@@ -30,7 +68,7 @@
       <% if teller_session.cash_location.blank? %>
         <%= form_with url: assign_drawer_teller_teller_session_path, method: :patch do |form| %>
           <p class="form-control">
-            <%= form.label :cash_location_id, "Assign drawer" %><br>
+            <%= form.label :cash_location_id, "Assign drawer", class: "block text-xs font-medium text-slate-700 mb-1" %>
             <%= form.select :cash_location_id,
               options_from_collection_for_select(drawers, :id, :name),
               { include_blank: "Select drawer" },
@@ -42,18 +80,18 @@
 
       <%= form_with url: close_teller_teller_session_path, method: :patch do |form| %>
         <p class="form-control">
-          <%= form.label :closing_cash_cents, "Declared closing cash" %><br>
+          <%= form.label :closing_cash_cents, "Declared closing cash", class: "block text-xs font-medium text-slate-700 mb-1" %>
           <div data-controller="currency-input">
             <%= form.hidden_field :closing_cash_cents, value: 0, data: { currency_input_target: "hiddenInput" } %>
             <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Declared closing cash" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:closing_cash_cents) %>" required />
           </div>
         </p>
         <p class="form-control">
-          <%= form.label :cash_variance_reason, "Variance reason (optional)" %><br>
+          <%= form.label :cash_variance_reason, "Variance reason (optional)", class: "block text-xs font-medium text-slate-700 mb-1" %>
           <%= form.text_field :cash_variance_reason, class: "input input-bordered" %>
         </p>
         <p class="form-control">
-          <%= form.label :cash_variance_notes, "Variance notes (optional)" %><br>
+          <%= form.label :cash_variance_notes, "Variance notes (optional)", class: "block text-xs font-medium text-slate-700 mb-1" %>
           <%= form.text_area :cash_variance_notes, class: "textarea textarea-bordered", rows: 3 %>
         </p>
         <%= form.submit "Close Teller Session", class: "btn btn-warning" %>
