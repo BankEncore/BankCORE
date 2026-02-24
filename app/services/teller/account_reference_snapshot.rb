@@ -13,9 +13,14 @@ module Teller
       latest_transaction = transactions.order(created_at: :desc).first
       computed_balance = credit_total - debit_total
 
+      account = Account.find_by(account_number: reference)
+      primary_owner_name = account&.primary_owner&.display_name.presence
+
       {
         ok: true,
         reference: reference,
+        account_id: account&.id,
+        account_exists: account.present?,
         found: transactions.exists?,
         status: transactions.exists? ? "Active" : "No activity",
         ledger_balance_cents: latest_transaction&.running_balance_cents || computed_balance,
@@ -23,6 +28,7 @@ module Teller
         total_debits_cents: debit_total,
         total_credits_cents: credit_total,
         last_posted_at: latest_transaction&.created_at&.iso8601,
+        primary_owner_name: primary_owner_name,
         alerts: build_alerts(
           found: transactions.exists?,
           computed_balance: computed_balance
