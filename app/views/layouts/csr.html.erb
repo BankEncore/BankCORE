@@ -20,19 +20,21 @@
   </head>
 
   <body class="bg-base-100">
-    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:m-3 focus:rounded focus:bg-base-100 focus:px-3 focus:py-2 focus:shadow">
+    <a href="#main" class="no-print sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:m-3 focus:rounded focus:bg-base-100 focus:px-3 focus:py-2 focus:shadow">
       Skip to content
     </a>
 
     <div class="min-h-screen">
-      <div class="sticky top-0 z-50">
+      <div class="no-print sticky top-0 z-50">
         <%= render "shared/global_header" %>
         <%= render "csr/shared/topbar" %>
         <%= render "csr/shared/command_bar" unless controller_path == "csr/contexts" %>
       </div>
 
       <main id="main" class="mx-auto w-full max-w-6xl px-4 py-4 space-y-4">
-        <%= render "teller/shared/flash_banners" %>
+        <div class="no-print">
+          <%= render "teller/shared/flash_banners" %>
+        </div>
         <%= yield %>
       </main>
     </div>

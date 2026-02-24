@@ -78,6 +78,13 @@ export default class extends Controller {
     "postSuccessIds",
     "postSuccessNewButton",
     "headerStateBadge",
+    "postingPreviewSection",
+    "postingPreviewBody",
+    "postingPreviewEmpty",
+    "computedCashSubtotal",
+    "computedCheckSubtotal",
+    "computedFeeSubtotal",
+    "computedNetTotal",
     "primaryReferenceValue",
     "primaryStatus",
     "primaryLedger",
@@ -303,6 +310,11 @@ export default class extends Controller {
 
     if (this.hasCashSubtotalTarget) this.cashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
     if (this.hasCheckSubtotalTarget) this.checkSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
+    if (this.hasComputedCashSubtotalTarget) this.computedCashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
+    if (this.hasComputedCheckSubtotalTarget) this.computedCheckSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
+    const feeCentsForComputed = showCheckCashingSection ? checkCashingAmounts.feeCents : (showDraftSection ? draftAmounts.draftFeeCents : 0)
+    if (this.hasComputedFeeSubtotalTarget) this.computedFeeSubtotalTarget.textContent = feeCentsForComputed > 0 ? `-${this.formatCents(feeCentsForComputed)}` : this.formatCents(0)
+    if (this.hasComputedNetTotalTarget) this.computedNetTotalTarget.textContent = this.formatCents(totalAmountCents)
     if (this.hasDebitTotalTarget) this.debitTotalTarget.textContent = this.formatCents(debitTotal)
     if (this.hasCreditTotalTarget) this.creditTotalTarget.textContent = this.formatCents(creditTotal)
     if (this.hasImbalanceTarget) this.imbalanceTarget.textContent = this.formatCents(imbalance)
@@ -337,6 +349,10 @@ export default class extends Controller {
       this.setHeaderState("Balanced")
     } else {
       this.setHeaderState("Editing")
+    }
+
+    if (this.hasPostingPreviewBodyTarget) {
+      this.renderPostingPreview(entries)
     }
 
     this.element.dispatchEvent(new CustomEvent("tx:recalc", {
@@ -1102,6 +1118,34 @@ export default class extends Controller {
       style: "currency",
       currency: "USD"
     }).format((Number(cents) || 0) / 100)
+  }
+
+  renderPostingPreview(entries) {
+    const body = this.postingPreviewBodyTarget
+    const empty = this.hasPostingPreviewEmptyTarget ? this.postingPreviewEmptyTarget : null
+
+    body.innerHTML = ""
+    if (empty) empty.hidden = entries.length > 0
+
+    entries.forEach((entry) => {
+      const tr = document.createElement("tr")
+      tr.className = "row-border"
+      const leg = entry.side === "debit" ? "Debit" : "Credit"
+      const debit = entry.side === "debit" ? this.formatCents(entry.amount_cents) : "—"
+      const credit = entry.side === "credit" ? this.formatCents(entry.amount_cents) : "—"
+      const ref = String(entry.account_reference || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+      tr.innerHTML = `
+        <td class="py-2">${leg}</td>
+        <td class="py-2 mono text-xs text-slate-600">${ref}</td>
+        <td class="py-2 text-right mono tabular-nums">${debit}</td>
+        <td class="py-2 text-right mono tabular-nums">${credit}</td>
+      `
+      body.appendChild(tr)
+    })
   }
 
   setAmountCents(target, cents) {

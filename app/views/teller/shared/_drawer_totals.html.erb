@@ -1,0 +1,29 @@
+<section aria-label="Drawer Totals" class="card bg-base-100 border border-base-300">
+  <div class="card-body p-3 md:p-4">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Drawer Totals</h2>
+        <p class="text-xs text-slate-600 mt-1">Cash and checks in drawer.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+    <dl class="space-y-1">
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Cash on hand</dt>
+        <dd class="ui-kv-value text-sm mono"><%= number_to_currency((teller_session&.expected_cash_cents || 0) / 100.0) %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Checks on hand</dt>
+        <dd class="ui-kv-value text-sm mono">$0.00</dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Net position</dt>
+        <dd class="ui-kv-value text-sm mono"><%= number_to_currency((teller_session&.expected_cash_cents || 0) / 100.0) %></dd>
+      </div>
+    </dl>
+    <div class="mt-3 flex gap-2">
+      <button type="button" class="btn btn-outline btn-sm">Count</button>
+      <button type="button" class="btn btn-ghost btn-sm">Details</button>
+    </div>
+  </div>
+</section>

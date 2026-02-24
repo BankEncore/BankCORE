@@ -6,6 +6,13 @@
 
 <section class="card bg-base-100 border border-base-300">
   <div class="card-body">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Edit Party</h2>
+        <p class="text-xs text-slate-600 mt-1"><%= @party.display_name.presence || "Party ##{@party.id}" %></p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
     <%= render "form" %>
   </div>
 </section>

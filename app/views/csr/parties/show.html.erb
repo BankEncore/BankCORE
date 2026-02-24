@@ -71,16 +71,19 @@
               <th>Type</th>
               <th>Branch</th>
               <th>Status</th>
+              <th class="text-right">Balance</th>
               <th class="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             <% accounts.each do |account| %>
+              <% balance_cents = account.balance_cents %>
               <tr class="hover">
                 <td class="font-mono tabular-nums"><%= account.account_number %></td>
                 <td><%= account.account_type.titleize %></td>
                 <td><%= account.branch.name %></td>
                 <td><span class="badge badge-outline"><%= account.status %></span></td>
+                <td class="text-right font-mono tabular-nums <%= balance_cents.negative? ? 'text-error' : 'text-success' %>"><%= number_to_currency(balance_cents / 100.0) %></td>
                 <td class="text-right">
                   <%= link_to "View", csr_account_path(account), class: "btn btn-ghost btn-xs" %>
                   <%= link_to "Edit", edit_csr_account_path(account), class: "btn btn-ghost btn-xs" %>

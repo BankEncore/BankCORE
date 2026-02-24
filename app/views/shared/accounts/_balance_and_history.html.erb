@@ -4,10 +4,17 @@
 <% balance_formatted = number_to_currency(balance_cents / 100.0) %>
 
 <% if sections.include?(:balance) %>
-<section class="card bg-base-100 border border-base-300 mt-4">
+<% compact = local_assigns.fetch(:compact, false) %>
+<section class="card receipt-section bg-base-100 border border-base-300 <%= 'mt-4' unless compact %>">
   <div class="card-body">
-    <h2 class="card-title text-base">Current Balance</h2>
-    <p class="text-2xl font-mono tabular-nums <%= balance_cents.negative? ? 'text-error' : '' %>">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Current Balance</h2>
+        <p class="text-xs text-slate-600 mt-1">Ledger balance for this account.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+    <p class="text-2xl <%= balance_cents.negative? ? 'text-error font-medium' : 'ui-money' %> mono tabular-nums">
       <%= balance_formatted %>
     </p>
   </div>
@@ -15,18 +22,24 @@
 <% end %>
 
 <% if sections.include?(:history) %>
-<section class="card bg-base-100 border border-base-300 mt-4">
+<section class="card receipt-section bg-base-100 border border-base-300 mt-4">
   <div class="card-body">
-    <h2 class="card-title text-base">Transaction History</h2>
-    <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-      <table class="table table-sm table-zebra w-full">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Transaction History</h2>
+        <p class="text-xs text-slate-600 mt-1">Posted transactions for this account.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
         <thead>
-          <tr>
-            <th>Posted</th>
-            <th>Type</th>
-            <th>Direction</th>
-            <th class="text-right">Amount</th>
-            <th class="text-right">Receipt</th>
+          <tr class="row-border t-head">
+            <th class="py-2 text-left">Posted</th>
+            <th class="py-2 text-left">Type</th>
+            <th class="py-2 text-left">Direction</th>
+            <th class="py-2 text-right">Amount</th>
+            <th class="no-print py-2 text-right">Receipt</th>
           </tr>
         </thead>
         <tbody>
@@ -34,31 +47,32 @@
             <% account_transactions.each do |at| %>
               <% tt = at.teller_transaction %>
               <% signed_cents = at.direction == "credit" ? at.amount_cents : -at.amount_cents %>
-              <tr class="hover">
-                <td class="tabular-nums"><%= tt.posted_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
-                <td><%= tt.transaction_type.titleize %></td>
-                <td>
+              <% posted_display = tt.posted_at ? "#{tt.posted_at.strftime('%b %-d, %Y')} at #{tt.posted_at.strftime('%-l:%M %p')}" : "—" %>
+              <tr class="row-border">
+                <td class="py-2"><%= posted_display %></td>
+                <td class="py-2"><%= tt.transaction_type.titleize %></td>
+                <td class="py-2">
                   <% if at.direction == "credit" %>
                     <span class="badge badge-sm badge-success badge-outline">Credit</span>
                   <% else %>
                     <span class="badge badge-sm badge-error badge-outline">Debit</span>
                   <% end %>
                 </td>
-                <td class="text-right font-mono tabular-nums <%= signed_cents.negative? ? 'text-error font-medium' : 'text-success' %>">
+                <td class="py-2 text-right mono tabular-nums <%= signed_cents.negative? ? 'text-error font-medium' : 'ui-money' %>">
                   <%= signed_cents.negative? ? "" : "+" %><%= number_to_currency(signed_cents / 100.0) %>
                 </td>
-                <td class="text-right">
+                <td class="no-print py-2 text-right">
                   <% if tt.posting_batch.present? %>
-                    <%= link_to "Receipt", teller_receipt_path(request_id: tt.request_id), class: "btn btn-ghost btn-xs" %>
+                    <%= link_to "Receipt", teller_receipt_path(request_id: tt.request_id), class: "btn btn-ghost btn-sm" %>
                   <% else %>
-                    <span class="opacity-50 text-xs">—</span>
+                    <span class="text-slate-500 text-xs">—</span>
                   <% end %>
                 </td>
               </tr>
             <% end %>
           <% else %>
-            <tr>
-              <td colspan="5" class="text-center opacity-70 py-8">No transactions yet.</td>
+            <tr class="row-border">
+              <td colspan="5" class="py-8 text-center text-slate-600">No transactions yet.</td>
             </tr>
           <% end %>
         </tbody>

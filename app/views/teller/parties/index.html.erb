@@ -8,6 +8,14 @@
 
 <section class="card bg-base-100 border border-base-300">
   <div class="card-body">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Parties</h2>
+        <p class="text-xs text-slate-600 mt-1">Customer and non-customer parties (individuals and organizations).</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+
     <div class="flex gap-2 flex-wrap mb-4">
       <%= link_to "All", teller_parties_path, class: "btn btn-sm #{params[:party_kind].blank? ? 'btn-primary' : 'btn-ghost'}" %>
       <% Party::PARTY_KINDS.each do |kind| %>
@@ -20,31 +28,31 @@
     </div>
 
     <div class="overflow-x-auto">
-      <table class="table table-sm">
+      <table class="w-full text-sm">
         <thead>
-          <tr>
-            <th>Name</th>
-            <th>Kind</th>
-            <th>Relationship</th>
-            <th class="text-right">Actions</th>
+          <tr class="row-border t-head">
+            <th class="py-2 text-left">Name</th>
+            <th class="py-2 text-left">Kind</th>
+            <th class="py-2 text-left">Relationship</th>
+            <th class="py-2 text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
           <% if @parties.any? %>
             <% @parties.each do |party| %>
-              <tr>
-                <td><%= party.display_name.presence || "—" %></td>
-                <td><span class="badge badge-outline"><%= party.party_kind %></span></td>
-                <td><span class="badge badge-outline"><%= party.relationship_kind %></span></td>
-                <td class="text-right">
-                  <%= link_to "View", teller_party_path(party), class: "btn btn-ghost btn-xs" %>
-                  <%= link_to "Edit", edit_teller_party_path(party), class: "btn btn-ghost btn-xs" %>
+              <tr class="row-border">
+                <td class="py-2"><%= party.display_name.presence || "—" %></td>
+                <td class="py-2"><span class="badge badge-outline"><%= party.party_kind %></span></td>
+                <td class="py-2"><span class="badge badge-outline"><%= party.relationship_kind %></span></td>
+                <td class="py-2 text-right">
+                  <%= link_to "View", teller_party_path(party), class: "btn btn-ghost btn-sm" %>
+                  <%= link_to "Edit", edit_teller_party_path(party), class: "btn btn-ghost btn-sm" %>
                 </td>
               </tr>
             <% end %>
           <% else %>
-            <tr>
-              <td colspan="4" class="text-center opacity-70 py-4">No parties found.</td>
+            <tr class="row-border">
+              <td colspan="4" class="py-4 text-center text-slate-600">No parties found.</td>
             </tr>
           <% end %>
         </tbody>
