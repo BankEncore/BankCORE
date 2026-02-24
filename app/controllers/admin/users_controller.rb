@@ -60,13 +60,14 @@ module Admin
       end
 
       def user_params
-        params.require(:user).permit(:email_address, :password, :password_confirmation)
+        params.require(:user).permit(:email_address, :teller_number, :first_name, :last_name, :display_name, :pin, :password, :password_confirmation)
       end
 
       def user_update_params
-        p = params.require(:user).permit(:email_address, :password, :password_confirmation)
+        p = params.require(:user).permit(:email_address, :teller_number, :first_name, :last_name, :display_name, :pin, :password, :password_confirmation)
         p.delete(:password) if p[:password].blank?
         p.delete(:password_confirmation) if p[:password_confirmation].blank?
+        p.delete(:pin) if p[:pin].blank?
         p
       end
   end

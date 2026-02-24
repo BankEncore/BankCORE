@@ -103,19 +103,24 @@ end
 seed_password = ENV.fetch("SEED_USER_PASSWORD", "ChangeMe123!")
 
 seed_users = [
-  { email_address: "teller@bankcore.local", role_key: "teller", branch: main_branch, workstation: main_workstation },
-  { email_address: "supervisor@bankcore.local", role_key: "supervisor", branch: main_branch, workstation: main_workstation },
-  { email_address: "admin@bankcore.local", role_key: "admin", branch: nil, workstation: nil },
-  { email_address: "csr@bankcore.local", role_key: "csr", branch: main_branch, workstation: nil }
+  { email_address: "teller@bankcore.local", first_name: "Tina", last_name: "Teller", teller_number: "T001", role_key: "teller", branch: main_branch, workstation: main_workstation },
+  { email_address: "supervisor@bankcore.local", first_name: "Sam", last_name: "Supervisor", teller_number: "S001", role_key: "supervisor", branch: main_branch, workstation: main_workstation },
+  { email_address: "admin@bankcore.local", first_name: "Admin", last_name: "User", teller_number: "A001", role_key: "admin", branch: nil, workstation: nil },
+  { email_address: "csr@bankcore.local", first_name: "Chris", last_name: "CSR", teller_number: "C001", role_key: "csr", branch: main_branch, workstation: nil }
 ]
 
 seed_users.each do |definition|
   user = User.find_or_initialize_by(email_address: definition[:email_address])
+  user.first_name = definition[:first_name] if definition[:first_name]
+  user.last_name = definition[:last_name] if definition[:last_name]
+  user.teller_number = definition[:teller_number] if definition[:teller_number]
 
   if user.new_record?
     user.password = seed_password
     user.password_confirmation = seed_password
     user.save!
+  else
+    user.save! if user.changed?
   end
 
   role = Role.find_by!(key: definition[:role_key])

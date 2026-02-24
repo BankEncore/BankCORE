@@ -1,5 +1,5 @@
 <%= render "admin/shared/page_header",
-  title: @user.email_address,
+  title: @user.display_label,
   description: "User details and role assignments.",
   secondary_button_path: admin_users_path,
   secondary_button_label: "Back to Users",
@@ -10,8 +10,18 @@
   <section class="card bg-base-100 border border-base-300">
     <div class="card-body">
       <dl class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <dt class="font-medium text-slate-600">Display name</dt>
+        <dd><%= @user.display_name.presence || "—" %></dd>
         <dt class="font-medium text-slate-600">Email</dt>
         <dd><%= @user.email_address %></dd>
+        <dt class="font-medium text-slate-600">Teller number</dt>
+        <dd><%= @user.teller_number.presence || "—" %></dd>
+        <dt class="font-medium text-slate-600">First name</dt>
+        <dd><%= @user.first_name.presence || "—" %></dd>
+        <dt class="font-medium text-slate-600">Last name</dt>
+        <dd><%= @user.last_name.presence || "—" %></dd>
+        <dt class="font-medium text-slate-600">PIN</dt>
+        <dd><%= @user.password_hash.present? ? "Set" : "Not set" %></dd>
       </dl>
     </div>
   </section>

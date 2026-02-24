@@ -14,7 +14,7 @@
     </div>
 
     <div class="mt-2 text-xs text-slate-600">
-      User <span class="font-medium text-slate-800"><%= Current.user&.email_address || "—" %></span>
+      User <span class="font-medium text-slate-800"><%= Current.user&.display_label || "—" %></span>
       <span class="opacity-50">•</span>
       <span class="font-medium text-slate-800 mono tabular-nums"><%= Time.current.strftime("%b %-d, %Y %-l:%M %p") %></span>
     </div>

@@ -28,7 +28,7 @@
         <p><strong>Currency:</strong> <%= @posting_batch.currency %></p>
         <p><strong>Posted At:</strong> <%= @teller_transaction.posted_at&.strftime("%Y-%m-%d %H:%M:%S") %></p>
         <p><strong>Committed At:</strong> <%= @posting_batch.committed_at&.strftime("%Y-%m-%d %H:%M:%S") %></p>
-        <p><strong>Teller:</strong> <%= @teller_transaction.user.email_address %></p>
+        <p><strong>Teller:</strong> <%= @teller_transaction.user.display_label %></p>
         <p><strong>Branch:</strong> <%= @teller_transaction.branch.name %></p>
         <p><strong>Workstation:</strong> <%= @teller_transaction.workstation.name %></p>
         <p><strong>Session ID:</strong> <%= @teller_transaction.teller_session_id %></p>

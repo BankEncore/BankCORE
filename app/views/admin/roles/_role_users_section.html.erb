@@ -16,7 +16,7 @@
           <tbody>
             <% user_roles.each do |ur| %>
               <tr>
-                <td><%= ur.user.email_address %></td>
+                <td><%= ur.user.display_label %></td>
                 <td><%= ur.branch&.name || "—" %></td>
                 <td><%= ur.workstation&.name || "—" %></td>
                 <td>
@@ -35,7 +35,7 @@
     <%= form_with model: UserRole.new, url: admin_role_user_roles_path(role), method: :post, class: "flex flex-wrap gap-4 items-end" do |f| %>
       <div class="form-control">
         <%= f.label :user_id, "User", class: "label" %>
-        <%= f.collection_select :user_id, User.order(:email_address), :id, :email_address, { include_blank: "Select user" }, class: "select select-bordered select-sm", required: true %>
+        <%= f.collection_select :user_id, User.order(:email_address), :id, :display_label, { include_blank: "Select user" }, class: "select select-bordered select-sm", required: true %>
       </div>
       <div class="form-control">
         <%= f.label :branch_id, "Branch (optional)", class: "label" %>

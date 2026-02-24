@@ -19,7 +19,7 @@
       <span class="opacity-50">•</span>
       Workstation <span class="font-medium text-slate-800"><%= current_workstation&.name || "—" %></span>
       <span class="opacity-50">•</span>
-      Teller <span class="font-medium text-slate-800"><%= Current.user&.email_address || "—" %></span>
+      Teller <span class="font-medium text-slate-800"><%= Current.user&.display_label || "—" %></span>
       <span class="opacity-50">•</span>
       Session <span class="font-medium text-slate-800 mono"><%= teller_session&.id || "—" %></span>
       <span class="opacity-50">•</span>

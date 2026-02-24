@@ -50,7 +50,7 @@
 
     <div class="flex-none flex flex-wrap items-center gap-2 text-sm">
       <span class="badge badge-outline">
-        <%= Current.user&.email_address || "Signed in" %>
+        <%= Current.user&.display_label || "Signed in" %>
       </span>
 
       <%= button_to "Log out", session_path, method: :delete, class: "btn btn-ghost btn-sm" %>
