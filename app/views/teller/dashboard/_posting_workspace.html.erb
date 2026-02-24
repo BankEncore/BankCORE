@@ -47,6 +47,17 @@
             </div>
           </p>
 
+          <% if flow_type == "deposit" %>
+            <p class="form-control" data-posting-form-target="cashBackRow">
+              <%= form.label :cash_back_cents, "Cash Back", class: "text-xs font-medium text-slate-700" %><br>
+              <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                <%= form.hidden_field :cash_back_cents, value: 0, data: { posting_form_target: "cashBackCents", currency_input_target: "hiddenInput" } %>
+                <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Back" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:cash_back_cents) %>" />
+              </div>
+              <span class="text-xs text-slate-600 mt-1 block">Amount returned to customer from cash received.</span>
+            </p>
+          <% end %>
+
           <p class="form-control">
             <%= form.label :primary_account_reference, "Primary Account Reference", class: "text-xs font-medium text-slate-700" %><br>
             <%= form.text_field :primary_account_reference, data: { posting_form_target: "primaryAccountReference", action: "input->posting-form#recalculate" }, required: true, class: "input input-bordered", placeholder: "Search by account # or name" %>
@@ -122,6 +133,10 @@
                   <div class="ui-kv-row">
                     <dt class="ui-kv-key text-xs">Checks</dt>
                     <dd class="ui-kv-value text-sm mono" data-posting-form-target="computedCheckSubtotal">$0.00</dd>
+                  </div>
+                  <div class="ui-kv-row" data-posting-form-target="computedCashBackRow" hidden>
+                    <dt class="ui-kv-key text-xs">Cash Back</dt>
+                    <dd class="ui-kv-value text-sm mono" data-posting-form-target="computedCashBackSubtotal">$0.00</dd>
                   </div>
                   <div class="ui-kv-row">
                     <dt class="ui-kv-key text-xs">Fee</dt>

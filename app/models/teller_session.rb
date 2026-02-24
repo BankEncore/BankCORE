@@ -33,11 +33,27 @@ class TellerSession < ApplicationRecord
     end
   end
 
-  def net_cash_movement_cents
-    cash_in_cents = cash_movements.where(direction: "in").sum(:amount_cents)
-    cash_out_cents = cash_movements.where(direction: "out").sum(:amount_cents)
+  def cash_in_cents
+    cash_movements.where(direction: "in").sum(:amount_cents)
+  end
 
+  def cash_out_cents
+    cash_movements.where(direction: "out").sum(:amount_cents)
+  end
+
+  def net_cash_movement_cents
     cash_in_cents - cash_out_cents
+  end
+
+  def checks_in_count
+    deposit_transactions_with_checks.sum { |tt| (tt.posting_batch&.metadata&.dig("check_items") || []).size }
+  end
+
+  def checks_in_cents
+    deposit_transactions_with_checks.sum do |tt|
+      items = tt.posting_batch&.metadata&.dig("check_items") || []
+      items.sum { |item| (item["amount_cents"] || item[:amount_cents] || 0).to_i }
+    end
   end
 
   def expected_cash_cents
@@ -58,4 +74,12 @@ class TellerSession < ApplicationRecord
       closed_at: Time.current
     )
   end
+
+  private
+    def deposit_transactions_with_checks
+      teller_transactions
+        .where(transaction_type: "deposit", status: "posted")
+        .includes(:posting_batch)
+        .select { |tt| tt.posting_batch.present? }
+    end
 end

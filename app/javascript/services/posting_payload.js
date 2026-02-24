@@ -17,6 +17,9 @@ export function appendEntriesAndTypePayload(formData, transactionType, state, sc
   if (hasSection(transactionType, "checks", schema)) {
     appendCheckItems(formData, state)
   }
+  if (transactionType === "deposit") {
+    formData.set("cash_back_cents", String(state.cashBackCents ?? 0))
+  }
   if (transactionType === "draft") {
     appendDraftPayload(formData, state)
   }

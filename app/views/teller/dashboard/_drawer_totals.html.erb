@@ -1,0 +1,37 @@
+<% return unless teller_session.present? && teller_session.open? %>
+<% money = ->(cents) { number_to_currency((cents || 0) / 100.0) } %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-base">Drawer</h2>
+    <p class="text-xs text-slate-600 mt-1">Cash and check totals for the current session.</p>
+    <div class="divider my-3"></div>
+
+    <dl class="space-y-1">
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Beginning Cash</dt>
+        <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.opening_cash_cents] %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Cash In</dt>
+        <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.cash_in_cents] %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Cash Out</dt>
+        <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.cash_out_cents] %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Net Cash</dt>
+        <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.expected_cash_cents] %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Checks In (Count)</dt>
+        <dd class="ui-kv-value text-sm mono"><%= teller_session.checks_in_count %></dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Checks In</dt>
+        <dd class="ui-kv-value text-sm ui-money mono"><%= money[teller_session.checks_in_cents] %></dd>
+      </div>
+    </dl>
+  </div>
+</section>
