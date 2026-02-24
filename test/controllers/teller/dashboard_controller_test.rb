@@ -32,8 +32,30 @@ module Teller
       get teller_root_path
 
       assert_response :success
-      assert_select "h2", "Teller Transaction Flows"
-      assert_select "a[href='#{new_teller_teller_session_path}']", "Session"
+      assert_select "h2", "Teller Workspace"
+      assert_select "a[href='#{new_teller_teller_session_path}']", "Session Setup"
+    end
+
+    test "shows drawer, movements, and recent transactions when session is open" do
+      user = User.take
+      branch = Branch.create!(code: "033", name: "Session Branch")
+      workstation = Workstation.create!(branch: branch, code: "S01", name: "Session WS")
+      drawer = CashLocation.create!(branch: branch, code: "DR1", name: "Drawer 1", location_type: "drawer")
+      grant_teller_dashboard_access(user, branch: branch, workstation: workstation)
+      grant_sessions_access(user, branch: branch, workstation: workstation)
+      sign_in_as(user)
+      patch teller_context_path, params: { branch_id: branch.id, workstation_id: workstation.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 1_000 }
+      patch assign_drawer_teller_teller_session_path, params: { cash_location_id: drawer.id }
+
+      get teller_root_path
+
+      assert_response :success
+      assert_select "h2", text: "Drawer"
+      assert_select "h2", text: "Movements"
+      assert_select "h2", text: "Recent Transactions"
+      assert_select "a", "Close Drawer"
+      assert_select "a", "All Transactions"
     end
 
     test "shows context setup page" do
@@ -100,6 +122,18 @@ module Teller
 
         RolePermission.find_or_create_by!(role: role, permission: permission)
         UserRole.find_or_create_by!(user: user, role: role, branch: branch, workstation: workstation)
+      end
+
+      def grant_sessions_access(user, branch:, workstation:)
+        [ "sessions.open", "sessions.close" ].each do |permission_key|
+          permission = Permission.find_or_create_by!(key: permission_key) do |record|
+            record.description = permission_key.humanize
+          end
+
+          role = Role.find_or_create_by!(key: "teller") { |r| r.name = "Teller" }
+          RolePermission.find_or_create_by!(role: role, permission: permission)
+          UserRole.find_or_create_by!(user: user, role: role, branch: branch, workstation: workstation)
+        end
       end
 
       def grant_posting_access(user, branch:, workstation:)
