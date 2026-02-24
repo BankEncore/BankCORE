@@ -10,6 +10,27 @@ class User < ApplicationRecord
   has_many :permissions, -> { distinct }, through: :role_permissions
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
+  normalizes :teller_number, with: ->(t) { t.to_s.upcase.strip }
+
+  before_validation :set_display_name, if: -> { display_name.blank? && (first_name.present? || last_name.present?) }
+
+  validates :teller_number, length: { maximum: 4 }, uniqueness: { case_sensitive: false }, allow_blank: true
+
+  attr_accessor :pin
+
+  def display_label
+    display_name.presence || email_address
+  end
+
+  def pin=(value)
+    @pin = value
+    self.password_hash = value.present? ? BCrypt::Password.create(value) : nil
+  end
+
+  def authenticate_pin(submitted_pin)
+    return false if password_hash.blank? || submitted_pin.blank?
+    BCrypt::Password.new(password_hash) == submitted_pin
+  end
 
   def has_permission?(permission_key, branch: nil, workstation: nil)
     scope = permissions.joins(roles: :user_roles)
@@ -26,4 +47,10 @@ class User < ApplicationRecord
 
     scope.exists?
   end
+
+  private
+
+    def set_display_name
+      self.display_name = [ first_name, last_name.to_s[0] ].compact_blank.join(" ").presence
+    end
 end

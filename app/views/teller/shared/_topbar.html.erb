@@ -7,7 +7,7 @@
     <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
       <span class="flex items-baseline gap-1">
         <span class="opacity-60">Teller:</span>
-        <span class="font-medium"><%= Current.user&.email_address || "Not signed in" %></span>
+        <span class="font-medium"><%= Current.user&.display_label || "Not signed in" %></span>
       </span>
 
       <span class="hidden sm:inline opacity-30">•</span>
