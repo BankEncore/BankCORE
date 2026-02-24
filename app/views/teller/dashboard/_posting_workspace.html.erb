@@ -52,11 +52,35 @@
             <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents" } %>
           <% end %>
 
-          <p class="form-control" data-posting-form-target="primaryAccountRow" <%= "hidden" if flow_type == "check_cashing" %>>
-            <%= form.label :primary_account_reference, "Primary Account Reference", class: "text-xs font-medium text-slate-700" %><br>
-            <%= form.text_field :primary_account_reference, data: { posting_form_target: "primaryAccountReference", action: "input->posting-form#recalculate" }, required: true, class: "input input-bordered", placeholder: "Search by account # or name" %>
-            <span class="text-xs text-slate-600 mt-1 block">Example: 0001234567 or Miller, Thomas</span>
-          </p>
+          <div class="form-control overflow-visible" data-posting-form-target="primaryAccountRow" <%= "hidden" if flow_type == "check_cashing" %>>
+            <%= form.label :primary_account_reference, "Primary Account", class: "text-xs font-medium text-slate-700" %><br>
+            <div class="relative overflow-visible" data-controller="primary-account-search"
+                 data-primary-account-search-search-url-value="<%= teller_transaction_search_path %>"
+                 data-primary-account-search-party-accounts-url-template-value="<%= accounts_teller_party_path('__ID__') %>">
+              <%= form.text_field :primary_account_reference,
+                data: {
+                  posting_form_target: "primaryAccountReference",
+                  primary_account_search_target: "searchInput",
+                  action: "input->posting-form#recalculate input->primary-account-search#search input->primary-account-search#onInputFreeTyping"
+                },
+                required: true,
+                class: "input input-bordered w-full",
+                placeholder: "Search party or account #, or type account number",
+                autocomplete: "off" %>
+              <div data-primary-account-search-target="resultsList"
+                   class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
+                   hidden>
+              </div>
+              <div data-primary-account-search-target="partyAccountsRow" class="mt-2" hidden>
+                <label class="text-xs font-medium text-slate-700">Select account for <span data-primary-account-search-target="partyName"></span></label>
+                <select data-primary-account-search-target="accountSelect"
+                        data-action="change->primary-account-search#selectAccountFromDropdown"
+                        class="select select-bordered w-full mt-1">
+                </select>
+              </div>
+            </div>
+            <span class="text-xs text-slate-600 mt-1 block">Search by name or account #, or enter account number directly.</span>
+          </div>
 
           <p class="form-control" data-posting-form-target="counterpartyRow" <%= "hidden" unless show_counterparty %>>
             <%= form.label :counterparty_account_reference, "Counterparty Account Reference", class: "text-xs font-medium text-slate-700" %><br>

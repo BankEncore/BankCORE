@@ -2,7 +2,7 @@
 
 module Teller
   class PartiesController < BaseController
-    before_action :set_party, only: [ :show, :edit, :update ]
+    before_action :set_party, only: [ :show, :edit, :update, :accounts ]
     before_action :ensure_authorized
 
     def index
@@ -58,6 +58,18 @@ module Teller
       else
         render :edit, status: :unprocessable_entity
       end
+    end
+
+    def accounts
+      accounts = @party.accounts.includes(:branch).map do |account|
+        {
+          id: account.id,
+          account_number: account.account_number,
+          account_type: account.account_type,
+          branch_code: account.branch&.code
+        }
+      end
+      render json: accounts
     end
 
     private

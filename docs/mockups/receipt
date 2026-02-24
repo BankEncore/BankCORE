@@ -1,0 +1,128 @@
+////////////////////////////////////////
+
+Branch:  000 - Sterling Heights
+Teller:  T00 - Thomas M.
+Session: S00               Drawer: D01
+Date:    02/24/2026 2:32PM
+
+DEPOSIT
+Cash In:
+Checks In:
+Cash Out:
+
+Check #	               Amount 	
+1234567890	 $         250.00 T
+1234567890	 $         10,250 T*
+1234567890	 $         500.00 O
+------------ ----------------
+999 items    $      11,000.00
+
+ACCOUNT xxxx9999 (SAV)
+Previous Bal: $         125.00
+Credit:       $         125.00
+Pending Bal:  $         125.00
+
+////////////////////////////////////////
+
+WITHDRAWAL
+From:                xxxx9999
+Amount:      $         10,000
+
+ACCOUNT xxxx9999 (SAV)
+Previous Bal: $    100,000.00
+Debit:        $     10,000.00
+Pending Bal:  $     90,000.00
+
+////////////////////////////////////////
+
+TRANSFER
+From:                xxxx9999
+To:                  xxxx9999
+Amount:      $         500.00
+Fee:         $           5.00
+
+ACCOUNT xxxx9999 (SAV)
+Previous Bal: $       1,000.00
+Debit:        $         500.00
+Pending Bal:  $         500.00
+
+ACCOUNT xxxx9999 (CHK)
+Previous Bal: $      10,350.00
+Credit:       $         495.00
+Pending Bal:  $      10,845.00
+
+////////////////////////////////////////
+
+CHECK CASHING
+Party:        John Doe (12345)
+Checks In:    $       1,250.00
+Fee:          $          10.00
+Disbursement: $       1,240.00
+
+Check #	               Amount 	
+1234567890	 $         250.00 T
+1234567890	 $         500.00 T
+1234567890	 $         500.00 O
+------------ ----------------
+999 items    $       1,250.00
+
+////////////////////////////////////////
+
+BANK DRAFT
+Draft #:      001-12345678910
+Amount:      $       3,000.00
+Fee:         $          10.00
+Total Due:   $       3,010.00
+Cash In:     $           0.00
+Checks In:   $           0.00
+Transfer:    $       3,010.00
+
+ACCOUNT xxxx9999 (CHK)
+Previous Bal: $      10,350.00
+Debit:        $       3,010.00
+Pending Bal:  $       7,340.00
+
+Auth: T01 - Thomas M.
+
+////////////////////////////////////////
+
+BILL PAYMENT
+Payee:         Alpha Utilities Co.
+Payee Ref:     xxxxxxxxxxxxxx1234
+Payment Amt:  $        125.15
+Fee:          $          5.00
+Total Due:    $        130.15
+Cash In:      $          0.00
+Checks In:    $         10.00
+Transfer:     $        120.15
+
+Check #	               Amount 
+1234567890	 $          10.00 O
+------------ ----------------
+1 items      $          10.00
+
+ACCOUNT xxxx9999 (CHK)
+Previous Bal: $      10,350.00
+Debit:        $         120.15
+Pending Bal:  $      10,229.85
+
+
+////////////////////////////////////////
+
+MISC RECEIPT
+Description:  Receipt Type/Description
+Amount:       $          10.00
+Cash In:      $          10.00
+
+This is memo text from the misc receipt
+and can run to more than one line.
+
+////////////////////////////////////////
+
+VAULT TRANSFER
+From:          Vault V-01
+To:            Drawer D-01
+Reason:        Replenish Drawer
+Amount:        $     10,000.00
+
+Auth: T01 - Thomas M.

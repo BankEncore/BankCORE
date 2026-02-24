@@ -585,6 +585,7 @@ export default class extends Controller {
     this.transactionTypeTarget.value = this.defaultTransactionTypeValue || "deposit"
     this.primaryAccountReferenceTarget.value = ""
     this.counterpartyAccountReferenceTarget.value = ""
+    this.element.dispatchEvent(new CustomEvent("tx:form-reset", { bubbles: true }))
     this.setAmountCents(this.amountCentsTarget, 0)
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
@@ -652,6 +653,7 @@ export default class extends Controller {
   clearTransactionFormAfterPost() {
     this.primaryAccountReferenceTarget.value = ""
     this.counterpartyAccountReferenceTarget.value = ""
+    this.element.dispatchEvent(new CustomEvent("tx:form-reset", { bubbles: true }))
     this.setAmountCents(this.amountCentsTarget, 0)
     this.cashAccountReferenceTarget.value = this.defaultCashAccountReference || ""
     this.approvalTokenTarget.value = ""
