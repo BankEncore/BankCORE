@@ -1,0 +1,54 @@
+<%= render "teller/shared/page_header",
+  title: "Parties",
+  description: "Customer and non-customer parties (individuals and organizations).",
+  secondary_button_path: teller_root_path,
+  secondary_button_label: "Back to Workspace",
+  primary_button_path: new_teller_party_path,
+  primary_button_label: "New Party" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <div class="flex gap-2 flex-wrap mb-4">
+      <%= link_to "All", teller_parties_path, class: "btn btn-sm #{params[:party_kind].blank? ? 'btn-primary' : 'btn-ghost'}" %>
+      <% Party::PARTY_KINDS.each do |kind| %>
+        <%= link_to kind.titleize, teller_parties_path(party_kind: kind), class: "btn btn-sm #{params[:party_kind] == kind ? 'btn-primary' : 'btn-ghost'}" %>
+      <% end %>
+      <span class="divider divider-horizontal"></span>
+      <% Party::RELATIONSHIP_KINDS.each do |rel| %>
+        <%= link_to rel.titleize, teller_parties_path(relationship_kind: rel), class: "btn btn-sm #{params[:relationship_kind] == rel ? 'btn-primary' : 'btn-ghost'}" %>
+      <% end %>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Kind</th>
+            <th>Relationship</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @parties.any? %>
+            <% @parties.each do |party| %>
+              <tr>
+                <td><%= party.display_name.presence || "—" %></td>
+                <td><span class="badge badge-outline"><%= party.party_kind %></span></td>
+                <td><span class="badge badge-outline"><%= party.relationship_kind %></span></td>
+                <td class="text-right">
+                  <%= link_to "View", teller_party_path(party), class: "btn btn-ghost btn-xs" %>
+                  <%= link_to "Edit", edit_teller_party_path(party), class: "btn btn-ghost btn-xs" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="4" class="text-center opacity-70 py-4">No parties found.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

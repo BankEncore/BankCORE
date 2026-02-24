@@ -1,0 +1,63 @@
+<% account_transactions = local_assigns.fetch(:account_transactions, account.account_transactions) %>
+<% sections = local_assigns.fetch(:sections, [:balance, :history]) %>
+<% balance_cents = account.balance_cents %>
+<% balance_formatted = number_to_currency(balance_cents / 100.0) %>
+
+<% if sections.include?(:balance) %>
+<section class="card bg-base-100 border border-base-300 mt-4">
+  <div class="card-body">
+    <h2 class="card-title text-base">Current Balance</h2>
+    <p class="text-2xl font-mono tabular-nums <%= balance_cents.negative? ? 'text-error' : '' %>">
+      <%= balance_formatted %>
+    </p>
+  </div>
+</section>
+<% end %>
+
+<% if sections.include?(:history) %>
+<section class="card bg-base-100 border border-base-300 mt-4">
+  <div class="card-body">
+    <h2 class="card-title text-base">Transaction History</h2>
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Posted</th>
+            <th>Type</th>
+            <th>Direction</th>
+            <th class="text-right">Amount</th>
+            <th class="text-right">Receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if account_transactions.any? %>
+            <% account_transactions.each do |at| %>
+              <% tt = at.teller_transaction %>
+              <% signed_cents = at.direction == "credit" ? at.amount_cents : -at.amount_cents %>
+              <tr>
+                <td><%= tt.posted_at&.strftime("%Y-%m-%d %H:%M:%S") || "—" %></td>
+                <td><%= tt.transaction_type.titleize %></td>
+                <td><span class="badge badge-outline"><%= at.direction.titleize %></span></td>
+                <td class="text-right font-mono tabular-nums <%= signed_cents.negative? ? 'text-error' : '' %>">
+                  <%= number_to_currency(signed_cents / 100.0) %>
+                </td>
+                <td class="text-right">
+                  <% if tt.posting_batch.present? %>
+                    <%= link_to "View Receipt", teller_receipt_path(request_id: tt.request_id), class: "btn btn-outline btn-xs" %>
+                  <% else %>
+                    <span class="opacity-70 text-xs">Unavailable</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="5" class="text-center opacity-70 py-4">No transactions yet.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<% end %>

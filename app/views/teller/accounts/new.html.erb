@@ -1,0 +1,53 @@
+<%= render "teller/shared/page_header",
+  title: "New Account",
+  description: "Create an account for #{@branch.name}. Add at least one owner.",
+  secondary_button_path: teller_accounts_path,
+  secondary_button_label: "Back to Accounts" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <%= form_with url: teller_accounts_path, method: :post, local: true, class: "space-y-4" do |f| %>
+      <%= hidden_field_tag "account[branch_id]", @branch.id %>
+
+      <% if @account&.errors&.any? %>
+        <div class="alert alert-error">
+          <ul class="list-disc list-inside">
+            <% @account.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= label_tag "account[account_number]", "Account number", class: "label" %>
+          <%= text_field_tag "account[account_number]", @account&.account_number, class: "input input-bordered w-full", maxlength: 16, placeholder: "e.g. 1234567890123456", required: true %>
+        </div>
+        <div class="form-control">
+          <%= label_tag "account[account_type]", "Account type", class: "label" %>
+          <%= select_tag "account[account_type]", options_for_select(Account::ACCOUNT_TYPES.map { |k| [ k.titleize, k ] }, @account&.account_type || "checking"), class: "select select-bordered w-full" %>
+        </div>
+      </div>
+
+      <%= hidden_field_tag "account[opened_on]", Date.current.strftime("%Y-%m-%d") %>
+      <%= hidden_field_tag "account[status]", "open" %>
+
+      <h3 class="font-medium">Owners</h3>
+      <p class="text-sm opacity-70">Select at least one party as owner. Mark one as primary.</p>
+      <div class="form-control">
+        <%= label_tag "account[primary_party_id]", "Primary owner", class: "label" %>
+        <%= select_tag "account[primary_party_id]", options_from_collection_for_select(@parties, :id, :display_name, params[:party_id]), { include_blank: "Select primary owner", class: "select select-bordered w-full" } %>
+      </div>
+      <div class="form-control">
+        <%= label_tag "account[party_ids][]", "Additional owners (optional)", class: "label" %>
+        <%= select_tag "account[party_ids][]", options_from_collection_for_select(@parties, :id, :display_name), { include_blank: true, class: "select select-bordered w-full", multiple: true } %>
+      </div>
+
+      <div class="flex gap-2">
+        <%= submit_tag "Create Account", class: "btn btn-primary" %>
+        <%= link_to "Cancel", teller_accounts_path, class: "btn btn-ghost" %>
+      </div>
+    <% end %>
+  </div>
+</section>

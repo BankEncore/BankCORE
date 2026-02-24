@@ -1,0 +1,57 @@
+<%= render "teller/shared/page_header",
+  title: "Account #{@account.account_number}",
+  description: "#{@account.account_type.titleize} • #{@account.branch.name}",
+  secondary_button_path: teller_accounts_path,
+  secondary_button_label: "Back to Accounts",
+  primary_button_path: edit_teller_account_path(@account),
+  primary_button_label: "Edit" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-base">Details</h2>
+    <dl class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+      <dt class="opacity-70">Account number</dt>
+      <dd class="font-mono"><%= @account.account_number %></dd>
+      <dt class="opacity-70">Posting reference</dt>
+      <dd class="font-mono"><%= @account.account_reference %></dd>
+      <dt class="opacity-70">Type</dt>
+      <dd><%= @account.account_type %></dd>
+      <dt class="opacity-70">Branch</dt>
+      <dd><%= @account.branch.name %></dd>
+      <dt class="opacity-70">Status</dt>
+      <dd><span class="badge badge-outline"><%= @account.status %></span></dd>
+      <dt class="opacity-70">Opened</dt>
+      <dd><%= @account.opened_on.strftime("%Y-%m-%d") %></dd>
+      <dt class="opacity-70">Closed</dt>
+      <dd><%= @account.closed_on&.strftime("%Y-%m-%d") || "—" %></dd>
+    </dl>
+  </div>
+</section>
+
+<%= render "shared/accounts/balance_and_history", account: @account, account_transactions: @account_transactions, sections: [:balance] %>
+
+<section class="card bg-base-100 border border-base-300 mt-4">
+  <div class="card-body">
+    <h2 class="card-title text-base">Owners</h2>
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Party</th>
+            <th>Primary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @account.account_owners.includes(:party).each do |ao| %>
+            <tr>
+              <td><%= link_to ao.party.display_name.presence || "Party ##{ao.party_id}", teller_party_path(ao.party), class: "link" %></td>
+              <td><%= ao.is_primary? ? "Yes" : "—" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<%= render "shared/accounts/balance_and_history", account: @account, account_transactions: @account_transactions, sections: [:history] %>

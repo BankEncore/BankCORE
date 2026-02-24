@@ -1,0 +1,54 @@
+<%= render "teller/shared/page_header",
+  title: "Accounts",
+  description: "Bank accounts by branch or party.",
+  secondary_button_path: teller_root_path,
+  secondary_button_label: "Back to Workspace",
+  primary_button_path: new_teller_account_path(branch_id: current_branch&.id),
+  primary_button_label: "New Account" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <div class="flex gap-2 flex-wrap mb-4">
+      <%= link_to "All", teller_accounts_path, class: "btn btn-sm #{params[:branch_id].blank? && params[:party_id].blank? ? 'btn-primary' : 'btn-ghost'}" %>
+      <% if current_branch.present? %>
+        <%= link_to "This branch", teller_accounts_path(branch_id: current_branch.id), class: "btn btn-sm #{params[:branch_id].to_s == current_branch.id.to_s ? 'btn-primary' : 'btn-ghost'}" %>
+      <% end %>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th>Type</th>
+            <th>Branch</th>
+            <th>Status</th>
+            <th>Owners</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @accounts.any? %>
+            <% @accounts.each do |account| %>
+              <tr>
+                <td class="font-mono"><%= account.account_number %></td>
+                <td><%= account.account_type %></td>
+                <td><%= account.branch.name %></td>
+                <td><span class="badge badge-outline"><%= account.status %></span></td>
+                <td><%= account.parties.map(&:display_name).compact.join(", ").presence || "—" %></td>
+                <td class="text-right">
+                  <%= link_to "View", teller_account_path(account), class: "btn btn-ghost btn-xs" %>
+                  <%= link_to "Edit", edit_teller_account_path(account), class: "btn btn-ghost btn-xs" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="6" class="text-center opacity-70 py-4">No accounts found.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,11 @@
+<%= render "teller/shared/page_header",
+  title: "Edit Party",
+  description: @party.display_name.presence || "Party ##{@party.id}",
+  secondary_button_path: teller_party_path(@party),
+  secondary_button_label: "Back to Party" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <%= render "form" %>
+  </div>
+</section>

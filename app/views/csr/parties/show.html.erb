@@ -1,0 +1,79 @@
+<%= render "csr/shared/page_header",
+  title: @party.display_name.presence || "Party ##{@party.id}",
+  description: "#{@party.party_kind.titleize} • #{@party.relationship_kind.titleize}",
+  secondary_button_path: csr_parties_path,
+  secondary_button_label: "Back to Parties",
+  primary_button_path: edit_csr_party_path(@party),
+  primary_button_label: "Edit" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-base">Details</h2>
+    <dl class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+      <dt class="opacity-70">Display name</dt>
+      <dd><%= @party.display_name.presence || "—" %></dd>
+      <dt class="opacity-70">Kind</dt>
+      <dd><%= @party.party_kind %></dd>
+      <dt class="opacity-70">Relationship</dt>
+      <dd><%= @party.relationship_kind %></dd>
+      <dt class="opacity-70">Status</dt>
+      <dd><%= @party.is_active? ? "Active" : "Inactive" %></dd>
+      <% if @party.individual? && @party.party_individual.present? %>
+        <dt class="opacity-70">First name</dt>
+        <dd><%= @party.party_individual.first_name %></dd>
+        <dt class="opacity-70">Last name</dt>
+        <dd><%= @party.party_individual.last_name %></dd>
+        <dt class="opacity-70">DOB</dt>
+        <dd><%= @party.party_individual.dob&.strftime("%Y-%m-%d") || "—" %></dd>
+      <% elsif @party.organization? && @party.party_organization.present? %>
+        <dt class="opacity-70">Legal name</dt>
+        <dd><%= @party.party_organization.legal_name %></dd>
+        <dt class="opacity-70">DBA</dt>
+        <dd><%= @party.party_organization.dba_name.presence || "—" %></dd>
+      <% end %>
+      <dt class="opacity-70">Email</dt>
+      <dd><%= @party.email.presence || "—" %></dd>
+      <dt class="opacity-70">Phone</dt>
+      <dd><%= @party.phone.presence || "—" %></dd>
+    </dl>
+  </div>
+</section>
+
+<section class="card bg-base-100 border border-base-300 mt-4">
+  <div class="card-body">
+    <h2 class="card-title text-base">Accounts</h2>
+    <% accounts = @party.accounts %>
+    <% if accounts.any? %>
+      <div class="overflow-x-auto">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>Type</th>
+              <th>Branch</th>
+              <th>Status</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% accounts.each do |account| %>
+              <tr>
+                <td class="font-mono"><%= account.account_number %></td>
+                <td><%= account.account_type %></td>
+                <td><%= account.branch.name %></td>
+                <td><span class="badge badge-outline"><%= account.status %></span></td>
+                <td class="text-right">
+                  <%= link_to "View", csr_account_path(account), class: "btn btn-ghost btn-xs" %>
+                  <%= link_to "Edit", edit_csr_account_path(account), class: "btn btn-ghost btn-xs" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-sm opacity-70">No accounts yet.</p>
+      <%= link_to "Add account", new_csr_account_path(party_id: @party.id), class: "btn btn-ghost btn-sm mt-2" %>
+    <% end %>
+  </div>
+</section>

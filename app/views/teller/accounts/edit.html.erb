@@ -1,0 +1,56 @@
+<%= render "teller/shared/page_header",
+  title: "Edit Account #{@account.account_number}",
+  description: "#{@account.account_type.titleize} • #{@account.branch.name}",
+  secondary_button_path: teller_account_path(@account),
+  secondary_button_label: "Back to Account" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <%= form_with model: [ :teller, @account ], url: teller_account_path(@account), method: :patch, local: true, class: "space-y-4" do |f| %>
+      <% if @account.errors.any? %>
+        <div class="alert alert-error">
+          <ul class="list-disc list-inside">
+            <% @account.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <span class="label">Account number</span>
+          <p class="font-mono text-sm py-2"><%= @account.account_number %></p>
+        </div>
+        <div class="form-control">
+          <span class="label">Branch</span>
+          <p class="text-sm py-2"><%= @account.branch.name %></p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :account_type, class: "label" %>
+          <%= f.select :account_type, Account::ACCOUNT_TYPES.map { |k| [ k.titleize, k ] }, {}, class: "select select-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :status, class: "label" %>
+          <%= f.select :status, Account::STATUSES.map { |k| [ k.titleize, k ] }, {}, class: "select select-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :opened_on, class: "label" %>
+          <%= f.date_field :opened_on, class: "input input-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :closed_on, class: "label" %>
+          <%= f.date_field :closed_on, class: "input input-bordered w-full" %>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <%= f.submit "Update Account", class: "btn btn-primary" %>
+        <%= link_to "Cancel", teller_account_path(@account), class: "btn btn-ghost" %>
+      </div>
+    <% end %>
+  </div>
+</section>

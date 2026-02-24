@@ -1,0 +1,22 @@
+<%= render "csr/shared/page_header",
+  title: "Branch Settings",
+  description: "Select branch for CSR workspace. Customer and account management will be scoped to this branch where applicable.",
+  secondary_button_path: root_path,
+  secondary_button_label: "Home" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <%= form_with url: csr_context_path, method: :patch, local: true, class: "space-y-4" do %>
+      <div class="form-control">
+        <%= label_tag :branch_id, "Branch", class: "label" %>
+        <%= select_tag :branch_id,
+          options_from_collection_for_select(@branches, :id, :name, current_branch&.id),
+          { include_blank: "Select branch", class: "select select-bordered w-full", required: true } %>
+      </div>
+      <div class="flex gap-2">
+        <%= submit_tag "Continue", class: "btn btn-primary" %>
+        <%= link_to "Cancel", root_path, class: "btn btn-ghost" %>
+      </div>
+    <% end %>
+  </div>
+</section>

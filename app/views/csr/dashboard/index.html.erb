@@ -1,0 +1,15 @@
+<%= render "csr/shared/page_header",
+  title: "CSR Workspace",
+  description: "Manage customer information (CIF) and accounts. Use Parties for individuals and organizations, Accounts for branch accounts.",
+  secondary_button_path: csr_context_path,
+  secondary_button_label: "Change Branch" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-base">Quick links</h2>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Parties", csr_parties_path, class: "btn btn-primary" %>
+      <%= link_to "Accounts", csr_accounts_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+</section>

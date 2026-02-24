@@ -1,6 +1,7 @@
 class AccountTransaction < ApplicationRecord
   DIRECTIONS = %w[debit credit].freeze
 
+  belongs_to :account, optional: true
   belongs_to :teller_transaction
   belongs_to :posting_batch
 

@@ -1,0 +1,13 @@
+<nav aria-label="CSR Commands" class="border-b border-base-300 bg-base-100 px-3 py-2" data-testid="csr-command-bar">
+  <div class="flex flex-wrap items-center gap-2">
+    <% active = ->(path) { current_page?(path) ? "btn-active" : "" } %>
+
+    <%= link_to "Workspace", csr_root_path, class: "btn btn-sm btn-ghost #{active.call(csr_root_path)}", aria: (current_page?(csr_root_path) ? { current: "page" } : {}) %>
+    <%= link_to "Parties", csr_parties_path, class: "btn btn-sm btn-ghost #{active.call(csr_parties_path)}" %>
+    <%= link_to "Accounts", csr_accounts_path, class: "btn btn-sm btn-ghost #{active.call(csr_accounts_path)}" %>
+
+    <div class="flex-1"></div>
+
+    <%= link_to "Branch", csr_context_path, class: "btn btn-sm btn-outline #{active.call(csr_context_path)}" %>
+  </div>
+</nav>
