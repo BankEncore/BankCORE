@@ -7,7 +7,7 @@ module Teller
     def call
       return { ok: false, error: "Account reference is required" } if reference.blank?
 
-      transactions = AccountTransaction.where(account_reference: reference)
+      transactions = resolve_transactions_scope
       debit_total = transactions.where(direction: "debit").sum(:amount_cents)
       credit_total = transactions.where(direction: "credit").sum(:amount_cents)
       latest_transaction = transactions.order(created_at: :desc).first
@@ -33,6 +33,15 @@ module Teller
 
     private
       attr_reader :reference
+
+      def resolve_transactions_scope
+        account = Account.find_by(account_number: reference)
+        if account
+          AccountTransaction.where(account_id: account.id)
+        else
+          AccountTransaction.where(account_reference: reference)
+        end
+      end
 
       def build_alerts(found:, computed_balance:)
         alerts = []

@@ -19,8 +19,8 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="form-control">
-          <span class="label">Account number</span>
-          <p class="font-mono text-sm py-2"><%= @account.account_number %></p>
+          <%= f.label :account_number, class: "label" %>
+          <%= f.text_field :account_number, class: "input input-bordered w-full font-mono", maxlength: 16, required: true %>
         </div>
         <div class="form-control">
           <span class="label">Branch</span>

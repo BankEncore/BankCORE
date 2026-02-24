@@ -1,0 +1,12 @@
+<div class="card bg-base-100 border border-base-300 mb-4">
+  <div class="card-body py-3">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      <div>
+        <div class="text-base-content/60">Ledger</div>
+        <div class="font-semibold tabular-nums <%= account.balance_cents.negative? ? 'text-error' : '' %>">
+          <%= number_to_currency(account.balance_cents / 100.0) %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

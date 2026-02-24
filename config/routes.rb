@@ -36,7 +36,9 @@ Rails.application.routes.draw do
   namespace :csr do
     root "dashboard#index"
     resources :parties, only: [ :index, :show, :new, :create, :edit, :update ]
-    resources :accounts, only: [ :index, :show, :new, :create, :edit, :update ]
+    resources :accounts, only: [ :index, :show, :new, :create, :edit, :update ] do
+      resources :account_owners, only: [ :create, :destroy, :update ], path: "owners"
+    end
     resource :context, only: [ :show, :update ]
   end
 

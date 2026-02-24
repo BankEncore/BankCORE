@@ -29,7 +29,7 @@ module Csr
       get csr_party_path(party)
 
       assert_response :success
-      assert_select "h2", /Show Me/
+      assert_select "h1", /Show Me/
     end
 
     private

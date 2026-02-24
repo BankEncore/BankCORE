@@ -23,6 +23,8 @@ module BankCore
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+    #
+    config.time_zone = "Eastern Time (US & Canada)"
 
     # Active Record Encryption (for parties.tax_id, party_individuals.govt_id)
     # Run bin/rails db:encryption:init and add output to credentials (bin/rails credentials:edit).

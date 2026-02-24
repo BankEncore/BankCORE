@@ -18,6 +18,11 @@ module Csr
         .includes(teller_transaction: :posting_batch)
         .order(created_at: :desc)
         .limit(50)
+      @parties_for_owner = Party
+        .where(is_active: true, relationship_kind: "customer")
+        .where.not(id: @account.account_owners.select(:party_id))
+        .order(:display_name)
+        .limit(50)
     end
 
     def edit
@@ -76,7 +81,7 @@ module Csr
       end
 
       def account_update_params
-        params.require(:account).permit(:account_type, :status, :opened_on, :closed_on)
+        params.require(:account).permit(:account_number, :account_type, :status, :opened_on, :closed_on)
       end
 
       def owner_params_present?

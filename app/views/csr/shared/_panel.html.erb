@@ -1,0 +1,16 @@
+<%# locals: title:, right: nil %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="card-title text-base"><%= title %></h2>
+      <% if local_assigns[:right].present? %>
+        <div class="text-sm text-base-content/60"><%= right %></div>
+      <% end %>
+    </div>
+
+    <div class="mt-3">
+      <%= yield %>
+    </div>
+  </div>
+</section>

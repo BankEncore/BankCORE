@@ -76,7 +76,7 @@ module Teller
       end
 
       def account_update_params
-        params.require(:account).permit(:account_type, :status, :opened_on, :closed_on)
+        params.require(:account).permit(:account_number, :account_type, :status, :opened_on, :closed_on)
       end
 
       def owner_params_present?

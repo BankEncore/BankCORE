@@ -17,10 +17,27 @@ class AccountOwnerTest < ActiveSupport::TestCase
     assert AccountOwner.new(account: @account, party: @party2, is_primary: false).valid?
   end
 
-  test "rejects second primary owner" do
+  test "setting new primary demotes existing primary" do
+    ao1 = AccountOwner.create!(account: @account, party: @party1, is_primary: true)
+    ao2 = AccountOwner.create!(account: @account, party: @party2, is_primary: false)
+    ao2.update!(is_primary: true)
+    assert ao2.reload.is_primary?
+    assert_not ao1.reload.is_primary?
+  end
+
+  test "prevents removing last owner" do
+    ao = AccountOwner.create!(account: @account, party: @party1, is_primary: true)
+    assert_no_difference "AccountOwner.count" do
+      ao.destroy
+    end
+    assert_includes ao.errors[:base], "Account must have at least one owner"
+  end
+
+  test "allows removing owner when others remain" do
     AccountOwner.create!(account: @account, party: @party1, is_primary: true)
-    second_primary = AccountOwner.new(account: @account, party: @party2, is_primary: true)
-    assert_not second_primary.valid?
-    assert_includes second_primary.errors[:is_primary], "already has a primary owner"
+    ao2 = AccountOwner.create!(account: @account, party: @party2, is_primary: false)
+    assert_difference "AccountOwner.count", -1 do
+      ao2.destroy
+    end
   end
 end

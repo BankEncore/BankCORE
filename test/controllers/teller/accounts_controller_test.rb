@@ -102,6 +102,19 @@ module Teller
       assert_equal "restricted", account.status
     end
 
+    test "update can change account_number" do
+      account = Account.create!(account_number: "4444444444444444", account_type: "checking", branch: @branch, status: "open", opened_on: Date.current, last_activity_at: Time.current)
+      AccountOwner.create!(account: account, party: @party, is_primary: true)
+
+      patch teller_account_path(account), params: {
+        account: { account_number: "5555555555555555", account_type: "checking", status: "open", opened_on: Date.current, closed_on: nil }
+      }
+
+      assert_redirected_to teller_account_path(account)
+      account.reload
+      assert_equal "5555555555555555", account.account_number
+    end
+
     private
 
       def set_signed_context(branch_id, workstation_id)

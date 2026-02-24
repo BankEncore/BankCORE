@@ -24,9 +24,8 @@ module Teller
 
       limit = [ params[:limit].to_i, 50 ].reject(&:zero?).min || 10
 
-      entries = AccountTransaction
+      entries = resolve_history_scope(reference)
         .includes(:teller_transaction)
-        .where(account_reference: reference)
         .order(created_at: :desc)
         .limit(limit)
         .map do |transaction|
@@ -51,6 +50,15 @@ module Teller
     private
       def ensure_authorized
         authorize([ :teller, :posting ], :create?)
+      end
+
+      def resolve_history_scope(reference)
+        account = Account.find_by(account_number: reference)
+        if account
+          AccountTransaction.where(account_id: account.id)
+        else
+          AccountTransaction.where(account_reference: reference)
+        end
       end
   end
 end

@@ -18,8 +18,8 @@
 <section class="card bg-base-100 border border-base-300 mt-4">
   <div class="card-body">
     <h2 class="card-title text-base">Transaction History</h2>
-    <div class="overflow-x-auto">
-      <table class="table table-sm">
+    <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+      <table class="table table-sm table-zebra w-full">
         <thead>
           <tr>
             <th>Posted</th>
@@ -34,25 +34,31 @@
             <% account_transactions.each do |at| %>
               <% tt = at.teller_transaction %>
               <% signed_cents = at.direction == "credit" ? at.amount_cents : -at.amount_cents %>
-              <tr>
-                <td><%= tt.posted_at&.strftime("%Y-%m-%d %H:%M:%S") || "—" %></td>
+              <tr class="hover">
+                <td class="tabular-nums"><%= tt.posted_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
                 <td><%= tt.transaction_type.titleize %></td>
-                <td><span class="badge badge-outline"><%= at.direction.titleize %></span></td>
-                <td class="text-right font-mono tabular-nums <%= signed_cents.negative? ? 'text-error' : '' %>">
-                  <%= number_to_currency(signed_cents / 100.0) %>
+                <td>
+                  <% if at.direction == "credit" %>
+                    <span class="badge badge-sm badge-success badge-outline">Credit</span>
+                  <% else %>
+                    <span class="badge badge-sm badge-error badge-outline">Debit</span>
+                  <% end %>
+                </td>
+                <td class="text-right font-mono tabular-nums <%= signed_cents.negative? ? 'text-error font-medium' : 'text-success' %>">
+                  <%= signed_cents.negative? ? "" : "+" %><%= number_to_currency(signed_cents / 100.0) %>
                 </td>
                 <td class="text-right">
                   <% if tt.posting_batch.present? %>
-                    <%= link_to "View Receipt", teller_receipt_path(request_id: tt.request_id), class: "btn btn-outline btn-xs" %>
+                    <%= link_to "Receipt", teller_receipt_path(request_id: tt.request_id), class: "btn btn-ghost btn-xs" %>
                   <% else %>
-                    <span class="opacity-70 text-xs">Unavailable</span>
+                    <span class="opacity-50 text-xs">—</span>
                   <% end %>
                 </td>
               </tr>
             <% end %>
           <% else %>
             <tr>
-              <td colspan="5" class="text-center opacity-70 py-4">No transactions yet.</td>
+              <td colspan="5" class="text-center opacity-70 py-8">No transactions yet.</td>
             </tr>
           <% end %>
         </tbody>

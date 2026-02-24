@@ -104,6 +104,41 @@ module Teller
       assert_match(/required/i, body["error"])
     end
 
+    test "returns balance and history by account_id when reference matches Account" do
+      account = Account.create!(
+        account_number: "5555555555555555",
+        account_type: "checking",
+        branch: @branch,
+        status: "open",
+        opened_on: Date.current,
+        last_activity_at: Time.current
+      )
+
+      post teller_posting_path, params: {
+        request_id: "acct-id-lookup-1",
+        transaction_type: "deposit",
+        amount_cents: 42_000,
+        primary_account_reference: account.account_number,
+        cash_account_reference: "cash:#{@drawer.code}"
+      }
+
+      account.update!(account_number: "6666666666666666")
+
+      get teller_account_reference_path, params: { reference: "6666666666666666" }
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal true, body["ok"]
+      assert_equal true, body["found"]
+      assert_equal 42_000, body["ledger_balance_cents"]
+
+      get teller_account_history_path, params: { reference: "6666666666666666", limit: 5 }
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal true, body["ok"]
+      assert_equal 1, body["entries"].size
+      assert_equal 42_000, body["entries"][0]["amount_cents"]
+    end
+
     private
       def grant_permissions(user, branch, workstation)
         [ "teller.dashboard.view", "transactions.deposit.create", "sessions.open" ].each do |permission_key|
