@@ -36,7 +36,10 @@
                 <td class="py-2 mono text-xs"><%= transaction.request_id %></td>
                 <td class="no-print py-2 text-right">
                   <% if transaction.posting_batch.present? %>
-                    <%= link_to "View Receipt", teller_receipt_path(request_id: transaction.request_id), class: "btn btn-ghost btn-sm" %>
+                    <div class="flex gap-1 justify-end">
+                      <%= link_to "Receipt", teller_receipt_path(request_id: transaction.request_id), class: "btn btn-ghost btn-sm" %>
+                      <%= link_to "Audit", teller_receipt_path(request_id: transaction.request_id, view: "audit"), class: "btn btn-ghost btn-sm" %>
+                    </div>
                   <% else %>
                     <span class="text-slate-500 text-xs">—</span>
                   <% end %>

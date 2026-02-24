@@ -1,0 +1,88 @@
+<div class="space-y-4">
+  <div class="no-print">
+    <section aria-label="Page Header" class="card bg-base-100 border border-base-300">
+      <div class="card-body py-3">
+        <h2 class="card-title text-lg">Audit Receipt</h2>
+        <p class="text-sm opacity-80">Full posting context, legs, and cash movements</p>
+        <p class="flex gap-2 flex-wrap">
+          <%= link_to "Back to Dashboard", teller_root_path, class: "btn btn-ghost btn-sm" %>
+          <%= link_to "Customer Receipt", teller_receipt_path(request_id: @posting_batch.request_id), class: "btn btn-outline btn-sm" %>
+          <button type="button" onclick="window.print()" class="btn btn-outline btn-sm">Print</button>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <div class="receipt-printable border border-base-300 rounded-lg p-4 bg-base-100 space-y-6">
+    <section>
+      <h3 class="text-sm font-bold uppercase tracking-wide text-slate-500 mb-2">Posting Context</h3>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm font-mono">
+        <dt class="text-slate-500">Request ID</dt>
+        <dd><%= @posting_batch.request_id %></dd>
+        <dt class="text-slate-500">Status</dt>
+        <dd><%= @posting_batch.status %> / <%= @teller_transaction.status %></dd>
+        <dt class="text-slate-500">Branch</dt>
+        <dd><%= @teller_transaction.branch.code %> - <%= @teller_transaction.branch.name %></dd>
+        <dt class="text-slate-500">Workstation</dt>
+        <dd><%= @teller_transaction.workstation&.code || "—" %></dd>
+        <dt class="text-slate-500">Teller</dt>
+        <dd><%= @teller_transaction.user.display_label %> (<%= @teller_transaction.user.teller_number.presence || "—" %>)</dd>
+        <dt class="text-slate-500">Posted</dt>
+        <dd><%= @teller_transaction.posted_at&.strftime("%Y-%m-%d %H:%M:%S") || "—" %></dd>
+      </dl>
+    </section>
+
+    <% if @posting_batch.metadata.present? && @posting_batch.metadata.any? %>
+      <section>
+        <h3 class="text-sm font-bold uppercase tracking-wide text-slate-500 mb-2">Transaction Metadata</h3>
+        <pre class="text-xs font-mono bg-slate-100 dark:bg-slate-800 p-3 rounded overflow-x-auto"><%= JSON.pretty_generate(@posting_batch.metadata) %></pre>
+      </section>
+    <% end %>
+
+    <section>
+      <h3 class="text-sm font-bold uppercase tracking-wide text-slate-500 mb-2">Posting Legs</h3>
+      <table class="w-full text-sm font-mono">
+        <thead>
+          <tr class="row-border t-head">
+            <th class="py-2 text-left">Side</th>
+            <th class="py-2 text-left">Account Reference</th>
+            <th class="py-2 text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @posting_legs.each do |leg| %>
+            <tr class="row-border">
+              <td class="py-2"><%= leg.side %></td>
+              <td class="py-2"><%= leg.account_reference %></td>
+              <td class="py-2 text-right tabular-nums"><%= number_to_currency(leg.amount_cents / 100.0) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+
+    <% if @cash_movements.any? %>
+      <section>
+        <h3 class="text-sm font-bold uppercase tracking-wide text-slate-500 mb-2">Cash Movements</h3>
+        <table class="w-full text-sm font-mono">
+          <thead>
+            <tr class="row-border t-head">
+              <th class="py-2 text-left">Direction</th>
+              <th class="py-2 text-left">Location</th>
+              <th class="py-2 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @cash_movements.each do |mov| %>
+              <tr class="row-border">
+                <td class="py-2"><%= mov.direction %></td>
+                <td class="py-2"><%= mov.cash_location&.code || "—" %></td>
+                <td class="py-2 text-right tabular-nums"><%= number_to_currency(mov.amount_cents / 100.0) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </section>
+    <% end %>
+  </div>
+</div>

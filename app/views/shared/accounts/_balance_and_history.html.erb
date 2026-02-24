@@ -63,7 +63,10 @@
                 </td>
                 <td class="no-print py-2 text-right">
                   <% if tt.posting_batch.present? %>
-                    <%= link_to "Receipt", teller_receipt_path(request_id: tt.request_id), class: "btn btn-ghost btn-sm" %>
+                    <div class="flex gap-1 justify-end">
+                      <%= link_to "Receipt", teller_receipt_path(request_id: tt.request_id), class: "btn btn-ghost btn-sm" %>
+                      <%= link_to "Audit", teller_receipt_path(request_id: tt.request_id, view: "audit"), class: "btn btn-ghost btn-sm" %>
+                    </div>
                   <% else %>
                     <span class="text-slate-500 text-xs">—</span>
                   <% end %>

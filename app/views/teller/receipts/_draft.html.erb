@@ -1,0 +1,32 @@
+<% meta = posting_batch.metadata || {} %>
+<% meta = meta.with_indifferent_access if meta.respond_to?(:with_indifferent_access) %>
+<% draft = meta["draft"] || meta[:draft] || {} %>
+<% draft = draft.with_indifferent_access if draft.respond_to?(:with_indifferent_access) %>
+<% instrument = (draft["instrument_number"] || draft[:instrument_number]).to_s %>
+<% draft_amt = (draft["draft_amount_cents"] || draft[:draft_amount_cents] || 0).to_i %>
+<% fee = (draft["fee_cents"] || draft[:fee_cents] || 0).to_i %>
+<% total = draft_amt + fee %>
+<% funding = (draft["funding_source"] || draft[:funding_source]).to_s %>
+<% user = teller_transaction.user %>
+
+<div class="receipt-type-details text-sm font-mono">
+  <p>Draft #:      <%= instrument.presence || "—" %></p>
+  <p>Amount:      <%= receipt_money(draft_amt) %></p>
+  <p>Fee:         <%= receipt_money(fee) %></p>
+  <p>Total Due:   <%= receipt_money(total) %></p>
+  <% if funding == "cash" %>
+    <p>Cash In:     <%= receipt_money(teller_transaction.amount_cents) %></p>
+    <p>Checks In:   $           0.00</p>
+    <p>Transfer:    $           0.00</p>
+  <% else %>
+    <p>Cash In:     $           0.00</p>
+    <p>Checks In:   $           0.00</p>
+    <p>Transfer:    <%= receipt_money(total) %></p>
+  <% end %>
+</div>
+
+<%= render "teller/receipts/receipt_account_info", posting_batch: posting_batch %>
+
+<div class="receipt-auth mt-3 text-sm font-mono">
+  <p>Auth: <%= user.teller_number.presence || teller_transaction.workstation&.code || "—" %> - <%= user.display_label %></p>
+</div>

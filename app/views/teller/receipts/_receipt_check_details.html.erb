@@ -1,0 +1,30 @@
+<% items = check_items || [] %>
+<% total = total_cents || items.sum { |i| (i["amount_cents"] || i[:amount_cents] || 0).to_i } %>
+
+<% if items.any? %>
+<table class="receipt-check-table table table-sm text-sm font-mono mt-2 w-full">
+  <thead>
+    <tr>
+      <th class="text-left">Check #</th>
+      <th class="text-right">Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% items.each do |item| %>
+      <% amt = (item["amount_cents"] || item[:amount_cents] || 0).to_i %>
+      <% num = (item["number"] || item[:number]).to_s.presence || "—" %>
+      <% indicator = check_hold_indicator(item) %>
+      <tr>
+        <td><%= num %></td>
+        <td class="text-right tabular-nums"><%= receipt_money(amt) %> <%= indicator %></td>
+      </tr>
+    <% end %>
+  </tbody>
+  <tfoot>
+    <tr class="border-t">
+      <td><%= items.size %> items</td>
+      <td class="text-right tabular-nums font-medium"><%= receipt_money(total) %></td>
+    </tr>
+  </tfoot>
+</table>
+<% end %>

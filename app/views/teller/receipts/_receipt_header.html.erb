@@ -1,0 +1,13 @@
+<% tt = teller_transaction %>
+<% branch = tt.branch %>
+<% user = tt.user %>
+<% session_record = tt.teller_session %>
+<% drawer = session_record&.cash_location %>
+<% posted = tt.posted_at %>
+
+<div class="receipt-header text-sm font-mono">
+  <p>Branch:  <%= branch.code %> - <%= branch.name %></p>
+  <p>Teller:  <%= user.teller_number.presence || tt.workstation&.code || "—" %> - <%= user.display_label %></p>
+  <p>Session: <%= session_record&.id || "—" %>               Drawer: <%= drawer&.code || "—" %></p>
+  <p>Date:    <%= posted ? posted.strftime("%m/%d/%Y %-l:%M%P") : "—" %></p>
+</div>
