@@ -46,10 +46,9 @@ module Teller
       get teller_receipt_path(request_id: request_id)
 
       assert_response :success
-      assert_select "h2", "Receipt / Audit"
-      assert_select "p", /Request ID:\s+#{request_id}/
-      assert_select "h3", "Posting Legs"
-      assert_select "table"
+      assert_select "h2", "Receipt"
+      assert_select ".receipt-type-title", "DEPOSIT"
+      assert_select ".receipt-header"
     end
 
     test "renders check cashing details when metadata is present" do
@@ -87,11 +86,10 @@ module Teller
       get teller_receipt_path(request_id: request_id)
 
       assert_response :success
-      assert_select "h3", "Check Cashing Details"
-      assert_select "p", /Checks Total:\s+\$100.00/
-      assert_select "p", /Fee:\s+\$5.00/
-      assert_select "p", /Net Cash Payout:\s+\$95.00/
-      assert_select "p", /ID Type:\s+Drivers license/i
+      assert_select ".receipt-type-title", /check cashing/i
+      assert_select "p", /Checks In:\s+\$100\.00/
+      assert_select "p", /Fee:\s+\$5\.00/
+      assert_select "p", /Disbursement:\s+\$95\.00/
     end
 
     test "renders draft details when metadata is present" do
@@ -128,12 +126,11 @@ module Teller
       get teller_receipt_path(request_id: request_id)
 
       assert_response :success
-      assert_select "h3", "Draft Issuance Details"
-      assert_select "p", /Funding Source:\s+Account/i
-      assert_select "p", /Draft Amount:\s+\$100\.00/
+      assert_select ".receipt-type-title", "DRAFT"
+      assert_select "p", /Draft #:\s+OD-2001/
+      assert_select "p", /Amount:\s+\$100\.00/
       assert_select "p", /Fee:\s+\$2\.50/
-      assert_select "p", /Payee:\s+City Utilities/
-      assert_select "p", /Instrument Number:\s+OD-2001/
+      assert_select "p", /Total Due:\s+\$102\.50/
     end
 
     test "renders vault transfer details when metadata is present" do
@@ -166,16 +163,13 @@ module Teller
       get teller_receipt_path(request_id: request_id)
 
       assert_response :success
-      assert_select "h3", "Vault Transfer Details"
-      assert_select "p", /Direction:\s+Drawer to vault/i
-      assert_select "p", /Reason Code:\s+Excess cash/i
-      assert_select "p", /Source:\s+cash:#{@drawer.code}/i
-      assert_select "p", /Destination:\s+cash:V01/i
-      assert_select "p", /Memo:\s+Evening pull/i
+      assert_select ".receipt-type-title", /vault transfer/i
+      assert_select "p", /Reason:\s+Excess cash/i
+      assert_select "p", /Amount:\s+\$120\.00/
     end
 
     private
-      def set_signed_context(branch_id, workstation_id)
+      def set_signed_context(branch_id, workstation_id) # test
         ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
           cookie_jar.signed[:current_branch_id] = branch_id
           cookie_jar.signed[:current_workstation_id] = workstation_id
@@ -199,6 +193,36 @@ module Teller
 
           role = Role.find_or_create_by!(key: "teller") do |record|
             record.name = "Teller"
+          end
+
+          RolePermission.find_or_create_by!(role: role, permission: permission)
+          UserRole.find_or_create_by!(user: user, role: role, branch: branch, workstation: workstation)
+        end
+      end
+  end
+end
+d_or_create_by!(user: user, role: role, branch: branch, workstation: workstation)
+        end
+      end
+  end
+end
+check_cashing.create"
+        ].each do |permission_key|
+          permission = Permission.find_or_create_by!(key: permission_key) do |record|
+            record.description = permission_key.humanize
+          end
+
+          role = Role.find_or_create_by!(key: "teller") do |record|
+            record.name = "Teller"
+          end
+
+          RolePermission.find_or_create_by!(role: role, permission: permission)
+          UserRole.find_or_create_by!(user: user, role: role, branch: branch, workstation: workstation)
+        end
+      end
+  end
+end
+.name = "Teller"
           end
 
           RolePermission.find_or_create_by!(role: role, permission: permission)

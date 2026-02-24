@@ -108,6 +108,23 @@
 			page-break-inside: avoid;
 		}
 
+		/* Customer receipt: compact, monospace-friendly */
+		.receipt-printable {
+			page-break-inside: avoid;
+			font-family: ui-monospace, monospace;
+		}
+
+		.receipt-header,
+		.receipt-type-details,
+		.receipt-account-block,
+		.receipt-auth {
+			page-break-inside: avoid;
+		}
+
+		.receipt-check-table {
+			font-size: 0.875rem;
+		}
+
 		/* Consistent print margins */
 		@page {
 			margin: 1cm;

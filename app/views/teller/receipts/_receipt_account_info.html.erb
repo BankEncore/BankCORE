@@ -1,0 +1,19 @@
+<% account_summaries_by_account(posting_batch).each do |summary| %>
+  <% account = summary[:account] %>
+  <% prev = summary[:previous_balance_cents] %>
+  <% credit = summary[:credit_cents] %>
+  <% debit = summary[:debit_cents] %>
+  <% pending = summary[:pending_balance_cents] %>
+
+<div class="receipt-account-block mt-3 text-sm font-mono">
+  <p class="font-semibold">ACCOUNT <%= masked_account_number(account.account_number) %> (<%= account.account_type.upcase[0, 3] %>)</p>
+  <p>Previous Bal: <%= receipt_money(prev) %></p>
+  <% if credit.positive? %>
+    <p>Credit:       <%= receipt_money(credit) %></p>
+  <% end %>
+  <% if debit.positive? %>
+    <p>Debit:        <%= receipt_money(debit) %></p>
+  <% end %>
+  <p>Pending Bal:  <%= receipt_money(pending) %></p>
+</div>
+<% end %>

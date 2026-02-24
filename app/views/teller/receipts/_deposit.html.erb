@@ -1,0 +1,20 @@
+<% meta = posting_batch.metadata || {} %>
+<% meta = meta.with_indifferent_access if meta.respond_to?(:with_indifferent_access) %>
+<% check_items = check_items_from_metadata(posting_batch) %>
+<% cash_back = (meta["cash_back_cents"] || meta[:cash_back_cents] || 0).to_i %>
+<% checks_total = check_items.sum { |i| (i["amount_cents"] || i[:amount_cents] || 0).to_i } %>
+<% total_debit = posting_legs.select { |l| l.side == "debit" }.sum(&:amount_cents) %>
+<% cash_in_from_cash = total_debit - checks_total %>
+<% cash_in_from_checks = checks_total %>
+
+<div class="receipt-type-details text-sm font-mono">
+  <p>Cash In:    <%= receipt_money(cash_in_from_cash) %></p>
+  <p>Checks In:  <%= receipt_money(cash_in_from_checks) %></p>
+  <p>Cash Out:   <%= receipt_money(cash_back) %></p>
+</div>
+
+<% if check_items.any? %>
+  <%= render "teller/receipts/receipt_check_details", check_items: check_items, total_cents: checks_total %>
+<% end %>
+
+<%= render "teller/receipts/receipt_account_info", posting_batch: posting_batch %>

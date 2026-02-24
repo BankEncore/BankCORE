@@ -1,0 +1,11 @@
+<% primary_leg = posting_legs.find { |l| l.side == "debit" && !l.account_reference.to_s.start_with?("cash:") } %>
+<% from_ref = primary_leg&.account_reference %>
+<% account = from_ref.present? ? Account.find_by(account_number: from_ref) : nil %>
+<% masked = account ? masked_account_number(from_ref) : (from_ref || "—") %>
+
+<div class="receipt-type-details text-sm font-mono">
+  <p>From:                <%= masked %></p>
+  <p>Amount:      <%= receipt_money(teller_transaction.amount_cents) %></p>
+</div>
+
+<%= render "teller/receipts/receipt_account_info", posting_batch: posting_batch %>

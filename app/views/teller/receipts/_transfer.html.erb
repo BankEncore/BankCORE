@@ -1,0 +1,22 @@
+<% debit_leg = posting_legs.find { |l| l.side == "debit" } %>
+<% credit_leg = posting_legs.find { |l| l.side == "credit" } %>
+<% from_ref = debit_leg&.account_reference %>
+<% to_ref = credit_leg&.account_reference %>
+<% from_account = from_ref.present? ? Account.find_by(account_number: from_ref) : nil %>
+<% to_account = to_ref.present? ? Account.find_by(account_number: to_ref) : nil %>
+<% from_masked = from_account ? masked_account_number(from_ref) : (from_ref || "—") %>
+<% to_masked = to_account ? masked_account_number(to_ref) : (to_ref || "—") %>
+<% meta = posting_batch.metadata || {} %>
+<% meta = meta.with_indifferent_access if meta.respond_to?(:with_indifferent_access) %>
+<% fee_cents = (meta["fee_cents"] || meta[:fee_cents] || 0).to_i %>
+
+<div class="receipt-type-details text-sm font-mono">
+  <p>From:                <%= from_masked %></p>
+  <p>To:                  <%= to_masked %></p>
+  <p>Amount:      <%= receipt_money(teller_transaction.amount_cents) %></p>
+  <% if fee_cents.positive? %>
+    <p>Fee:         <%= receipt_money(fee_cents) %></p>
+  <% end %>
+</div>
+
+<%= render "teller/receipts/receipt_account_info", posting_batch: posting_batch %>
