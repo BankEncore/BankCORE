@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BankCORE UI Mockup (Standalone)</title>
+
+  <!-- Font: Roboto Mono (matches your ui-money/ui-kv-value intent) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       "Standalone preview" scaffolding
+       - This is NOT Tailwind/Daisy at runtime.
+       - It approximates your current theme @layer components by
+         translating those utilities into plain CSS.
+       ============================================================ */
+
+    :root{
+      /* Your theme tokens */
+      --color-base-100: #ffffff;
+      --color-base-200: #f8fafc; /* slate-50-ish */
+      --color-base-300: #e2e8f0; /* slate-200-ish */
+
+      /* Slate palette approximation (for text/borders/rings) */
+      --slate-50:  #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1f2937; /* close enough for hover */
+      --slate-900: #0f172a;
+
+      --emerald-50:  #ecfdf5;
+      --emerald-100: #d1fae5;
+      --emerald-700: #047857;
+
+      --amber-50:  #fffbeb;
+      --amber-100: #fef3c7;
+      --amber-500: #f59e0b;
+      --amber-600: #d97706;
+      --amber-700: #b45309;
+
+      --red-50:  #fef2f2;
+      --red-200: #fecaca;
+      --red-700: #b91c1c;
+
+      --sky-50:  #f0f9ff;
+      --sky-200: #bae6fd;
+      --sky-700: #0369a1;
+
+      --ring: 0 0 0 2px var(--slate-400);
+      --ring-soft: 0 0 0 2px var(--slate-300);
+
+      --radius-lg: 0.5rem;
+      --radius-md: 0.375rem;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Basic reset */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--slate-900);
+      background: var(--color-base-200);
+    }
+    a { color: inherit; }
+    button, input, select { font: inherit; }
+
+    /* Helpers approximating a subset of Tailwind utilities used */
+    .min-h-screen { min-height: 100vh; }
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .max-w-7xl { max-width: 80rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+    .mt-1 { margin-top: 0.25rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-3 { margin-top: 0.75rem; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-5 { margin-top: 1.25rem; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mb-0 { margin-bottom: 0; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .space-y-1 > * + * { margin-top: 0.25rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .justify-between { justify-content: space-between; }
+    .flex-wrap { flex-wrap: wrap; }
+    .flex-col { flex-direction: column; }
+    .text-right { text-align: right; }
+    .text-left { text-align: left; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .tracking-tight { letter-spacing: -0.01em; }
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-base { font-size: 1rem; line-height: 1.5rem; }
+    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+    .overflow-x-auto { overflow-x: auto; }
+    .w-full { width: 100%; }
+    .h-9 { height: 2.25rem; }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .border { border-width: 1px; border-style: solid; }
+    .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+    .border-base-300 { border-color: var(--color-base-300); }
+    .bg-base-100 { background: var(--color-base-100); }
+    .bg-base-200 { background: var(--color-base-200); }
+
+    /* Responsive-ish layout without Tailwind */
+    .grid { display: grid; }
+    .grid-cols-1 { grid-template-columns: 1fr; }
+    .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+    .lg\:col-span-8 { grid-column: span 8 / span 8; }
+    .lg\:col-span-4 { grid-column: span 4 / span 4; }
+
+    /* “md:” approximation using a single breakpoint */
+    @media (min-width: 768px) {
+      .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .md\:flex-row { flex-direction: row; }
+      .md\:items-start { align-items: flex-start; }
+      .md\:items-center { align-items: center; }
+      .md\:justify-between { justify-content: space-between; }
+      .md\:text-right { text-align: right; }
+    }
+    @media (min-width: 1024px) {
+      .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+      .lg\:col-span-8 { grid-column: span 8 / span 8; }
+      .lg\:col-span-4 { grid-column: span 4 / span 4; }
+    }
+
+    /* ============================================================
+       Your ui_contract.css (verbatim behavior, adapted to plain CSS)
+       ============================================================ */
+    .ui-panel {
+      border-radius: 0.5rem;
+      border-width: 1px;
+      border-style: solid;
+      /* Your original uses Tailwind opacity vars; standalone uses fallbacks */
+      border-color: #e5e7eb;
+      background-color: #f3f4f6;
+    }
+
+    .ui-section-title { font-weight: 700; font-size: 1.125rem; color: var(--slate-900); }
+    .ui-muted { font-size: 0.75rem; color: rgba(15,23,42,0.60); }
+    .ui-kv-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.1rem;
+      margin-bottom: 0.1rem;
+      padding: 0;
+    }
+    .ui-kv-key { font-weight: 500; color: #6b7280; }
+    .ui-kv-value {
+      font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-variant-numeric: tabular-nums;
+      color: #111827;
+    }
+    .ui-money {
+      font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: #16a34a;
+    }
+
+    /* ============================================================
+       Your @layer components translation (plain CSS approximations)
+       ============================================================ */
+
+    .navbar { display:flex; align-items:center; justify-content:space-between; gap:0.75rem; }
+
+    .card {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      background: #fff;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-body { padding: 1rem; }
+    .card-title { font-weight: 600; color: var(--slate-900); margin: 0; }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:0.5rem;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background-color 150ms, color 150ms, border-color 150ms;
+      cursor: pointer;
+      background: transparent;
+    }
+    .btn:focus-visible { outline: none; box-shadow: var(--ring); }
+    .btn:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    .btn-sm { padding: 0.375rem 0.625rem; font-size: 0.75rem; }
+    .btn-primary { background: var(--slate-900); color: #fff; }
+    .btn-primary:hover { background: var(--slate-800); }
+    .btn-outline { border-color: var(--slate-300); background: #fff; color: var(--slate-700); }
+    .btn-outline:hover { background: var(--slate-50); }
+    .btn-ghost { background: transparent; color: var(--slate-700); }
+    .btn-ghost:hover { background: var(--slate-100); }
+    .btn-warning { background: var(--amber-500); color: #fff; }
+    .btn-warning:hover { background: var(--amber-600); }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      border-radius: 9999px;
+      padding: 0.125rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: var(--slate-100);
+      color: var(--slate-700);
+      border: 1px solid transparent;
+    }
+    .badge-outline { border-color: var(--slate-300); background:#fff; color: var(--slate-700); }
+    .badge-success { background: var(--emerald-100); color: var(--emerald-700); }
+    .badge-warning { background: var(--amber-100); color: var(--amber-700); }
+    .badge-error { background: var(--red-200); color: var(--red-700); }
+    .badge-neutral { background: var(--slate-100); color: var(--slate-700); }
+
+    .alert{
+      border-radius: var(--radius-md);
+      border: 1px solid var(--slate-200);
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      background: #fff;
+      color: var(--slate-900);
+    }
+    .alert-error { border-color: var(--red-200); background: var(--red-50); color: var(--red-700); }
+    .alert-success { border-color: var(--emerald-100); background: var(--emerald-50); color: var(--emerald-700); }
+    .alert-warning { border-color: var(--amber-100); background: var(--amber-50); color: var(--amber-700); }
+    .alert-info { border-color: var(--sky-200); background: var(--sky-50); color: var(--sky-700); }
+
+    .input, .select{
+      width: 100%;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--slate-300);
+      background: #fff;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      color: var(--slate-900);
+    }
+    .input:focus-visible, .select:focus-visible { outline:none; box-shadow: var(--ring-soft); }
+    .input-bordered, .select-bordered { border-color: var(--slate-300); }
+    .form-control { display:block; }
+    .form-control > * + * { margin-top: 0.25rem; }
+
+    .divider { position:relative; margin: 0.5rem 0; height: 1px; width: 100%; background: var(--slate-200); }
+
+    .collapse{
+      border-radius: var(--radius-md);
+      border: 1px solid var(--slate-200);
+      background: var(--slate-50);
+      overflow: hidden;
+    }
+    .collapse-title{ cursor:pointer; padding: 0.5rem 0.75rem; }
+    .collapse-content{ display:none; padding: 0 0.75rem 0.75rem; }
+    .collapse input { position:absolute; opacity:0; pointer-events:none; }
+    .collapse input:checked ~ .collapse-content { display:block; }
+
+    /* Table cosmetics for the demo */
+    table { border-collapse: collapse; }
+    th, td { vertical-align: middle; }
+    thead th { font-weight: 600; }
+    .t-head { color: rgba(71,85,105,0.95); font-size: 0.75rem; }
+    .row-border { border-bottom: 1px solid var(--slate-200); }
+
+    /* Small UX refinements for standalone preview */
+    .mono { font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .muted { color: rgba(15,23,42,0.60); }
+  </style>
+</head>
+
+<body>
+  <main class="min-h-screen bg-base-200">
+    <header class="border-b border-base-300 bg-base-100">
+      <div class="mx-auto max-w-7xl px-4 py-3">
+        <div class="navbar">
+          <div class="flex items-center gap-3">
+            <div class="font-semibold tracking-tight">BankCORE</div>
+            <span class="badge badge-outline">Workstation</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button class="btn btn-sm btn-ghost" type="button">Help</button>
+            <button class="btn btn-sm btn-outline" type="button">Switch Branch</button>
+            <button class="btn btn-sm btn-primary" type="button">Sign Out</button>
+          </div>
+        </div>
+
+        <div class="mt-2 text-xs muted">
+          Branch <span class="font-medium" style="color: var(--slate-800);">001</span> •
+          Workstation <span class="font-medium" style="color: var(--slate-800);">WS-12</span> •
+          Teller <span class="font-medium" style="color: var(--slate-800);">T001</span> •
+          Session <span class="font-medium" style="color: var(--slate-800);">S045</span> •
+          <span class="font-medium" style="color: var(--slate-800);">Feb 23, 2026 11:24 PM</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-7xl px-4 py-6">
+      <section class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <h1 class="text-xl font-semibold tracking-tight" style="margin:0;">Deposit</h1>
+          <p class="ui-muted mt-1">
+            Standalone preview: forms + tables + reference panels using your current primitives.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button class="btn btn-outline" type="button">Back</button>
+          <button class="btn btn-ghost" type="button">Save Draft</button>
+          <button class="btn btn-warning" type="button">Void</button>
+        </div>
+      </section>
+
+      <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div class="lg:col-span-8" style="display:block;">
+          <div class="space-y-4">
+            <section class="alert alert-info">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-medium">Ready</div>
+                  <div class="text-xs" style="opacity:0.85; margin-top: 0.125rem;">
+                    Neutrals + borders + mono numbers = conservative workstation look.
+                  </div>
+                </div>
+                <span class="badge badge-neutral">Draft</span>
+              </div>
+            </section>
+
+            <section class="card border border-base-300 bg-base-100">
+              <div class="card-body">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 class="card-title text-base">Transaction Entry</h2>
+                    <p class="ui-muted mt-1">Account search + cash/check entry + totals.</p>
+                  </div>
+
+                  <div class="flex gap-2">
+                    <button class="btn btn-sm btn-outline" type="button">Lookup</button>
+                    <button class="btn btn-sm btn-ghost" type="button">Clear</button>
+                  </div>
+                </div>
+
+                <div class="divider" style="margin-top: 0.75rem; margin-bottom: 0.75rem;"></div>
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <label class="form-control">
+                    <div class="text-xs font-medium" style="color: var(--slate-700);">Account</div>
+                    <input class="input input-bordered" placeholder="Search by account # / name" />
+                    <div class="ui-muted">Example: 0001234567 or “Miller, Thomas”.</div>
+                  </label>
+
+                  <label class="form-control">
+                    <div class="text-xs font-medium" style="color: var(--slate-700);">Deposit type</div>
+                    <select class="select select-bordered">
+                      <option>Standard deposit</option>
+                      <option>Cash-only</option>
+                      <option>Night deposit</option>
+                      <option>Mixed deposit</option>
+                    </select>
+                  </label>
+
+                  <label class="form-control">
+                    <div class="text-xs font-medium" style="color: var(--slate-700);">Cash amount</div>
+                    <input class="input input-bordered text-right tabular-nums" inputmode="decimal" placeholder="0.00" />
+                  </label>
+
+                  <label class="form-control">
+                    <div class="text-xs font-medium" style="color: var(--slate-700);">Fee</div>
+                    <input class="input input-bordered text-right tabular-nums" inputmode="decimal" placeholder="0.00" />
+                    <div class="ui-muted">Leave blank for no fee.</div>
+                  </label>
+                </div>
+
+                <div class="divider" style="margin-top: 1rem; margin-bottom: 1rem;"></div>
+
+                <div class="flex items-center justify-between">
+                  <div class="font-medium">Checks</div>
+                  <button class="btn btn-sm btn-outline" type="button">+ Add Check</button>
+                </div>
+
+                <div class="mt-3 overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="row-border t-head">
+                        <th class="py-2 text-left">#</th>
+                        <th class="py-2 text-left">Routing</th>
+                        <th class="py-2 text-left">Account</th>
+                        <th class="py-2 text-left">Check #</th>
+                        <th class="py-2 text-right">Amount</th>
+                        <th class="py-2 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="row-border">
+                        <td class="py-2 pr-2 mono text-xs" style="color: rgba(71,85,105,0.9);">01</td>
+                        <td class="py-2 pr-2"><input class="input input-bordered h-9" placeholder="123456789" style="padding: 0.4rem 0.5rem;" /></td>
+                        <td class="py-2 pr-2"><input class="input input-bordered h-9" placeholder="000123456789" style="padding: 0.4rem 0.5rem;" /></td>
+                        <td class="py-2 pr-2"><input class="input input-bordered h-9" placeholder="1042" style="padding: 0.4rem 0.5rem;" /></td>
+                        <td class="py-2 pl-2"><input class="input input-bordered h-9 text-right tabular-nums" placeholder="125.00" style="padding: 0.4rem 0.5rem;" /></td>
+                        <td class="py-2 pl-2 text-right"><button class="btn btn-sm btn-ghost" type="button">Remove</button></td>
+                      </tr>
+                      <tr class="row-border">
+                        <td class="py-2 pr-2 mono text-xs" style="color: rgba(71,85,105,0.9);">02</td>
+                        <td class="py-2 pr-2"><input class="input input-bordered h-9" placeholder="987654321" style="padding: 0.4rem 0.5rem;" /></td>
+                        <td class="py-2 pr-2"><input class="input input-bordered h-9" placeholder="000987654321" style="padding: 0.4rem 0.5rem;" /></td>
+                        <td class="py-2 pr-2"><input class="input input-bordered h-9" placeholder="8450" style="padding: 0.4rem 0.5rem;" /></td>
+                        <td class="py-2 pl-2"><input class="input input-bordered h-9 text-right tabular-nums" placeholder="250.00" style="padding: 0.4rem 0.5rem;" /></td>
+                        <td class="py-2 pl-2 text-right"><button class="btn btn-sm btn-ghost" type="button">Remove</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="mt-4 ui-panel border border-base-300" style="padding: 0.75rem;">
+                  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div>
+                      <div class="ui-section-title" style="font-size: 1rem;">Computed</div>
+                      <div class="mt-2 space-y-1">
+                        <div class="ui-kv-row">
+                          <div class="ui-kv-key text-xs">Cash</div>
+                          <div class="ui-kv-value text-sm">$<span class="tabular-nums">0.00</span></div>
+                        </div>
+                        <div class="ui-kv-row">
+                          <div class="ui-kv-key text-xs">Checks</div>
+                          <div class="ui-kv-value text-sm">$<span class="tabular-nums">375.00</span></div>
+                        </div>
+                        <div class="ui-kv-row">
+                          <div class="ui-kv-key text-xs">Fee</div>
+                          <div class="ui-kv-value text-sm">-$<span class="tabular-nums">0.00</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="md:text-right">
+                      <div class="ui-section-title" style="font-size: 1rem;">Net deposit</div>
+                      <div class="mt-2 text-lg font-semibold">
+                        <span class="ui-money">$<span class="tabular-nums">375.00</span></span>
+                      </div>
+                      <div class="ui-muted mt-1">Posted to customer account upon submit.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div class="ui-muted">By submitting, you certify funds received and details reviewed.</div>
+                  <div class="flex gap-2">
+                    <button class="btn btn-outline" type="button">Review</button>
+                    <button class="btn btn-primary" type="button">Submit Deposit</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card border border-base-300 bg-base-100">
+              <div class="card-body">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 class="card-title text-base">Posting Preview</h2>
+                    <p class="ui-muted mt-1">Ledger-like table: borders + mono + minimal color.</p>
+                  </div>
+                  <span class="badge badge-outline">Simulated</span>
+                </div>
+
+                <div class="divider" style="margin-top: 0.75rem; margin-bottom: 0.75rem;"></div>
+
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="row-border t-head">
+                        <th class="py-2 text-left">Leg</th>
+                        <th class="py-2 text-left">GL Account</th>
+                        <th class="py-2 text-right">Debit</th>
+                        <th class="py-2 text-right">Credit</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="row-border">
+                        <td class="py-2">Cashbox — Checks In</td>
+                        <td class="py-2 mono text-xs" style="color: rgba(71,85,105,0.95);">1010-120</td>
+                        <td class="py-2 text-right mono tabular-nums">375.00</td>
+                        <td class="py-2 text-right mono tabular-nums">—</td>
+                      </tr>
+                      <tr class="row-border">
+                        <td class="py-2">Customer Account</td>
+                        <td class="py-2 mono text-xs" style="color: rgba(71,85,105,0.95);">DDA-0001234567</td>
+                        <td class="py-2 text-right mono tabular-nums">—</td>
+                        <td class="py-2 text-right mono tabular-nums">375.00</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="mt-3 ui-muted">
+                  This is the “workstation” effect your current settings are capable of: simple, bordered, mono-heavy.
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <aside class="lg:col-span-4" style="display:block;">
+          <div class="space-y-4">
+            <section class="card border border-base-300 bg-base-100">
+              <div class="card-body">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 class="card-title text-base">Account Reference</h2>
+                    <p class="ui-muted mt-1">Read-only details for safe entry.</p>
+                  </div>
+                  <span class="badge badge-success">Active</span>
+                </div>
+
+                <div class="divider" style="margin-top: 0.75rem; margin-bottom: 0.75rem;"></div>
+
+                <div class="space-y-1">
+                  <div class="ui-kv-row">
+                    <div class="ui-kv-key text-xs">Customer</div>
+                    <div class="ui-kv-value text-sm">Thomas Miller</div>
+                  </div>
+                  <div class="ui-kv-row">
+                    <div class="ui-kv-key text-xs">Account #</div>
+                    <div class="ui-kv-value text-sm">0001234567</div>
+                  </div>
+                  <div class="ui-kv-row">
+                    <div class="ui-kv-key text-xs">Product</div>
+                    <div class="ui-kv-value text-sm">Checking</div>
+                  </div>
+
+                  <div class="divider" style="margin-top: 0.75rem; margin-bottom: 0.75rem;"></div>
+
+                  <div class="ui-kv-row">
+                    <div class="ui-kv-key text-xs">Ledger</div>
+                    <div class="ui-kv-value text-sm">$<span class="tabular-nums">4,250.00</span></div>
+                  </div>
+                  <div class="ui-kv-row">
+                    <div class="ui-kv-key text-xs">Available</div>
+                    <div class="ui-kv-value text-sm">$<span class="tabular-nums">4,100.00</span></div>
+                  </div>
+                  <div class="ui-kv-row">
+                    <div class="ui-kv-key text-xs">Holds</div>
+                    <div class="ui-kv-value text-sm">$<span class="tabular-nums">150.00</span></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card border border-base-300 bg-base-100">
+              <div class="card-body">
+                <h2 class="card-title text-base">Drawer Totals</h2>
+                <p class="ui-muted mt-1">Real-time totals (compact, mono values).</p>
+
+                <div class="divider" style="margin-top: 0.75rem; margin-bottom: 0.75rem;"></div>
+
+                <div class="space-y-1">
+                  <div class="ui-kv-row">
+                    <div class="ui-kv-key text-xs">Cash on hand</div>
+                    <div class="ui-kv-value text-sm">$<span class="tabular-nums">2,140.00</span></div>
+                  </div>
+                  <div class="ui-kv-row">
+                    <div class="ui-kv-key text-xs">Checks on hand</div>
+                    <div class="ui-kv-value text-sm">$<span class="tabular-nums">860.00</span></div>
+                  </div>
+                  <div class="ui-kv-row">
+                    <div class="ui-kv-key text-xs">Net position</div>
+                    <div class="ui-kv-value text-sm">$<span class="tabular-nums">3,000.00</span></div>
+                  </div>
+                </div>
+
+                <div class="mt-3 flex gap-2">
+                  <button class="btn btn-sm btn-outline" type="button">Count</button>
+                  <button class="btn btn-sm btn-ghost" type="button">Details</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="collapse">
+              <input type="checkbox" id="sup-approval" />
+              <label class="collapse-title" for="sup-approval">
+                <div class="flex items-center justify-between">
+                  <div class="font-medium">Supervisor Approval</div>
+                  <span class="badge badge-warning">Required</span>
+                </div>
+                <div class="ui-muted mt-1">Collapsible “control event” area.</div>
+              </label>
+
+              <div class="collapse-content">
+                <div class="alert alert-warning">
+                  This transaction requires supervisor approval before final posting.
+                </div>
+
+                <div class="mt-3 grid grid-cols-1 gap-3">
+                  <label class="form-control">
+                    <div class="text-xs font-medium" style="color: var(--slate-700);">Supervisor ID</div>
+                    <input class="input input-bordered" placeholder="SUP001" />
+                  </label>
+
+                  <label class="form-control">
+                    <div class="text-xs font-medium" style="color: var(--slate-700);">Approval code</div>
+                    <input class="input input-bordered" placeholder="••••••" />
+                  </label>
+
+                  <div class="flex gap-2">
+                    <button class="btn btn-sm btn-primary" type="button">Approve</button>
+                    <button class="btn btn-sm btn-outline" type="button">Cancel</button>
+                  </div>
+
+                  <div class="ui-muted">
+                    Pattern: collapsible panel + alert + compact form + small buttons.
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card border border-base-300 bg-base-100">
+              <div class="card-body">
+                <h2 class="card-title text-base">Recent Activity</h2>
+                <p class="ui-muted mt-1">List-style rows (no nested cards).</p>
+
+                <div class="divider" style="margin-top: 0.75rem; margin-bottom: 0.75rem;"></div>
+
+                <div class="space-y-2 text-sm">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="font-medium">Withdrawal</div>
+                      <div class="ui-muted">Acct 0001234567 • 10:34 AM</div>
+                    </div>
+                    <div class="mono tabular-nums">-$40.00</div>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="font-medium">Deposit</div>
+                      <div class="ui-muted">Acct 0005551212 • 10:12 AM</div>
+                    </div>
+                    <div class="mono tabular-nums">$125.00</div>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="font-medium">Fee assessed</div>
+                      <div class="ui-muted">Cash check • 9:58 AM</div>
+                    </div>
+                    <div class="mono tabular-nums">$5.00</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </aside>
+      </div>
+
+      <div class="mt-6 text-xs" style="color: rgba(71,85,105,0.9);">
+        Standalone preview approximates your current Tailwind/DaisyUI layer using plain CSS.
+      </div>
+    </div>
+  </main>
+</body>
+</html>

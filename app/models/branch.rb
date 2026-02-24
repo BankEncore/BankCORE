@@ -1,4 +1,5 @@
 class Branch < ApplicationRecord
+  has_many :accounts, dependent: :restrict_with_exception
   has_many :cash_locations, dependent: :destroy
   has_many :teller_sessions, dependent: :destroy
   has_many :teller_transactions, dependent: :destroy

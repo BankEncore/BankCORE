@@ -1,0 +1,62 @@
+<%= render "teller/shared/page_header",
+  title: "Accounts",
+  description: "Bank accounts by branch or party.",
+  secondary_button_path: teller_root_path,
+  secondary_button_label: "Back to Workspace",
+  primary_button_path: new_teller_account_path(branch_id: current_branch&.id),
+  primary_button_label: "New Account" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Accounts</h2>
+        <p class="text-xs text-slate-600 mt-1">Bank accounts by branch or party.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+
+    <div class="flex gap-2 flex-wrap mb-4">
+      <%= link_to "All", teller_accounts_path, class: "btn btn-sm #{params[:branch_id].blank? && params[:party_id].blank? ? 'btn-primary' : 'btn-ghost'}" %>
+      <% if current_branch.present? %>
+        <%= link_to "This branch", teller_accounts_path(branch_id: current_branch.id), class: "btn btn-sm #{params[:branch_id].to_s == current_branch.id.to_s ? 'btn-primary' : 'btn-ghost'}" %>
+      <% end %>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="row-border t-head">
+            <th class="py-2 text-left">Account</th>
+            <th class="py-2 text-left">Type</th>
+            <th class="py-2 text-left">Branch</th>
+            <th class="py-2 text-left">Status</th>
+            <th class="py-2 text-left">Owners</th>
+            <th class="py-2 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @accounts.any? %>
+            <% @accounts.each do |account| %>
+              <tr class="row-border">
+                <td class="py-2 mono"><%= account.account_number %></td>
+                <td class="py-2"><%= account.account_type %></td>
+                <td class="py-2"><%= account.branch.name %></td>
+                <td class="py-2"><span class="badge badge-outline"><%= account.status %></span></td>
+                <td class="py-2"><%= account.parties.map(&:display_name).compact.join(", ").presence || "—" %></td>
+                <td class="py-2 text-right">
+                  <%= link_to "View", teller_account_path(account), class: "btn btn-ghost btn-sm" %>
+                  <%= link_to "Edit", edit_teller_account_path(account), class: "btn btn-ghost btn-sm" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr class="row-border">
+              <td colspan="6" class="py-4 text-center text-slate-600">No accounts found.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

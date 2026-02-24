@@ -4,6 +4,9 @@
 
     <%= link_to "Workspace", teller_root_path, class: "btn btn-sm btn-ghost #{active.call(teller_root_path)}", aria: (current_page?(teller_root_path) ? { current: "page" } : {}) %>
     <%= link_to "History", teller_history_path, class: "btn btn-sm btn-ghost #{active.call(teller_history_path)}", aria: (current_page?(teller_history_path) ? { current: "page" } : {}) %>
+    <%= link_to "Parties", teller_parties_path, class: "btn btn-sm btn-ghost #{active.call(teller_parties_path)}" %>
+    <%= link_to "Accounts", teller_accounts_path, class: "btn btn-sm btn-ghost #{active.call(teller_accounts_path)}" %>
+    <%= link_to "CSR", csr_root_path, class: "btn btn-sm btn-ghost", title: "CSR Workspace" %>
 
     <div class="h-5 w-px bg-base-300/70 mx-1"></div>
 

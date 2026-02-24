@@ -1,0 +1,25 @@
+<section aria-label="CSR Context Bar" class="border-b border-base-300 bg-base-200/70 px-4 py-2">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="text-sm font-semibold tracking-wide">
+      BANKCORE — CSR Workspace
+    </div>
+
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+      <span class="flex items-baseline gap-1">
+        <span class="opacity-60">CSR:</span>
+        <span class="font-medium"><%= Current.user&.email_address || "Not signed in" %></span>
+      </span>
+
+      <span class="hidden sm:inline opacity-30">•</span>
+
+      <span class="flex items-baseline gap-1">
+        <span class="opacity-60">Branch:</span>
+        <span class="font-medium"><%= current_branch&.name || "Not set" %></span>
+      </span>
+
+      <span class="ml-2 opacity-60 tabular-nums">
+        <%= Time.current.strftime("%Y-%m-%d %H:%M:%S") %>
+      </span>
+    </div>
+  </div>
+</section>

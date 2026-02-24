@@ -3,6 +3,8 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
   namespace :teller do
     root "dashboard#index"
+    resources :parties, only: [ :index, :show, :new, :create, :edit, :update ]
+    resources :accounts, only: [ :index, :show, :new, :create, :edit, :update ]
     resources :deposits, only: [ :new, :create ]
     resources :withdrawals, only: [ :new, :create ]
     resources :transfers, only: [ :new, :create ]
@@ -29,6 +31,15 @@ Rails.application.routes.draw do
       patch :assign_drawer
       patch :close
     end
+  end
+
+  namespace :csr do
+    root "dashboard#index"
+    resources :parties, only: [ :index, :show, :new, :create, :edit, :update ]
+    resources :accounts, only: [ :index, :show, :new, :create, :edit, :update ] do
+      resources :account_owners, only: [ :create, :destroy, :update ], path: "owners"
+    end
+    resource :context, only: [ :show, :update ]
   end
 
   namespace :ops do

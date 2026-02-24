@@ -1,0 +1,36 @@
+<section aria-label="Account Snapshot" class="card bg-base-100 border border-base-300" hidden data-live-account-panel-target="panel">
+  <div class="card-body p-3 md:p-4">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Account Snapshot</h2>
+        <p class="text-xs text-slate-600 mt-1">Live balance for primary account.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+    <div data-live-account-panel-target="content">
+      <dl class="space-y-1">
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Account</dt>
+          <dd class="ui-kv-value text-sm mono" data-live-account-panel-target="accountNumberContainer">—</dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Primary Owner</dt>
+          <dd class="ui-kv-value text-sm" data-live-account-panel-target="primaryOwner">—</dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Ledger Balance</dt>
+          <dd class="ui-kv-value text-sm mono tabular-nums" data-live-account-panel-target="ledgerBalance">$0.00</dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Pending</dt>
+          <dd class="ui-kv-value text-sm mono tabular-nums" data-live-account-panel-target="pending">$0.00</dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Projected Balance</dt>
+          <dd class="ui-kv-value text-sm mono tabular-nums font-medium" data-live-account-panel-target="projectedBalance">$0.00</dd>
+        </div>
+      </dl>
+    </div>
+    <p class="text-sm text-slate-600 hidden" data-live-account-panel-target="unrecognizedMessage">Unrecognized account number.</p>
+  </div>
+</section>

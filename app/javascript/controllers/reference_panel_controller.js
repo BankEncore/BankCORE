@@ -10,22 +10,21 @@ export default class extends Controller {
   }
 
   refresh(event) {
-    if (!event?.detail) {
+    const detail = event?.detail
+    if (!detail) {
       return
     }
 
-    const {
-      transactionType,
-      primaryReference,
-      counterpartyReference,
-      cashReference,
-      requestId,
-      cashAmountCents,
-      cashImpactCents,
-      projectedDrawerCents,
-      readyToPost,
-      blockedReason
-    } = event.detail
+    const transactionType = detail.transactionType
+    const primaryReference = detail.primaryReference
+    const counterpartyReference = detail.counterpartyReference
+    const cashReference = detail.cashReference
+    const requestId = detail.requestId
+    const cashAmountCents = detail.cashAmountCents ?? 0
+    const cashImpactCents = detail.cashImpactCents ?? 0
+    const projectedDrawerCents = detail.projectedDrawerCents ?? 0
+    const readyToPost = detail.readyToPost
+    const blockedReason = detail.blockedReason
 
     this.setText("summaryTransactionType", this.titleize(transactionType || "N/A"))
     this.setText("primaryReferenceValue", primaryReference || "N/A")

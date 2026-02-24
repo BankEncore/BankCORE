@@ -1,17 +1,34 @@
-<%= render "teller/shared/page_header",
-  title: @page_title,
-  description: "#{@page_title} flow. Validate and post once balanced.",
-  show_state_badge: true,
-  initial_state: "Editing",
-  secondary_button_action: "posting-form#resetForm",
-  secondary_button_label: "Cancel",
-  show_primary_submit: true,
-  primary_submit_label: "Post Transaction",
-  primary_submit_form_id: "posting-form" %>
+<div id="teller-transaction-flow"
+  data-controller="posting-form line-items reference-panel approval-panel live-account-panel tx-shell tx-keyboard tx-validation tx-posting"
+  data-live-account-panel-account-reference-url-value="<%= teller_account_reference_path %>"
+  data-live-account-panel-account-path-template-value="<%= teller_account_path('__ID__') %>"
+  data-action="tx:changed->posting-form#recalculate tx:recalc->reference-panel#refresh tx:recalc->live-account-panel#refresh tx:recalc->tx-shell#handleRecalc tx:validate-requested->tx-validation#handleValidateRequested tx:post-requested->tx-posting#handlePostRequested tx:submit-requested->tx-shell#handleSubmitRequested tx:cancel-requested->tx-shell#handleCancelRequested tx:approval-required->approval-panel#show tx:approval-required->tx-shell#handleApprovalRequired tx:approval-cleared->approval-panel#hide tx:approval-cleared->tx-shell#handleApprovalCleared tx:approval-granted->posting-form#handleApprovalGranted tx:approval-granted->tx-shell#handleApprovalGranted tx:approval-error->posting-form#handleApprovalError tx:approval-error->tx-shell#handleApprovalError tx:posting-started->tx-shell#handlePostingStarted tx:posted-success->tx-shell#handlePostedSuccess tx:posted-failed->tx-shell#handlePostedFailed"
+  data-posting-form-opening-cash-cents-value="<%= @teller_session.expected_cash_cents %>"
+  data-posting-form-default-transaction-type-value="<%= @transaction_type %>"
+  data-posting-form-validate-url-value="<%= teller_validate_transaction_path %>"
+  data-posting-form-account-reference-url-value="<%= teller_account_reference_path %>"
+  data-posting-form-account-history-url-value="<%= teller_account_history_path %>"
+  data-posting-form-workflow-schema-url-value="<%= teller_workflow_schema_path %>"
+  data-posting-form-receipt-url-template-value="<%= teller_receipt_path(request_id: "__REQUEST_ID__") %>"
+  data-posting-form-drawer-reference-value="<%= @teller_session.cash_location.present? ? "cash:#{@teller_session.cash_location.code}" : "" %>"
+  data-approval-panel-approval-url-value="<%= teller_approvals_path %>"
+  data-reference-panel-account-reference-url-value="<%= teller_account_reference_path %>"
+  data-reference-panel-account-history-url-value="<%= teller_account_history_path %>">
+  <%= render "teller/shared/page_header",
+    title: @page_title,
+    description: "#{@page_title} flow. Validate and post once balanced.",
+    show_state_badge: true,
+    initial_state: "Editing",
+    secondary_button_action: "posting-form#resetForm",
+    secondary_button_label: "Cancel",
+    show_primary_submit: true,
+    primary_submit_label: "Post Transaction",
+    primary_submit_form_id: "posting-form" %>
 
-<%= render "teller/dashboard/posting_workspace",
-  teller_session: @teller_session,
-  form_url: @form_url,
-  cash_locations: @cash_locations,
-  default_transaction_type: @transaction_type,
-  show_transaction_type: false %>
+  <%= render "teller/dashboard/posting_workspace",
+    teller_session: @teller_session,
+    form_url: @form_url,
+    cash_locations: @cash_locations,
+    default_transaction_type: @transaction_type,
+    show_transaction_type: false %>
+</div>

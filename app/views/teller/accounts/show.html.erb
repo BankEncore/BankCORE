@@ -1,0 +1,97 @@
+<div class="no-print">
+  <section aria-label="Page Header" class="card bg-base-100 border border-base-300">
+    <div class="card-body py-3">
+      <h2 class="card-title text-lg">Account <%= @account.account_number %></h2>
+      <p class="text-sm opacity-80"><%= @account.account_type.titleize %> • <%= @account.branch.name %></p>
+      <p class="flex gap-2">
+        <%= link_to "Back to Accounts", teller_accounts_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to "Edit", edit_teller_account_path(@account), class: "btn btn-primary btn-sm" %>
+        <button type="button" onclick="window.print()" class="btn btn-outline btn-sm">Print</button>
+      </p>
+    </div>
+  </section>
+</div>
+
+<div class="print-only mb-4">
+  <h1 class="text-lg font-bold">BankCORE</h1>
+  <p class="text-sm">Account Details — <%= @account.account_number %></p>
+  <p class="text-xs text-slate-600"><%= @account.account_type.titleize %> • <%= @account.branch.name %> • <%= @account.status %></p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <section class="card receipt-section bg-base-100 border border-base-300">
+    <div class="card-body">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="card-title text-base">Details</h2>
+          <p class="text-xs text-slate-600 mt-1"><%= @account.account_type.titleize %> • <%= @account.branch.name %></p>
+        </div>
+      </div>
+      <div class="divider my-3"></div>
+      <dl class="space-y-1">
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Account number</dt>
+          <dd class="ui-kv-value text-sm mono"><%= @account.account_number %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Posting reference</dt>
+          <dd class="ui-kv-value text-sm mono"><%= @account.account_reference %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Type</dt>
+          <dd class="ui-kv-value text-sm"><%= @account.account_type %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Branch</dt>
+          <dd class="ui-kv-value text-sm"><%= @account.branch.name %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Status</dt>
+          <dd class="ui-kv-value text-sm"><span class="badge badge-outline"><%= @account.status %></span></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Opened</dt>
+          <dd class="ui-kv-value text-sm mono"><%= @account.opened_on.strftime("%Y-%m-%d") %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Closed</dt>
+          <dd class="ui-kv-value text-sm mono"><%= @account.closed_on&.strftime("%Y-%m-%d") || "—" %></dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <%= render "shared/accounts/balance_and_history", account: @account, account_transactions: @account_transactions, sections: [:balance], compact: true %>
+</div>
+
+<section class="card receipt-section bg-base-100 border border-base-300 mt-4">
+  <div class="card-body">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Owners</h2>
+        <p class="text-xs text-slate-600 mt-1">Parties with ownership of this account.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="row-border t-head">
+            <th class="py-2 text-left">Party</th>
+            <th class="py-2 text-left">Primary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @account.account_owners.includes(:party).each do |ao| %>
+            <tr class="row-border">
+              <td class="py-2"><%= link_to ao.party.display_name.presence || "Party ##{ao.party_id}", teller_party_path(ao.party), class: "link link-hover" %></td>
+              <td class="py-2"><%= ao.is_primary? ? "Yes" : "—" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<%= render "shared/accounts/balance_and_history", account: @account, account_transactions: @account_transactions, sections: [:history] %>

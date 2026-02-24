@@ -4,6 +4,7 @@
 	--color-base-100: #ffffff;
 	--color-base-200: #f8fafc;
 	--color-base-300: #e2e8f0;
+	--font-mono: 'Roboto Mono', ui-monospace, monospace;
 }
 
 @layer components {
@@ -79,5 +80,37 @@
 
 	.collapse input:checked ~ .collapse-content {
 		@apply block;
+	}
+
+	/* Table utilities for mockup-style ledger tables */
+	.t-head { @apply text-slate-600 text-xs font-semibold; }
+	.row-border { @apply border-b border-slate-200; }
+	.mono { @apply font-mono tabular-nums; }
+}
+
+@layer utilities {
+	/* Print-only: hidden on screen, visible when printing */
+	.print-only {
+		display: none !important;
+	}
+
+	@media print {
+		.no-print {
+			display: none !important;
+		}
+
+		.print-only {
+			display: block !important;
+		}
+
+		/* Receipt sections: avoid page breaks mid-section */
+		.receipt-section {
+			page-break-inside: avoid;
+		}
+
+		/* Consistent print margins */
+		@page {
+			margin: 1cm;
+		}
 	}
 }

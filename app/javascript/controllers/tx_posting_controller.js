@@ -34,7 +34,7 @@ export default class extends Controller {
         detail: {
           postingBatchId: body.posting_batch_id,
           tellerTransactionId: body.teller_transaction_id,
-          requestId,
+          requestId: body.request_id ?? requestId,
           postedAt: new Date().toISOString()
         }
       }))

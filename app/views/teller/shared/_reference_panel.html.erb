@@ -1,72 +1,78 @@
-<section aria-label="Reference Panel" class="ui-panel bg-base-200 border-base-300 lg:sticky lg:top-4 h-fit">
-  <div class="ui-panel-pad text-sm">
-    <h2 class="ui-section-title text-lg">Reference Summary</h2>
+<section aria-label="Reference Panel" class="ui-panel bg-base-200 border border-base-300 rounded-lg lg:sticky lg:top-4 h-fit">
+  <div class="ui-panel-pad p-3 md:p-4 text-sm">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Account Reference</h2>
+        <p class="text-xs text-slate-600 mt-1">Transaction snapshot and posting totals.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
 
     <p class="font-semibold mt-2">Transaction Snapshot</p>
     <dl class="space-y-1">
       <div class="ui-kv-row">
-        <dt class="ui-kv-key">Type</dt>
-        <dd class="ui-kv-value" data-posting-form-target="summaryTransactionType">N/A</dd>
+        <dt class="ui-kv-key text-xs">Type</dt>
+        <dd class="ui-kv-value text-sm" data-posting-form-target="summaryTransactionType">N/A</dd>
       </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Primary Account</dt>
-        <dd class="font-medium" data-posting-form-target="primaryReferenceValue">N/A</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Primary Account</dt>
+        <dd class="ui-kv-value text-sm" data-posting-form-target="primaryReferenceValue">N/A</dd>
       </div>
       <div data-posting-form-target="counterpartyReferencePanel" hidden>
-        <div class="flex justify-between gap-2">
-          <dt class="opacity-70">Counterparty</dt>
-          <dd class="font-medium" data-posting-form-target="counterpartyReferenceValue">N/A</dd>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Counterparty</dt>
+          <dd class="ui-kv-value text-sm" data-posting-form-target="counterpartyReferenceValue">N/A</dd>
         </div>
       </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Request ID</dt>
-        <dd class="font-medium" data-posting-form-target="summaryRequestId">N/A</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Request ID</dt>
+        <dd class="ui-kv-value text-sm mono" data-posting-form-target="summaryRequestId">N/A</dd>
       </div>
     </dl>
 
     <div class="divider my-2"></div>
     <p class="font-semibold">Amounts</p>
     <dl class="space-y-1">
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Entered Cash</dt>
-        <dd class="font-mono tabular-nums" data-posting-form-target="cashSubtotal">$0.00</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Entered Cash</dt>
+        <dd class="ui-kv-value text-sm mono" data-posting-form-target="cashSubtotal">$0.00</dd>
       </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Check Subtotal</dt>
-        <dd class="font-mono tabular-nums" data-posting-form-target="checkSubtotal">$0.00</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Check Subtotal</dt>
+        <dd class="ui-kv-value text-sm mono" data-posting-form-target="checkSubtotal">$0.00</dd>
       </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Effective Total</dt>
-        <dd class="font-mono tabular-nums" data-posting-form-target="totalAmount">$0.00</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Effective Total</dt>
+        <dd class="ui-kv-value text-sm mono" data-posting-form-target="totalAmount">$0.00</dd>
       </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Debits / Credits</dt>
-        <dd class="font-mono tabular-nums"><span data-posting-form-target="debitTotal">$0.00</span> / <span data-posting-form-target="creditTotal">$0.00</span></dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Debits / Credits</dt>
+        <dd class="ui-kv-value text-sm mono"><span data-posting-form-target="debitTotal">$0.00</span> / <span data-posting-form-target="creditTotal">$0.00</span></dd>
       </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Imbalance</dt>
-        <dd class="font-mono tabular-nums" data-posting-form-target="imbalance">$0.00</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Imbalance</dt>
+        <dd class="ui-kv-value text-sm mono" data-posting-form-target="imbalance">$0.00</dd>
       </div>
     </dl>
 
     <div class="divider my-2"></div>
     <p class="font-semibold">Cash Impact</p>
     <dl class="space-y-1">
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Cash In</dt>
-        <dd class="font-mono tabular-nums" data-posting-form-target="summaryCashIn">$0.00</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Cash In</dt>
+        <dd class="ui-kv-value text-sm mono" data-posting-form-target="summaryCashIn">$0.00</dd>
       </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Cash Out</dt>
-        <dd class="font-mono tabular-nums" data-posting-form-target="summaryCashOut">$0.00</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Cash Out</dt>
+        <dd class="ui-kv-value text-sm mono" data-posting-form-target="summaryCashOut">$0.00</dd>
       </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Net Drawer Impact</dt>
-        <dd class="font-mono tabular-nums" data-posting-form-target="cashImpact">$0.00</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Net Drawer Impact</dt>
+        <dd class="ui-kv-value text-sm mono" data-posting-form-target="cashImpact">$0.00</dd>
       </div>
-      <div class="flex justify-between gap-2">
-        <dt class="opacity-70">Projected Drawer</dt>
-        <dd class="font-mono tabular-nums" data-posting-form-target="projectedDrawer">$0.00</dd>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Projected Drawer</dt>
+        <dd class="ui-kv-value text-sm mono" data-posting-form-target="projectedDrawer">$0.00</dd>
       </div>
     </dl>
 

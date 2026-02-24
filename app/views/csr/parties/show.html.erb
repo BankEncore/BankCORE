@@ -1,0 +1,102 @@
+<%= render "csr/shared/record_screen" do %>
+
+  <%= render "csr/shared/record_header",
+    title: @party.display_name.presence || "Party ##{@party.id}",
+    subtitle: "#{@party.party_kind.titleize} • #{@party.relationship_kind.titleize}",
+    status: (@party.is_active? ? "Active" : "Inactive") do %>
+    <%= link_to "Back to Parties", csr_parties_path, class: "btn btn-sm btn-ghost" %>
+    <%= link_to "Edit", edit_csr_party_path(@party), class: "btn btn-sm btn-primary" %>
+  <% end %>
+
+  <%= render "csr/shared/panel", title: "Details" do %>
+    <dl class="divide-y divide-base-300/60 text-sm">
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Display name</dt>
+        <dd><%= @party.display_name.presence || "—" %></dd>
+      </div>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Kind</dt>
+        <dd><%= @party.party_kind.titleize %></dd>
+      </div>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Relationship</dt>
+        <dd><%= @party.relationship_kind.titleize %></dd>
+      </div>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Status</dt>
+        <dd><%= @party.is_active? ? "Active" : "Inactive" %></dd>
+      </div>
+      <% if @party.individual? && @party.party_individual.present? %>
+        <div class="flex justify-between py-2">
+          <dt class="text-base-content/70">First name</dt>
+          <dd><%= @party.party_individual.first_name %></dd>
+        </div>
+        <div class="flex justify-between py-2">
+          <dt class="text-base-content/70">Last name</dt>
+          <dd><%= @party.party_individual.last_name %></dd>
+        </div>
+        <div class="flex justify-between py-2">
+          <dt class="text-base-content/70">DOB</dt>
+          <dd class="tabular-nums"><%= @party.party_individual.dob&.strftime("%Y-%m-%d") || "—" %></dd>
+        </div>
+      <% elsif @party.organization? && @party.party_organization.present? %>
+        <div class="flex justify-between py-2">
+          <dt class="text-base-content/70">Legal name</dt>
+          <dd><%= @party.party_organization.legal_name %></dd>
+        </div>
+        <div class="flex justify-between py-2">
+          <dt class="text-base-content/70">DBA</dt>
+          <dd><%= @party.party_organization.dba_name.presence || "—" %></dd>
+        </div>
+      <% end %>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Email</dt>
+        <dd><%= @party.email.presence || "—" %></dd>
+      </div>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Phone</dt>
+        <dd><%= @party.phone.presence || "—" %></dd>
+      </div>
+    </dl>
+  <% end %>
+
+  <% accounts = @party.accounts %>
+  <%= render "csr/shared/panel", title: "Accounts", right: "#{accounts.size} total" do %>
+    <% if accounts.any? %>
+      <div class="overflow-x-auto">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>Type</th>
+              <th>Branch</th>
+              <th>Status</th>
+              <th class="text-right">Balance</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% accounts.each do |account| %>
+              <% balance_cents = account.balance_cents %>
+              <tr class="hover">
+                <td class="font-mono tabular-nums"><%= account.account_number %></td>
+                <td><%= account.account_type.titleize %></td>
+                <td><%= account.branch.name %></td>
+                <td><span class="badge badge-outline"><%= account.status %></span></td>
+                <td class="text-right font-mono tabular-nums <%= balance_cents.negative? ? 'text-error' : 'text-success' %>"><%= number_to_currency(balance_cents / 100.0) %></td>
+                <td class="text-right">
+                  <%= link_to "View", csr_account_path(account), class: "btn btn-ghost btn-xs" %>
+                  <%= link_to "Edit", edit_csr_account_path(account), class: "btn btn-ghost btn-xs" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-sm text-base-content/70">No accounts yet.</p>
+      <%= link_to "Add account", new_csr_account_path(party_id: @party.id), class: "btn btn-ghost btn-sm mt-2" %>
+    <% end %>
+  <% end %>
+
+<% end %>

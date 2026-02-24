@@ -10,8 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_21_001000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_24_033609) do
+  create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "is_primary", null: false
+    t.bigint "party_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "party_id"], name: "index_account_owners_on_account_id_and_party_id", unique: true
+    t.index ["account_id"], name: "index_account_owners_on_account_id"
+    t.index ["party_id"], name: "index_account_owners_on_party_id"
+  end
+
   create_table "account_transactions", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.bigint "account_id"
     t.string "account_reference", null: false
     t.integer "amount_cents", null: false
     t.datetime "created_at", null: false
@@ -20,10 +32,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_001000) do
     t.integer "running_balance_cents"
     t.bigint "teller_transaction_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_account_transactions_on_account_id"
     t.index ["account_reference"], name: "index_account_transactions_on_account_reference"
     t.index ["direction"], name: "index_account_transactions_on_direction"
     t.index ["posting_batch_id"], name: "index_account_transactions_on_posting_batch_id"
     t.index ["teller_transaction_id"], name: "index_account_transactions_on_teller_transaction_id"
+  end
+
+  create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.string "account_number", limit: 16, null: false
+    t.string "account_type", null: false
+    t.bigint "branch_id", null: false
+    t.date "closed_on"
+    t.datetime "created_at", null: false
+    t.datetime "last_activity_at", default: -> { "current_timestamp(6)" }, null: false
+    t.date "opened_on", default: -> { "curdate()" }, null: false
+    t.string "status", default: "open", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_number"], name: "index_accounts_on_account_number", unique: true
+    t.index ["branch_id"], name: "index_accounts_on_branch_id"
+    t.index ["status"], name: "index_accounts_on_status"
   end
 
   create_table "audit_events", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
@@ -93,6 +121,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_001000) do
     t.index ["direction"], name: "index_cash_movements_on_direction"
     t.index ["teller_session_id"], name: "index_cash_movements_on_teller_session_id"
     t.index ["teller_transaction_id"], name: "index_cash_movements_on_teller_transaction_id"
+  end
+
+  create_table "parties", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.string "city"
+    t.datetime "created_at", null: false
+    t.string "display_name"
+    t.string "email"
+    t.boolean "is_active", default: true, null: false
+    t.string "party_kind", null: false
+    t.string "phone", limit: 20
+    t.string "relationship_kind", null: false
+    t.string "state", limit: 2
+    t.string "street_address"
+    t.string "tax_id"
+    t.datetime "updated_at", null: false
+    t.string "zip_code", limit: 10
+  end
+
+  create_table "party_individuals", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "dob"
+    t.string "first_name", null: false
+    t.string "govt_id"
+    t.string "govt_id_type"
+    t.string "last_name", null: false
+    t.bigint "party_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["party_id"], name: "index_party_individuals_on_party_id", unique: true
+  end
+
+  create_table "party_organizations", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "dba_name"
+    t.string "legal_name", null: false
+    t.bigint "party_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["party_id"], name: "index_party_organizations_on_party_id", unique: true
   end
 
   create_table "permissions", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
@@ -234,8 +299,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_001000) do
     t.index ["branch_id"], name: "index_workstations_on_branch_id"
   end
 
+  add_foreign_key "account_owners", "accounts"
+  add_foreign_key "account_owners", "parties"
+  add_foreign_key "account_transactions", "accounts"
   add_foreign_key "account_transactions", "posting_batches"
   add_foreign_key "account_transactions", "teller_transactions"
+  add_foreign_key "accounts", "branches"
   add_foreign_key "audit_events", "branches"
   add_foreign_key "audit_events", "teller_sessions"
   add_foreign_key "audit_events", "users", column: "actor_user_id"
@@ -246,6 +315,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_001000) do
   add_foreign_key "cash_movements", "cash_locations"
   add_foreign_key "cash_movements", "teller_sessions"
   add_foreign_key "cash_movements", "teller_transactions"
+  add_foreign_key "party_individuals", "parties"
+  add_foreign_key "party_organizations", "parties"
   add_foreign_key "posting_batches", "teller_transactions"
   add_foreign_key "posting_legs", "posting_batches"
   add_foreign_key "role_permissions", "permissions"

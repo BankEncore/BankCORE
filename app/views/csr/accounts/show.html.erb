@@ -1,0 +1,134 @@
+<%= render "csr/shared/record_screen" do %>
+
+  <div class="no-print">
+    <%= render "csr/shared/record_header",
+      title: "Account #{@account.account_number}",
+      subtitle: "#{@account.account_type.titleize} • #{@account.branch.name}",
+      status: @account.status do %>
+      <%= link_to "Back to Accounts", csr_accounts_path, class: "btn btn-sm btn-ghost" %>
+      <%= link_to "Edit", edit_csr_account_path(@account), class: "btn btn-sm btn-primary" %>
+      <button type="button" onclick="window.print()" class="btn btn-outline btn-sm">Print</button>
+    <% end %>
+  </div>
+
+  <div class="print-only mb-4">
+    <h1 class="text-lg font-bold">BankCORE</h1>
+    <p class="text-sm">Account Details — <%= @account.account_number %></p>
+    <p class="text-xs text-slate-600"><%= @account.account_type.titleize %> • <%= @account.branch.name %> • <%= @account.status %></p>
+  </div>
+
+  <%= render "csr/accounts/summary_strip", account: @account %>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <%= render "csr/shared/panel", title: "Details" do %>
+    <dl class="divide-y divide-base-300/60 text-sm">
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Account number</dt>
+        <dd class="font-mono tabular-nums"><%= @account.account_number %></dd>
+      </div>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Posting reference</dt>
+        <dd class="font-mono tabular-nums"><%= @account.account_reference %></dd>
+      </div>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Type</dt>
+        <dd><%= @account.account_type.titleize %></dd>
+      </div>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Branch</dt>
+        <dd><%= @account.branch.name %></dd>
+      </div>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Status</dt>
+        <dd><span class="badge badge-outline"><%= @account.status %></span></dd>
+      </div>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Opened</dt>
+        <dd class="tabular-nums"><%= @account.opened_on&.strftime("%Y-%m-%d") || "—" %></dd>
+      </div>
+      <div class="flex justify-between py-2">
+        <dt class="text-base-content/70">Closed</dt>
+        <dd class="tabular-nums"><%= @account.closed_on&.strftime("%Y-%m-%d") || "—" %></dd>
+      </div>
+    </dl>
+  <% end %>
+
+  <%= render "csr/shared/panel", title: "Owners", right: "#{@account.account_owners.size} total" do %>
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Party</th>
+            <th class="w-28">Primary</th>
+            <th class="no-print w-32"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @account.account_owners.includes(:party).each do |ao| %>
+            <tr class="hover">
+              <td>
+                <%= link_to(
+                      ao.party.display_name.presence || "Party ##{ao.party_id}",
+                      csr_party_path(ao.party),
+                      class: "link"
+                    ) %>
+              </td>
+              <td>
+                <% if ao.is_primary? %>
+                  <span class="badge badge-outline">Primary</span>
+                <% else %>
+                  <span class="no-print">
+                    <%= button_to "Set as primary",
+                          csr_account_account_owner_path(@account, ao),
+                          method: :patch,
+                          params: { account_owner: { is_primary: true } },
+                          class: "btn btn-ghost btn-xs" %>
+                  </span>
+                  <span class="print-only">—</span>
+                <% end %>
+              </td>
+              <td class="no-print">
+                <% if @account.account_owners.size > 1 %>
+                  <%= button_to "Remove",
+                        csr_account_account_owner_path(@account, ao),
+                        method: :delete,
+                        form: { data: { turbo_confirm: "Remove this owner?" } },
+                        class: "btn btn-ghost btn-xs text-error" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @parties_for_owner&.any? %>
+      <%= form_with scope: :account_owner, url: csr_account_account_owners_path(@account), method: :post, local: true, class: "no-print mt-4 pt-4 border-t border-base-300/60 flex flex-wrap items-end gap-3" do |f| %>
+        <div class="form-control">
+          <%= f.label :party_id, "Add owner", class: "label label-text" %>
+          <%= f.select :party_id,
+                options_from_collection_for_select(@parties_for_owner, :id, :display_name),
+                { include_blank: "Select party…" },
+                class: "select select-bordered select-sm",
+                required: true %>
+        </div>
+        <div class="form-control">
+          <label class="label cursor-pointer gap-2">
+            <%= f.check_box :is_primary, class: "checkbox checkbox-sm" %>
+            <span class="label-text">Primary</span>
+          </label>
+        </div>
+        <%= f.submit "Add", class: "btn btn-primary btn-sm" %>
+      <% end %>
+    <% elsif @parties_for_owner.present? %>
+      <p class="no-print mt-4 pt-4 border-t border-base-300/60 text-sm text-base-content/60">All eligible parties are already owners.</p>
+    <% end %>
+  <% end %>
+  </div>
+
+  <%= render "shared/accounts/balance_and_history",
+    account: @account,
+    account_transactions: @account_transactions,
+    sections: [:history] %>
+
+<% end %>

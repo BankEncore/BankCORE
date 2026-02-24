@@ -51,7 +51,7 @@ module Teller
       get teller_deposit_transaction_path
       assert_response :success
       assert_select "h2", "Deposit"
-      assert_select "h2", "Reference Summary"
+      assert_select "h2", "Account Reference"
       assert_select "p", /Transaction Snapshot/
       assert_select "p", /Amounts/
       assert_select "p", /Cash Impact/
@@ -68,7 +68,7 @@ module Teller
       get teller_withdrawal_transaction_path
       assert_response :success
       assert_select "h2", "Withdrawal"
-      assert_select "h2", "Reference Summary"
+      assert_select "h2", "Account Reference"
       assert_select "p", /Transaction Snapshot/
       assert_select "p", /Amounts/
       assert_select "p", /Cash Impact/
@@ -85,7 +85,7 @@ module Teller
       get teller_transfer_transaction_path
       assert_response :success
       assert_select "h2", "Transfer"
-      assert_select "h2", "Reference Summary"
+      assert_select "h2", "Account Reference"
       assert_select "p", /Transaction Snapshot/
       assert_select "p", /Amounts/
       assert_select "p", /Cash Impact/
@@ -102,7 +102,7 @@ module Teller
       get teller_check_cashing_transaction_path
       assert_response :success
       assert_select "h2", "Check Cashing"
-      assert_select "h2", "Reference Summary"
+      assert_select "h2", "Account Reference"
       assert_select "p", /Transaction Snapshot/
       assert_select "p", /Amounts/
       assert_select "p", /Cash Impact/

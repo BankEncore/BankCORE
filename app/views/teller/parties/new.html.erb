@@ -1,0 +1,18 @@
+<%= render "teller/shared/page_header",
+  title: "New Party",
+  description: "Create a customer or non-customer party (individual or organization).",
+  secondary_button_path: teller_parties_path,
+  secondary_button_label: "Back to Parties" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">New Party</h2>
+        <p class="text-xs text-slate-600 mt-1">Create a customer or non-customer party (individual or organization).</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+    <%= render "form" %>
+  </div>
+</section>

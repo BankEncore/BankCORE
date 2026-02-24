@@ -52,10 +52,13 @@ module Posting
 
       def persist_legs_and_account_transactions!(posting_batch, teller_transaction)
         legs.each do |leg|
+          account_reference = leg.fetch(:account_reference)
+          account_id = Account.find_by(account_number: account_reference)&.id
+
           PostingLeg.create!(
             posting_batch: posting_batch,
             side: leg.fetch(:side),
-            account_reference: leg.fetch(:account_reference),
+            account_reference: account_reference,
             amount_cents: leg.fetch(:amount_cents),
             position: leg.fetch(:position)
           )
@@ -63,7 +66,8 @@ module Posting
           AccountTransaction.create!(
             teller_transaction: teller_transaction,
             posting_batch: posting_batch,
-            account_reference: leg.fetch(:account_reference),
+            account_reference: account_reference,
+            account_id: account_id,
             direction: leg.fetch(:side),
             amount_cents: leg.fetch(:amount_cents)
           )

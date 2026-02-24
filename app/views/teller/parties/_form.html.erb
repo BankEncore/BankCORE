@@ -1,0 +1,118 @@
+<%= form_with model: [ :teller, @party ], local: true, class: "space-y-4" do |f| %>
+  <% if @party.errors.any? %>
+    <div class="alert alert-error">
+      <ul class="list-disc list-inside">
+        <% @party.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="form-control">
+      <%= f.label :party_kind, class: "text-xs font-medium text-slate-700" %>
+      <%= f.select :party_kind, Party::PARTY_KINDS.map { |k| [ k.titleize, k ] }, {}, class: "select select-bordered w-full" %>
+    </div>
+    <div class="form-control">
+      <%= f.label :relationship_kind, class: "text-xs font-medium text-slate-700" %>
+      <%= f.select :relationship_kind, Party::RELATIONSHIP_KINDS.map { |k| [ k.titleize, k ] }, {}, class: "select select-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="divider my-3"></div>
+
+  <div id="individual-fields" class="space-y-4" style="<%= 'display:none' unless @party.individual? %>">
+    <h3 class="font-medium text-sm">Individual</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <%= label_tag :first_name, "First name", class: "text-xs font-medium text-slate-700" %>
+        <%= text_field_tag "party[first_name]", @party.party_individual&.first_name, class: "input input-bordered w-full" %>
+      </div>
+      <div class="form-control">
+        <%= label_tag :last_name, "Last name", class: "text-xs font-medium text-slate-700" %>
+        <%= text_field_tag "party[last_name]", @party.party_individual&.last_name, class: "input input-bordered w-full" %>
+      </div>
+      <div class="form-control">
+        <%= label_tag :dob, "Date of birth", class: "text-xs font-medium text-slate-700" %>
+        <%= date_field_tag "party[dob]", @party.party_individual&.dob&.strftime("%Y-%m-%d"), class: "input input-bordered w-full" %>
+      </div>
+      <div class="form-control">
+        <%= label_tag :govt_id_type, "Govt ID type", class: "text-xs font-medium text-slate-700" %>
+        <%= select_tag "party[govt_id_type]", options_for_select(PartyIndividual::GOVT_ID_TYPES.map { |k| [ k.titleize, k ] }, @party.party_individual&.govt_id_type), { include_blank: true, class: "select select-bordered w-full" } %>
+      </div>
+    </div>
+  </div>
+
+  <div id="organization-fields" class="space-y-4" style="<%= 'display:none' unless @party.organization? %>">
+    <h3 class="font-medium text-sm">Organization</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <%= label_tag :legal_name, "Legal name", class: "text-xs font-medium text-slate-700" %>
+        <%= text_field_tag "party[legal_name]", @party.party_organization&.legal_name, class: "input input-bordered w-full" %>
+      </div>
+      <div class="form-control">
+        <%= label_tag :dba_name, "DBA name", class: "text-xs font-medium text-slate-700" %>
+        <%= text_field_tag "party[dba_name]", @party.party_organization&.dba_name, class: "input input-bordered w-full" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider my-3"></div>
+
+  <h3 class="font-medium text-sm">Contact</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="form-control">
+      <%= f.label :email, class: "text-xs font-medium text-slate-700" %>
+      <%= f.email_field :email, class: "input input-bordered w-full", placeholder: "Optional" %>
+    </div>
+    <div class="form-control">
+      <%= f.label :phone, class: "text-xs font-medium text-slate-700" %>
+      <%= f.text_field :phone, class: "input input-bordered w-full", placeholder: "Optional" %>
+    </div>
+  </div>
+
+  <div class="divider my-3"></div>
+
+  <h3 class="font-medium text-sm">Address</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="form-control md:col-span-2">
+      <%= f.label :street_address, class: "text-xs font-medium text-slate-700" %>
+      <%= f.text_field :street_address, class: "input input-bordered w-full", placeholder: "Optional" %>
+    </div>
+    <div class="form-control">
+      <%= f.label :city, class: "text-xs font-medium text-slate-700" %>
+      <%= f.text_field :city, class: "input input-bordered w-full", placeholder: "Optional" %>
+    </div>
+    <div class="form-control">
+      <%= f.label :state, class: "text-xs font-medium text-slate-700" %>
+      <%= f.text_field :state, class: "input input-bordered w-full", placeholder: "Optional", maxlength: 2 %>
+    </div>
+    <div class="form-control">
+      <%= f.label :zip_code, class: "text-xs font-medium text-slate-700" %>
+      <%= f.text_field :zip_code, class: "input input-bordered w-full", placeholder: "Optional", maxlength: 10 %>
+    </div>
+  </div>
+
+  <div class="divider my-3"></div>
+
+  <div class="flex gap-2">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", @party.persisted? ? teller_party_path(@party) : teller_parties_path, class: "btn btn-ghost" %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const partyKindSelect = document.querySelector("#party_party_kind");
+    const individualFields = document.getElementById("individual-fields");
+    const organizationFields = document.getElementById("organization-fields");
+    if (partyKindSelect) {
+      partyKindSelect.addEventListener("change", function() {
+        const v = this.value;
+        individualFields.style.display = v === "individual" ? "block" : "none";
+        organizationFields.style.display = v === "organization" ? "block" : "none";
+      });
+    }
+  });
+</script>

@@ -12,6 +12,7 @@ permissions = {
   "sessions.open" => "Open teller session",
   "sessions.close" => "Close teller session",
   "teller.dashboard.view" => "Access teller dashboard",
+  "csr.dashboard.view" => "Access CSR workspace (customer and account management)",
   "transactions.deposit.create" => "Create deposits",
   "transactions.withdrawal.create" => "Create withdrawals",
   "transactions.transfer.create" => "Create transfers",
@@ -34,6 +35,7 @@ roles = {
       "sessions.open",
       "sessions.close",
       "teller.dashboard.view",
+      "csr.dashboard.view",
       "transactions.deposit.create",
       "transactions.withdrawal.create",
       "transactions.transfer.create",
@@ -48,6 +50,7 @@ roles = {
       "sessions.open",
       "sessions.close",
       "teller.dashboard.view",
+      "csr.dashboard.view",
       "transactions.deposit.create",
       "transactions.withdrawal.create",
       "transactions.transfer.create",
@@ -60,6 +63,10 @@ roles = {
   "admin" => {
     name: "Administrator",
     permissions: permissions.keys
+  },
+  "csr" => {
+    name: "Customer Service Representative",
+    permissions: [ "csr.dashboard.view" ]
   }
 }
 
@@ -97,7 +104,8 @@ seed_password = ENV.fetch("SEED_USER_PASSWORD", "ChangeMe123!")
 seed_users = [
   { email_address: "teller@bankcore.local", role_key: "teller", branch: main_branch, workstation: main_workstation },
   { email_address: "supervisor@bankcore.local", role_key: "supervisor", branch: main_branch, workstation: main_workstation },
-  { email_address: "admin@bankcore.local", role_key: "admin", branch: nil, workstation: nil }
+  { email_address: "admin@bankcore.local", role_key: "admin", branch: nil, workstation: nil },
+  { email_address: "csr@bankcore.local", role_key: "csr", branch: main_branch, workstation: nil }
 ]
 
 seed_users.each do |definition|
@@ -116,4 +124,41 @@ seed_users.each do |definition|
     branch: definition[:branch],
     workstation: definition[:workstation]
   )
+end
+
+# CIF: Sample parties and accounts for teller tests
+party_jane = Party.joins(:party_individual).find_by(party_individuals: { first_name: "Jane", last_name: "Doe" })
+unless party_jane
+  party_jane = Party.create!(party_kind: "individual", relationship_kind: "customer", is_active: true)
+  party_jane.create_party_individual!(first_name: "Jane", last_name: "Doe")
+end
+
+party_acme = Party.joins(:party_organization).find_by(party_organizations: { legal_name: "Acme Corp" })
+unless party_acme
+  party_acme = Party.create!(party_kind: "organization", relationship_kind: "customer", is_active: true)
+  party_acme.create_party_organization!(legal_name: "Acme Corp", dba_name: "Acme")
+end
+
+Account.find_or_create_by!(account_number: "1000000000001001") do |a|
+  a.account_type = "checking"
+  a.branch = main_branch
+  a.status = "open"
+  a.opened_on = Date.current
+  a.last_activity_at = Time.current
+end.tap do |account|
+  unless account.account_owners.exists?(party: party_jane)
+    AccountOwner.create!(account: account, party: party_jane, is_primary: true)
+  end
+end
+
+Account.find_or_create_by!(account_number: "1000000000001002") do |a|
+  a.account_type = "savings"
+  a.branch = main_branch
+  a.status = "open"
+  a.opened_on = Date.current
+  a.last_activity_at = Time.current
+end.tap do |account|
+  unless account.account_owners.exists?(party: party_acme)
+    AccountOwner.create!(account: account, party: party_acme, is_primary: true)
+  end
 end
