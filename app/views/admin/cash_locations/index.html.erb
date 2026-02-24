@@ -1,0 +1,43 @@
+<%= render "admin/shared/page_header",
+  title: "Cash Locations",
+  description: "Manage drawers and vaults across branches.",
+  primary_button_path: admin_branches_path,
+  primary_button_label: "Add via Branch" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <% if params[:branch_id].present? %>
+      <p class="text-sm text-slate-600 mb-2">Filtered by branch. <%= link_to "Show all", admin_cash_locations_path, class: "link" %></p>
+    <% end %>
+
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Branch</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Active</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @cash_locations.each do |cash_location| %>
+            <tr>
+              <td><%= link_to cash_location.branch.name, admin_branch_path(cash_location.branch), class: "link" %></td>
+              <td><%= cash_location.code %></td>
+              <td><%= cash_location.name %></td>
+              <td><%= cash_location.location_type %></td>
+              <td><%= cash_location.active? ? "Yes" : "No" %></td>
+              <td class="text-right">
+                <%= link_to "View", admin_cash_location_path(cash_location), class: "btn btn-ghost btn-sm" %>
+                <%= link_to "Edit", edit_admin_cash_location_path(cash_location), class: "btn btn-ghost btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

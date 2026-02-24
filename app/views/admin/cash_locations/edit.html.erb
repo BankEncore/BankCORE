@@ -1,0 +1,7 @@
+<%= render "admin/shared/page_header",
+  title: "Edit Cash Location",
+  description: "Update cash location details.",
+  secondary_button_path: admin_cash_location_path(@cash_location),
+  secondary_button_label: "Back" %>
+
+<%= render "admin/cash_locations/form", cash_location: @cash_location %>

@@ -1,0 +1,53 @@
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-base">Roles</h2>
+
+    <% if user_roles.any? %>
+      <div class="overflow-x-auto mb-4">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Branch</th>
+              <th>Workstation</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% user_roles.each do |ur| %>
+              <tr>
+                <td><%= ur.role.name %></td>
+                <td><%= ur.branch&.name || "—" %></td>
+                <td><%= ur.workstation&.name || "—" %></td>
+                <td>
+                  <%= button_to "Remove", admin_user_user_role_path(user, ur), method: :delete, data: { turbo_confirm: "Remove this role assignment?" }, class: "btn btn-ghost btn-sm text-error" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-sm text-slate-600 mb-4">No roles assigned yet.</p>
+    <% end %>
+
+    <h3 class="font-medium text-sm mb-2">Add Role</h3>
+    <%= form_with model: UserRole.new, url: admin_user_user_roles_path(user), method: :post, class: "flex flex-wrap gap-4 items-end" do |f| %>
+      <div class="form-control">
+        <%= f.label :role_id, "Role", class: "label" %>
+        <%= f.collection_select :role_id, Role.order(:key), :id, :name, { include_blank: "Select role" }, class: "select select-bordered select-sm", required: true %>
+      </div>
+      <div class="form-control">
+        <%= f.label :branch_id, "Branch (optional)", class: "label" %>
+        <%= f.collection_select :branch_id, Branch.order(:code), :id, :name, { include_blank: "Global" }, class: "select select-bordered select-sm" %>
+      </div>
+      <div class="form-control">
+        <%= f.label :workstation_id, "Workstation (optional)", class: "label" %>
+        <%= f.collection_select :workstation_id, Workstation.includes(:branch).order(:branch_id, :code), :id, ->(w) { "#{w.branch.code} - #{w.name}" }, { include_blank: "Any" }, class: "select select-bordered select-sm" %>
+      </div>
+      <div class="form-control">
+        <%= f.submit "Add Role", class: "btn btn-primary btn-sm" %>
+      </div>
+    <% end %>
+  </div>
+</section>

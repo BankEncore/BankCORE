@@ -1,0 +1,7 @@
+<%= render "admin/shared/page_header",
+  title: "Edit Workstation",
+  description: "Update workstation details.",
+  secondary_button_path: admin_workstation_path(@workstation),
+  secondary_button_label: "Back" %>
+
+<%= render "admin/workstations/form", workstation: @workstation %>

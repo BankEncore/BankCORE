@@ -1,0 +1,17 @@
+<%= render "admin/shared/page_header",
+  title: "Administration Workspace",
+  description: "Manage branches, workstations, cash locations, users, and roles." %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-base">Quick links</h2>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Branches", admin_branches_path, class: "btn btn-primary" %>
+      <%= link_to "Workstations", admin_workstations_path, class: "btn btn-primary" %>
+      <%= link_to "Cash Locations", admin_cash_locations_path, class: "btn btn-primary" %>
+      <%= link_to "Cash Location Assignments", admin_cash_location_assignments_path, class: "btn btn-primary" %>
+      <%= link_to "Users", admin_users_path, class: "btn btn-primary" %>
+      <%= link_to "Roles", admin_roles_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+</section>

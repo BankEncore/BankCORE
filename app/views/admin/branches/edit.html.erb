@@ -1,0 +1,7 @@
+<%= render "admin/shared/page_header",
+  title: "Edit Branch",
+  description: "Update branch details.",
+  secondary_button_path: admin_branch_path(@branch),
+  secondary_button_label: "Back" %>
+
+<%= render "admin/branches/form", branch: @branch %>

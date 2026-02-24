@@ -2,6 +2,7 @@
 <% teller_active = controller_path.start_with?("teller/") %>
 <% csr_active   = controller_path.start_with?("csr/") %>
 <% ops_active   = controller_path.start_with?("ops/") %>
+<% admin_active = controller_path.start_with?("admin/") %>
 
 <header class="border-b border-base-300 bg-base-200/70 px-4">
   <div class="navbar min-h-0 py-2 px-0">
@@ -15,7 +16,7 @@
                     aria: (current_page?(root_path) ? { current: "page" } : {}) %>
 
         <details class="dropdown">
-          <summary class="btn btn-ghost btn-sm <%= (teller_active || csr_active || ops_active) ? "btn-active" : "" %>">
+          <summary class="btn btn-ghost btn-sm <%= (teller_active || csr_active || ops_active || admin_active) ? "btn-active" : "" %>">
             Workspace
           </summary>
 
@@ -35,6 +36,13 @@
                           ops_root_path,
                           class: (ops_active ? "active" : nil) %>
             </li>
+            <% if Current.user&.has_permission?("administration.workspace.view") %>
+              <li>
+                <%= link_to "Administration Workspace",
+                            admin_root_path,
+                            class: (admin_active ? "active" : nil) %>
+              </li>
+            <% end %>
           </ul>
         </details>
       </nav>

@@ -1,0 +1,7 @@
+<%= render "admin/shared/page_header",
+  title: "New User",
+  description: "Create a new system user.",
+  secondary_button_path: admin_users_path,
+  secondary_button_label: "Back" %>
+
+<%= render "admin/users/form", user: @user %>

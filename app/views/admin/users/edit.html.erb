@@ -1,0 +1,7 @@
+<%= render "admin/shared/page_header",
+  title: "Edit User",
+  description: "Update user details.",
+  secondary_button_path: admin_user_path(@user),
+  secondary_button_label: "Back" %>
+
+<%= render "admin/users/form", user: @user %>

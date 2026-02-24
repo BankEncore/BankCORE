@@ -1,0 +1,7 @@
+<%= render "admin/shared/page_header",
+  title: "Edit Role",
+  description: "Update role and permissions.",
+  secondary_button_path: admin_role_path(@role),
+  secondary_button_label: "Back" %>
+
+<%= render "admin/roles/form", role: @role, permissions: @permissions %>

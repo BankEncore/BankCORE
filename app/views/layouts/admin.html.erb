@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "BankCORE Administration" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="BankCORE">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-base-100">
+    <a href="#main" class="no-print sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:m-3 focus:rounded focus:bg-base-100 focus:px-3 focus:py-2 focus:shadow">
+      Skip to content
+    </a>
+
+    <div class="min-h-screen">
+      <div class="no-print sticky top-0 z-50">
+        <%= render "admin/shared/admin_header" %>
+        <%= render "admin/shared/command_bar" %>
+      </div>
+
+      <main id="main" class="mx-auto w-full max-w-7xl px-4 py-3 space-y-3">
+        <div class="no-print">
+          <%= render "teller/shared/flash_banners" %>
+        </div>
+        <%= yield %>
+      </main>
+    </div>
+  </body>
+</html>

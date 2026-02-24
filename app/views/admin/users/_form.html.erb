@@ -1,0 +1,35 @@
+<%= form_with model: user, url: user.persisted? ? admin_user_path(user) : admin_users_path, method: user.persisted? ? :patch : :post, class: "card bg-base-100 border border-base-300" do |f| %>
+  <div class="card-body">
+    <% if user.errors.any? %>
+      <div class="alert alert-error">
+        <ul>
+          <% user.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-control">
+      <%= f.label :email_address, class: "label" %>
+      <%= f.email_field :email_address, class: "input input-bordered", required: true %>
+    </div>
+
+    <div class="form-control">
+      <%= f.label :password, class: "label" %>
+      <%= f.password_field :password, class: "input input-bordered", required: user.new_record? %>
+      <% if user.persisted? %>
+        <p class="text-xs text-slate-600 mt-1">Leave blank to keep current password</p>
+      <% end %>
+    </div>
+
+    <div class="form-control">
+      <%= f.label :password_confirmation, class: "label" %>
+      <%= f.password_field :password_confirmation, class: "input input-bordered", required: user.new_record? %>
+    </div>
+
+    <div class="form-control mt-4">
+      <%= f.submit user.persisted? ? "Update User" : "Create User", class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>

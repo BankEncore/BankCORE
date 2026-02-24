@@ -1,0 +1,34 @@
+<%= render "admin/shared/page_header",
+  title: "Branches",
+  description: "Manage bank branches and their workstations and cash locations.",
+  primary_button_path: new_admin_branch_path,
+  primary_button_label: "Add Branch" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @branches.each do |branch| %>
+            <tr>
+              <td><%= branch.code %></td>
+              <td><%= branch.name %></td>
+              <td class="text-right">
+                <%= link_to "View", admin_branch_path(branch), class: "btn btn-ghost btn-sm" %>
+                <%= link_to "Edit", edit_admin_branch_path(branch), class: "btn btn-ghost btn-sm" %>
+                <%= button_to "Delete", admin_branch_path(branch), method: :delete, data: { turbo_confirm: "Are you sure? This may fail if the branch has dependent records." }, class: "btn btn-ghost btn-sm text-error" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

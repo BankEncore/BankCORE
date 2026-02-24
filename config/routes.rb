@@ -55,6 +55,23 @@ Rails.application.routes.draw do
     get "ledger", to: "ledger#index", as: :ledger
   end
 
+  namespace :admin do
+    root "dashboard#index"
+    resources :branches do
+      resources :workstations, only: [ :new, :create ], shallow: true
+      resources :cash_locations, only: [ :new, :create ], shallow: true
+    end
+    resources :workstations, only: [ :index, :show, :edit, :update, :destroy ]
+    resources :cash_locations, only: [ :index, :show, :edit, :update, :destroy ]
+    resources :cash_location_assignments, only: [ :index, :show ]
+    resources :users do
+      resources :user_roles, only: [ :create, :destroy ], path: "roles"
+    end
+    resources :roles do
+      resources :user_roles, only: [ :create, :destroy ], path: "users", controller: "role_users"
+    end
+  end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

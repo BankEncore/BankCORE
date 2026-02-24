@@ -1,0 +1,58 @@
+<%= render "admin/shared/page_header",
+  title: "Cash Location Assignments",
+  description: "View drawer and vault assignment history for teller sessions.",
+  secondary_button_path: admin_root_path,
+  secondary_button_label: "Dashboard" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <%= form_with url: admin_cash_location_assignments_path, method: :get, class: "flex flex-wrap gap-4 mb-4" do |f| %>
+      <div class="form-control">
+        <%= f.label :branch_id, "Branch", class: "label" %>
+        <%= f.collection_select :branch_id, Branch.order(:code), :id, :name, { include_blank: "All branches" }, class: "select select-bordered select-sm" %>
+      </div>
+      <div class="form-control">
+        <%= f.label :cash_location_id, "Cash Location", class: "label" %>
+        <%= f.collection_select :cash_location_id, CashLocation.includes(:branch).order(:branch_id, :code), :id, ->(cl) { "#{cl.branch.code} - #{cl.name}" }, { include_blank: "All" }, class: "select select-bordered select-sm" %>
+      </div>
+      <div class="form-control">
+        <%= f.label :from_date, "From Date", class: "label" %>
+        <%= f.date_field :from_date, class: "input input-bordered input-sm" %>
+      </div>
+      <div class="form-control">
+        <%= f.label :to_date, "To Date", class: "label" %>
+        <%= f.date_field :to_date, class: "input input-bordered input-sm" %>
+      </div>
+      <div class="form-control self-end">
+        <%= f.submit "Filter", class: "btn btn-primary btn-sm" %>
+      </div>
+    <% end %>
+
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Session</th>
+            <th>Cash Location</th>
+            <th>Branch</th>
+            <th>Assigned At</th>
+            <th>Released At</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @cash_location_assignments.each do |assignment| %>
+            <tr>
+              <td>#<%= assignment.teller_session_id %></td>
+              <td><%= assignment.cash_location.name %></td>
+              <td><%= assignment.cash_location.branch.name %></td>
+              <td><%= assignment.assigned_at.strftime("%Y-%m-%d %H:%M") %></td>
+              <td><%= assignment.released_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
+              <td><%= link_to "View", admin_cash_location_assignment_path(assignment), class: "btn btn-ghost btn-sm" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
