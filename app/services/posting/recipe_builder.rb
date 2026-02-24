@@ -15,10 +15,12 @@ module Posting
 
       check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
       check_items = check_items.select { |item| item[:amount_cents].to_i.positive? }
-      return {} if check_items.empty?
+      cash_back_cents = posting_params[:cash_back_cents].to_i
 
-      {
-        check_items: check_items.map do |item|
+      metadata = {}
+      metadata[:cash_back_cents] = cash_back_cents if cash_back_cents.positive?
+      if check_items.any?
+        metadata[:check_items] = check_items.map do |item|
           {
             routing: item[:routing].to_s,
             account: item[:account].to_s,
@@ -29,7 +31,9 @@ module Posting
             hold_until: item[:hold_until].to_s
           }
         end
-      }
+      end
+
+      metadata.presence || {}
     end
 
     def normalized_entries

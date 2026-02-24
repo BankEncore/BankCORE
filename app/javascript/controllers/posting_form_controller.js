@@ -27,6 +27,8 @@ export default class extends Controller {
     "cashAccountReference",
     "cashAccountRow",
     "checkSection",
+    "cashBackRow",
+    "cashBackCents",
     "draftSection",
     "vaultTransferSection",
     "checkCashingSection",
@@ -88,6 +90,8 @@ export default class extends Controller {
     "postingPreviewEmpty",
     "computedCashSubtotal",
     "computedCheckSubtotal",
+    "computedCashBackRow",
+    "computedCashBackSubtotal",
     "computedFeeSubtotal",
     "computedNetTotal",
     "primaryReferenceValue",
@@ -183,6 +187,7 @@ export default class extends Controller {
       counterpartyAccountReference: this.counterpartyAccountReferenceTarget.value,
       cashAccountReference: this.cashAccountReferenceTarget.value,
       amountCents: parseInt(this.amountCentsTarget.value || "0", 10),
+      cashBackCents: this.cashBackCents(),
       effectiveAmountCents,
       checks,
       checkCashingAmounts,
@@ -294,6 +299,10 @@ export default class extends Controller {
     if (this.hasCheckSectionTarget) {
       this.checkSectionTarget.hidden = !showCheckSection
     }
+    const showCashBackRow = transactionType === "deposit"
+    if (this.hasCashBackRowTarget) {
+      this.cashBackRowTarget.hidden = !showCashBackRow
+    }
     if (this.hasDraftSectionTarget) {
       this.draftSectionTarget.hidden = !showDraftSection
     }
@@ -332,6 +341,11 @@ export default class extends Controller {
     if (this.hasCheckSubtotalTarget) this.checkSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
     if (this.hasComputedCashSubtotalTarget) this.computedCashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
     if (this.hasComputedCheckSubtotalTarget) this.computedCheckSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
+    const cashBackCentsForComputed = transactionType === "deposit" ? this.cashBackCents() : 0
+    if (this.hasComputedCashBackRowTarget) {
+      this.computedCashBackRowTarget.hidden = cashBackCentsForComputed <= 0
+      if (this.hasComputedCashBackSubtotalTarget) this.computedCashBackSubtotalTarget.textContent = this.formatCents(cashBackCentsForComputed)
+    }
     const feeCentsForComputed = showCheckCashingSection ? checkCashingAmounts.feeCents : (showDraftSection ? draftAmounts.draftFeeCents : 0)
     if (this.hasComputedFeeSubtotalTarget) this.computedFeeSubtotalTarget.textContent = feeCentsForComputed > 0 ? `-${this.formatCents(feeCentsForComputed)}` : this.formatCents(0)
     if (this.hasComputedNetTotalTarget) this.computedNetTotalTarget.textContent = this.formatCents(totalAmountCents)
@@ -587,6 +601,9 @@ export default class extends Controller {
     this.counterpartyAccountReferenceTarget.value = ""
     this.element.dispatchEvent(new CustomEvent("tx:form-reset", { bubbles: true }))
     this.setAmountCents(this.amountCentsTarget, 0)
+    if (this.hasCashBackCentsTarget) {
+      this.setAmountCents(this.cashBackCentsTarget, 0)
+    }
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
     this.resetDraftFields()
@@ -655,6 +672,9 @@ export default class extends Controller {
     this.counterpartyAccountReferenceTarget.value = ""
     this.element.dispatchEvent(new CustomEvent("tx:form-reset", { bubbles: true }))
     this.setAmountCents(this.amountCentsTarget, 0)
+    if (this.hasCashBackCentsTarget) {
+      this.setAmountCents(this.cashBackCentsTarget, 0)
+    }
     this.cashAccountReferenceTarget.value = this.defaultCashAccountReference || ""
     this.approvalTokenTarget.value = ""
     this.checkRowsTarget.innerHTML = ""
@@ -837,10 +857,17 @@ export default class extends Controller {
     const baseAmount = parseInt(this.amountCentsTarget.value || "0", 10)
 
     if (amountSource === "cash_plus_checks") {
-      return Math.max(baseAmount, 0) + this.checkSubtotalCents()
+      const cashAmount = Math.max(baseAmount, 0)
+      const cashBackCents = Math.min(this.cashBackCents(), cashAmount)
+      return Math.max(cashAmount + this.checkSubtotalCents() - cashBackCents, 0)
     }
 
     return Math.max(baseAmount, 0)
+  }
+
+  cashBackCents() {
+    if (!this.hasCashBackCentsTarget) return 0
+    return Math.max(parseInt(this.cashBackCentsTarget.value || "0", 10), 0)
   }
 
   checkCashingAmounts() {

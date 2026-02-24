@@ -62,6 +62,7 @@ module TellerPostingExecution
         :request_id,
         :transaction_type,
         :amount_cents,
+        :cash_back_cents,
         :currency,
         :approval_token,
         :primary_account_reference,

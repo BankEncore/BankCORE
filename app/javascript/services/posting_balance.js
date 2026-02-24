@@ -18,6 +18,7 @@ export function buildEntries(transactionType, state) {
   const entryProfile = state.entryProfile ?? transactionType
   const amountCents = state.effectiveAmountCents ?? 0
   const cashAmountCents = state.amountCents ?? 0
+  const cashBackCents = state.cashBackCents ?? 0
   const checks = state.checks ?? []
   const primaryAccountReference = (state.primaryAccountReference ?? "").trim()
   const counterpartyAccountReference = (state.counterpartyAccountReference ?? "").trim()
@@ -52,6 +53,11 @@ export function buildEntries(transactionType, state) {
           amount_cents: check.amount_cents
         })
       })
+
+    const cappedCashBackCents = Math.min(cashBackCents, cashAmountCents)
+    if (cappedCashBackCents > 0 && cashAccountReference) {
+      entries.push({ side: "credit", account_reference: cashAccountReference, amount_cents: cappedCashBackCents })
+    }
 
     entries.push({ side: "credit", account_reference: primaryAccountReference, amount_cents: amountCents })
     return entries
