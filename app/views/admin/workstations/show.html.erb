@@ -1,0 +1,22 @@
+<%= render "admin/shared/page_header",
+  title: @workstation.name,
+  description: "Workstation #{@workstation.code} at #{@workstation.branch.name}",
+  secondary_button_path: admin_workstations_path,
+  secondary_button_label: "Back to Workstations",
+  primary_button_path: edit_admin_workstation_path(@workstation),
+  primary_button_label: "Edit" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <dl class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <dt class="font-medium text-slate-600">Branch</dt>
+      <dd><%= link_to @workstation.branch.name, admin_branch_path(@workstation.branch), class: "link" %></dd>
+
+      <dt class="font-medium text-slate-600">Code</dt>
+      <dd><%= @workstation.code %></dd>
+
+      <dt class="font-medium text-slate-600">Name</dt>
+      <dd><%= @workstation.name %></dd>
+    </dl>
+  </div>
+</section>

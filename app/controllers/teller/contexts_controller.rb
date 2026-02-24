@@ -38,6 +38,7 @@ module Teller
         return
       end
 
+      session.delete(:current_teller_session_id)
       session[:current_branch_id] = branch.id
       session[:current_workstation_id] = workstation&.id
 

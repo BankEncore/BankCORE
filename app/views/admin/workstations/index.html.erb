@@ -1,0 +1,39 @@
+<%= render "admin/shared/page_header",
+  title: "Workstations",
+  description: "Manage workstations across branches.",
+  primary_button_path: admin_branches_path,
+  primary_button_label: "Add via Branch" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <% if params[:branch_id].present? %>
+      <p class="text-sm text-slate-600 mb-2">Filtered by branch. <%= link_to "Show all", admin_workstations_path, class: "link" %></p>
+    <% end %>
+
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Branch</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @workstations.each do |workstation| %>
+            <tr>
+              <td><%= link_to workstation.branch.name, admin_branch_path(workstation.branch), class: "link" %></td>
+              <td><%= workstation.code %></td>
+              <td><%= workstation.name %></td>
+              <td class="text-right">
+                <%= link_to "View", admin_workstation_path(workstation), class: "btn btn-ghost btn-sm" %>
+                <%= link_to "Edit", edit_admin_workstation_path(workstation), class: "btn btn-ghost btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

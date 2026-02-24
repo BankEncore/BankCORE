@@ -1,0 +1,23 @@
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-base">Permissions</h2>
+    <p class="text-sm text-slate-600 mb-4">Select the permissions this role should have.</p>
+
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <% permissions.each do |permission| %>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <%= check_box_tag "permission_ids[]",
+            permission.id,
+            role.permission_ids.include?(permission.id),
+            class: "checkbox" %>
+          <span class="text-sm">
+            <%= permission.key %>
+            <% if permission.description.present? %>
+              <span class="text-slate-500">— <%= permission.description %></span>
+            <% end %>
+          </span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+</section>

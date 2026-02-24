@@ -1,0 +1,26 @@
+<%= render "admin/shared/page_header",
+  title: "Cash Location Assignment",
+  description: "Assignment ##{@cash_location_assignment.id}",
+  secondary_button_path: admin_cash_location_assignments_path,
+  secondary_button_label: "Back" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <dl class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <dt class="font-medium text-slate-600">Teller Session</dt>
+      <dd>#<%= @cash_location_assignment.teller_session_id %></dd>
+
+      <dt class="font-medium text-slate-600">Cash Location</dt>
+      <dd><%= link_to @cash_location_assignment.cash_location.name, admin_cash_location_path(@cash_location_assignment.cash_location), class: "link" %></dd>
+
+      <dt class="font-medium text-slate-600">Branch</dt>
+      <dd><%= link_to @cash_location_assignment.cash_location.branch.name, admin_branch_path(@cash_location_assignment.cash_location.branch), class: "link" %></dd>
+
+      <dt class="font-medium text-slate-600">Assigned At</dt>
+      <dd><%= @cash_location_assignment.assigned_at.strftime("%Y-%m-%d %H:%M:%S") %></dd>
+
+      <dt class="font-medium text-slate-600">Released At</dt>
+      <dd><%= @cash_location_assignment.released_at&.strftime("%Y-%m-%d %H:%M:%S") || "—" %></dd>
+    </dl>
+  </div>
+</section>

@@ -1,0 +1,35 @@
+<%= form_with model: role, url: role.persisted? ? admin_role_path(role) : admin_roles_path, method: role.persisted? ? :patch : :post, class: "space-y-4" do |f| %>
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <% if role.errors.any? %>
+        <div class="alert alert-error">
+          <ul>
+            <% role.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="form-control">
+        <%= f.label :key, class: "label" %>
+        <%= f.text_field :key, class: "input input-bordered", required: true, readonly: role.persisted? %>
+      </div>
+
+      <div class="form-control">
+        <%= f.label :name, class: "label" %>
+        <%= f.text_field :name, class: "input input-bordered", required: true %>
+      </div>
+    </div>
+  </section>
+
+  <% if permissions.present? %>
+  <%= render "admin/roles/role_permissions_section", role: role, permissions: permissions %>
+<% end %>
+
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <%= f.submit role.persisted? ? "Update Role" : "Create Role", class: "btn btn-primary" %>
+    </div>
+  </section>
+<% end %>

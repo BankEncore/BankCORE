@@ -1,0 +1,13 @@
+<nav aria-label="Administration Commands" class="border-b border-base-300 bg-base-100 px-3 py-2" data-testid="admin-command-bar">
+  <div class="flex flex-wrap items-center gap-2">
+    <% active = ->(path) { current_page?(path) ? "btn-active" : "" } %>
+
+    <%= link_to "Dashboard", admin_root_path, class: "btn btn-sm btn-ghost #{active.call(admin_root_path)}", aria: (current_page?(admin_root_path) ? { current: "page" } : {}) %>
+    <%= link_to "Branches", admin_branches_path, class: "btn btn-sm btn-ghost #{active.call(admin_branches_path)}" %>
+    <%= link_to "Workstations", admin_workstations_path, class: "btn btn-sm btn-ghost #{active.call(admin_workstations_path)}" %>
+    <%= link_to "Cash Locations", admin_cash_locations_path, class: "btn btn-sm btn-ghost #{active.call(admin_cash_locations_path)}" %>
+    <%= link_to "Cash Location Assignments", admin_cash_location_assignments_path, class: "btn btn-sm btn-ghost #{active.call(admin_cash_location_assignments_path)}" %>
+    <%= link_to "Users", admin_users_path, class: "btn btn-sm btn-ghost #{active.call(admin_users_path)}" %>
+    <%= link_to "Roles", admin_roles_path, class: "btn btn-sm btn-ghost #{active.call(admin_roles_path)}" %>
+  </div>
+</nav>

@@ -1,0 +1,20 @@
+<section aria-label="Page Header" class="card bg-base-100 border border-base-300">
+  <div class="card-body py-3">
+    <h2 class="card-title text-lg"><%= title %></h2>
+    <% if local_assigns[:description].present? %>
+      <p class="text-sm opacity-80"><%= description %></p>
+    <% end %>
+
+    <p class="flex gap-2">
+      <% if local_assigns[:secondary_button_path].present? %>
+        <%= link_to local_assigns.fetch(:secondary_button_label, "Back"), local_assigns[:secondary_button_path], class: "btn btn-ghost btn-sm" %>
+      <% elsif local_assigns[:secondary_button_action].present? %>
+        <button type="button" class="btn btn-ghost" data-action="<%= local_assigns[:secondary_button_action] %>"><%= local_assigns.fetch(:secondary_button_label, "Cancel") %></button>
+      <% end %>
+
+      <% if local_assigns[:primary_button_path].present? %>
+        <%= link_to local_assigns.fetch(:primary_button_label, "Continue"), local_assigns[:primary_button_path], class: "btn btn-primary btn-sm" %>
+      <% end %>
+    </p>
+  </div>
+</section>

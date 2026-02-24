@@ -19,7 +19,8 @@ permissions = {
   "transactions.vault_transfer.create" => "Create vault transfers",
   "transactions.draft.create" => "Create draft issuances",
   "transactions.check_cashing.create" => "Create check cashing transactions",
-  "approvals.override.execute" => "Execute supervisor override"
+  "approvals.override.execute" => "Execute supervisor override",
+  "administration.workspace.view" => "Access Administration workspace (manage branches, cash locations, users, roles)"
 }
 
 permissions.each do |key, description|

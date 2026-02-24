@@ -1,0 +1,86 @@
+<%= render "admin/shared/page_header",
+  title: @branch.name,
+  description: "Branch #{@branch.code}",
+  secondary_button_path: admin_branches_path,
+  secondary_button_label: "Back to Branches",
+  primary_button_path: edit_admin_branch_path(@branch),
+  primary_button_label: "Edit" %>
+
+<div class="space-y-4">
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <div class="flex items-center justify-between">
+        <h2 class="card-title text-base">Workstations</h2>
+        <%= link_to "Add Workstation", new_admin_branch_workstation_path(@branch), class: "btn btn-primary btn-sm" %>
+      </div>
+      <div class="overflow-x-auto">
+        <% if @workstations.any? %>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @workstations.each do |workstation| %>
+                <tr>
+                  <td><%= workstation.code %></td>
+                  <td><%= workstation.name %></td>
+                  <td class="text-right">
+                    <%= link_to "Edit", edit_admin_workstation_path(workstation), class: "btn btn-ghost btn-sm" %>
+                    <%= button_to "Delete", admin_workstation_path(workstation), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "btn btn-ghost btn-sm text-error" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <p class="text-sm text-slate-600">No workstations yet.</p>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <div class="flex items-center justify-between">
+        <h2 class="card-title text-base">Cash Locations</h2>
+        <%= link_to "Add Cash Location", new_admin_branch_cash_location_path(@branch), class: "btn btn-primary btn-sm" %>
+      </div>
+      <div class="overflow-x-auto">
+        <% if @cash_locations.any? %>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Active</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @cash_locations.each do |cash_location| %>
+                <tr>
+                  <td><%= cash_location.code %></td>
+                  <td><%= cash_location.name %></td>
+                  <td><%= cash_location.location_type %></td>
+                  <td><%= cash_location.active? ? "Yes" : "No" %></td>
+                  <td class="text-right">
+                    <%= link_to "View", admin_cash_location_path(cash_location), class: "btn btn-ghost btn-sm" %>
+                    <%= link_to "Edit", edit_admin_cash_location_path(cash_location), class: "btn btn-ghost btn-sm" %>
+                    <%= button_to "Delete", admin_cash_location_path(cash_location), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "btn btn-ghost btn-sm text-error" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <p class="text-sm text-slate-600">No cash locations yet.</p>
+        <% end %>
+      </div>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,33 @@
+<%= render "admin/shared/page_header",
+  title: "New Workstation",
+  description: "Add a workstation to #{@branch.name}.",
+  secondary_button_path: admin_branch_path(@branch),
+  secondary_button_label: "Back" %>
+
+<%= form_with model: @workstation, url: admin_branch_workstations_path(@branch), class: "card bg-base-100 border border-base-300" do |f| %>
+  <div class="card-body">
+    <% if @workstation.errors.any? %>
+      <div class="alert alert-error">
+        <ul>
+          <% @workstation.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-control">
+      <%= f.label :code, class: "label" %>
+      <%= f.text_field :code, class: "input input-bordered", required: true, placeholder: "e.g. T01" %>
+    </div>
+
+    <div class="form-control">
+      <%= f.label :name, class: "label" %>
+      <%= f.text_field :name, class: "input input-bordered", required: true, placeholder: "e.g. Teller 01" %>
+    </div>
+
+    <div class="form-control mt-4">
+      <%= f.submit "Create Workstation", class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>

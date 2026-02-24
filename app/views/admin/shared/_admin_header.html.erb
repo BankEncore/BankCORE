@@ -1,0 +1,22 @@
+<%# Admin workspace header: identity + user + actions %>
+<header class="border-b border-base-300 bg-base-100">
+  <div class="mx-auto max-w-7xl px-4 py-3">
+    <div class="navbar">
+      <div class="flex items-center gap-3">
+        <%= link_to "BankCORE", root_path, class: "font-semibold tracking-tight" %>
+        <span class="badge badge-outline">Administration</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <%= link_to "Switch Workspace", root_path, class: "btn btn-ghost btn-sm" %>
+        <%= button_to "Sign Out", session_path, method: :delete, class: "btn btn-primary btn-sm" %>
+      </div>
+    </div>
+
+    <div class="mt-2 text-xs text-slate-600">
+      User <span class="font-medium text-slate-800"><%= Current.user&.email_address || "—" %></span>
+      <span class="opacity-50">•</span>
+      <span class="font-medium text-slate-800 mono tabular-nums"><%= Time.current.strftime("%b %-d, %Y %-l:%M %p") %></span>
+    </div>
+  </div>
+</header>

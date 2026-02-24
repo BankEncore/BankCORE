@@ -1,0 +1,7 @@
+<%= render "admin/shared/page_header",
+  title: "New Branch",
+  description: "Create a new bank branch.",
+  secondary_button_path: admin_branches_path,
+  secondary_button_label: "Back" %>
+
+<%= render "admin/branches/form", branch: @branch %>

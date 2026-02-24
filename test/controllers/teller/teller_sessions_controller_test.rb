@@ -107,6 +107,16 @@ module Teller
       assert_select "form[action='#{teller_teller_session_path}'][method='post']"
     end
 
+    test "shows session page with close form when open session has drawer" do
+      post teller_teller_session_path, params: { opening_cash_cents: 5_000 }
+      patch assign_drawer_teller_teller_session_path, params: { cash_location_id: @drawer.id }
+
+      get new_teller_teller_session_path
+
+      assert_response :success
+      assert_select "form[action='#{close_teller_teller_session_path}'][method='post']"
+    end
+
     private
       def grant_permissions(user, branch, workstation)
         [ "teller.dashboard.view", "sessions.open", "sessions.close" ].each do |permission_key|

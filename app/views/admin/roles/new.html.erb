@@ -1,0 +1,7 @@
+<%= render "admin/shared/page_header",
+  title: "New Role",
+  description: "Create a new role with permissions.",
+  secondary_button_path: admin_roles_path,
+  secondary_button_label: "Back" %>
+
+<%= render "admin/roles/form", role: @role, permissions: @permissions %>

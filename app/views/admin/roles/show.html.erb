@@ -1,0 +1,38 @@
+<%= render "admin/shared/page_header",
+  title: @role.name,
+  description: "Role #{@role.key}",
+  secondary_button_path: admin_roles_path,
+  secondary_button_label: "Back to Roles",
+  primary_button_path: edit_admin_role_path(@role),
+  primary_button_label: "Edit" %>
+
+<div class="space-y-4">
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <dl class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <dt class="font-medium text-slate-600">Key</dt>
+        <dd><%= @role.key %></dd>
+
+        <dt class="font-medium text-slate-600">Name</dt>
+        <dd><%= @role.name %></dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <h2 class="card-title text-base">Permissions</h2>
+      <% if @role.permissions.any? %>
+        <ul class="list-disc list-inside">
+          <% @role.permissions.order(:key).each do |perm| %>
+            <li><%= perm.key %> — <%= perm.description %></li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="text-sm text-slate-600">No permissions assigned.</p>
+      <% end %>
+    </div>
+  </section>
+
+  <%= render "admin/roles/role_users_section", role: @role, user_roles: @user_roles %>
+</div>
