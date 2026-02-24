@@ -26,11 +26,21 @@ module Posting
             errors << "To account reference is required" if params[:counterparty_account_reference].blank?
           end
         when "check_cashing"
-          if mode == :validate
-            errors << "Primary account reference is required" if entries.blank? && params[:primary_account_reference].blank?
+          errors << "Party is required" if params[:party_id].blank?
+          raw_items = Array(params[:check_items])
+          check_items = raw_items.select { |item| (item[:amount_cents] || item["amount_cents"]).to_i.positive? }
+          errors << "At least one check with amount greater than zero is required" if check_items.empty?
+          if check_items.any?
+            check_total = check_items.sum { |item| (item[:amount_cents] || item["amount_cents"]).to_i }
+            fee_cents = params[:fee_cents].to_i
+            errors << "Fee cannot exceed check total" if fee_cents > check_total
+            net_payout = check_total - fee_cents
+            errors << "Net cash payout must be greater than zero" if net_payout <= 0
           end
-          errors << "ID type is required" if params[:id_type].blank?
-          errors << "ID number is required" if params[:id_number].blank?
+          if params[:party_id].blank?
+            errors << "ID type is required when no party is selected" if params[:id_type].blank?
+            errors << "ID number is required when no party is selected" if params[:id_number].blank?
+          end
         when "draft"
           validate_draft(errors, params, mode: mode)
         when "vault_transfer"

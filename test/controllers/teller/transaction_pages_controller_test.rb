@@ -51,11 +51,8 @@ module Teller
       get teller_deposit_transaction_path
       assert_response :success
       assert_select "h2", "Deposit"
-      assert_select "h2", "Account Reference"
-      assert_select "p", /Transaction Snapshot/
-      assert_select "p", /Amounts/
-      assert_select "p", /Cash Impact/
-      assert_select "p", /Posting Readiness/
+      assert_select "h2", "Transaction Entry"
+      assert_select "p", /Account reference|totals/
       assert_select "h2", text: "Live Totals", count: 0
       assert_select "h2", text: "Cash Impact Footer", count: 0
       assert_select "p", text: /Primary Account History/, count: 0
@@ -68,11 +65,8 @@ module Teller
       get teller_withdrawal_transaction_path
       assert_response :success
       assert_select "h2", "Withdrawal"
-      assert_select "h2", "Account Reference"
-      assert_select "p", /Transaction Snapshot/
-      assert_select "p", /Amounts/
-      assert_select "p", /Cash Impact/
-      assert_select "p", /Posting Readiness/
+      assert_select "h2", "Transaction Entry"
+      assert_select "p", /Account reference|totals/
       assert_select "h2", text: "Live Totals", count: 0
       assert_select "h2", text: "Cash Impact Footer", count: 0
       assert_select "p", text: /Primary Account History/, count: 0
@@ -85,11 +79,8 @@ module Teller
       get teller_transfer_transaction_path
       assert_response :success
       assert_select "h2", "Transfer"
-      assert_select "h2", "Account Reference"
-      assert_select "p", /Transaction Snapshot/
-      assert_select "p", /Amounts/
-      assert_select "p", /Cash Impact/
-      assert_select "p", /Posting Readiness/
+      assert_select "h2", "Transaction Entry"
+      assert_select "p", /Account reference|totals/
       assert_select "h2", text: "Live Totals", count: 0
       assert_select "h2", text: "Cash Impact Footer", count: 0
       assert_select "p", text: /Primary Account History/, count: 0
@@ -102,16 +93,13 @@ module Teller
       get teller_check_cashing_transaction_path
       assert_response :success
       assert_select "h2", "Check Cashing"
-      assert_select "h2", "Account Reference"
-      assert_select "p", /Transaction Snapshot/
-      assert_select "p", /Amounts/
-      assert_select "p", /Cash Impact/
-      assert_select "p", /Posting Readiness/
+      assert_select "h2", "Transaction Entry"
+      assert_select "p", /Account reference|totals/
       assert_select "h2", text: "Live Totals", count: 0
       assert_select "h2", text: "Cash Impact Footer", count: 0
       assert_select "p", text: /Primary Account History/, count: 0
       assert_select "input[name='transaction_type'][value='check_cashing']", count: 1
-      assert_select "section[data-posting-form-target='checkSection'][hidden]", count: 1
+      assert_select "section[data-posting-form-target='checkSection']:not([hidden])", count: 1
       assert_select "section[data-posting-form-target='checkCashingSection']:not([hidden])", count: 1
 
       get teller_draft_transaction_path

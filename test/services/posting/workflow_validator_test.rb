@@ -58,36 +58,38 @@ module Posting
       assert_empty errors
     end
 
-    test "check_cashing returns errors when id_type or id_number is blank" do
+    test "check_cashing returns errors when party_id is blank" do
       errors = WorkflowValidator.errors({
         transaction_type: "check_cashing",
-        check_amount_cents: 10_000,
-        fee_cents: 0,
         amount_cents: 10_000,
-        settlement_account_reference: "acct:settle",
-        entries: [
-          { side: "debit", account_reference: "acct:settle", amount_cents: 10_000 },
-          { side: "credit", account_reference: "cash:D1", amount_cents: 10_000 }
-        ]
+        check_items: [ { routing: "021", account: "123", number: "1", account_reference: "check:021:123:1", amount_cents: 10_000 } ],
+        entries: []
       }, mode: :post)
 
-      assert_includes errors, "ID type is required"
-      assert_includes errors, "ID number is required"
+      assert_includes errors, "Party is required"
     end
 
-    test "check_cashing returns no ID errors when id_type and id_number present" do
+    test "check_cashing returns errors when id_type or id_number is blank and no party" do
       errors = WorkflowValidator.errors({
         transaction_type: "check_cashing",
-        check_amount_cents: 10_000,
-        fee_cents: 0,
         amount_cents: 10_000,
-        settlement_account_reference: "acct:settle",
-        id_type: "drivers_license",
-        id_number: "DL123",
-        entries: [
-          { side: "debit", account_reference: "acct:settle", amount_cents: 10_000 },
-          { side: "credit", account_reference: "cash:D1", amount_cents: 10_000 }
-        ]
+        party_id: "",
+        check_items: [ { routing: "021", account: "123", number: "1", account_reference: "check:021:123:1", amount_cents: 10_000 } ],
+        entries: []
+      }, mode: :post)
+
+      assert_includes errors, "ID type is required when no party is selected"
+      assert_includes errors, "ID number is required when no party is selected"
+    end
+
+    test "check_cashing returns no ID errors when party_id present" do
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Test", is_active: true)
+      errors = WorkflowValidator.errors({
+        transaction_type: "check_cashing",
+        amount_cents: 10_000,
+        party_id: party.id,
+        check_items: [ { routing: "021", account: "123", number: "1", account_reference: "check:021:123:1", amount_cents: 10_000 } ],
+        entries: []
       }, mode: :post)
 
       assert errors.none? { |e| e.include?("ID type") }, "Should not report ID type error"

@@ -48,7 +48,8 @@ module Teller
       assert_equal "draft_account_only", body.dig("workflows", "draft", "primary_account_policy")
       assert_equal true, body.dig("workflows", "transfer", "requires_counterparty_account")
       assert_equal "draft_cash_only", body.dig("workflows", "draft", "cash_account_policy")
-      assert_equal true, body.dig("workflows", "check_cashing", "requires_settlement_account")
+      assert_equal false, body.dig("workflows", "check_cashing", "requires_settlement_account")
+      assert_includes body.dig("workflows", "check_cashing", "required_fields"), "party_id"
     end
 
     private

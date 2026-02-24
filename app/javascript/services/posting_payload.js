@@ -65,15 +65,9 @@ function appendVaultTransferPayload(formData, state) {
 
 function appendCheckCashingPayload(formData, state) {
   const amounts = state.checkCashingAmounts ?? {}
-  formData.set("check_amount_cents", String(amounts.checkAmountCents ?? 0))
   formData.set("fee_cents", String(amounts.feeCents ?? 0))
-  formData.set("settlement_account_reference", (state.settlementAccountReference ?? "").trim())
   formData.set("fee_income_account_reference", (state.feeIncomeAccountReference ?? "income:check_cashing_fee").trim())
-  formData.set("check_number", (state.checkNumber ?? "").trim())
-  formData.set("routing_number", (state.routingNumber ?? "").trim())
-  formData.set("account_number", (state.accountNumber ?? "").trim())
-  formData.set("payer_name", (state.payerName ?? "").trim())
-  formData.set("presenter_type", (state.presenterType ?? "").trim())
+  formData.set("party_id", (state.partyId ?? "").trim())
   formData.set("id_type", (state.idType ?? "").trim())
   formData.set("id_number", (state.idNumber ?? "").trim())
 }

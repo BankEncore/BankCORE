@@ -104,6 +104,12 @@ export function getRequiresCashAccount(transactionType, schema, context = {}) {
 export function getRequiresSettlementAccount(transactionType, schema) {
   const value = schema?.[transactionType]?.requires_settlement_account
   if (value !== undefined) return value === true
+  return false
+}
+
+export function getRequiresParty(transactionType, schema) {
+  const required = schema?.[transactionType]?.required_fields
+  if (Array.isArray(required)) return required.includes("party_id")
   return transactionType === "check_cashing"
 }
 
@@ -158,6 +164,8 @@ export function blockedReason({
   hasCashAccount,
   requiresSettlementAccount,
   hasSettlementAccount,
+  requiresParty,
+  hasParty,
   requiresDraftDetails,
   hasDraftPayee,
   hasDraftInstrumentNumber,
@@ -177,9 +185,10 @@ export function blockedReason({
   if (requiresPrimaryAccount && !hasPrimaryAccount) return "Primary account reference is required."
   if (requiresCounterparty && !hasCounterparty) return "Counterparty account reference is required."
   if (requiresSettlementAccount && !hasSettlementAccount) return "Settlement account reference is required."
+  if (requiresParty && !hasParty) return "Party is required."
   if (requiresCashAccount && !hasCashAccount) return "Cash account reference is required."
   if (hasInvalidCheckRows) return "Complete check routing, account, and number for each entered check."
-  if (hasInvalidCheckCashingFields) return "Complete check cashing amount and presenter ID details."
+  if (hasInvalidCheckCashingFields) return "Complete party, check amounts, and ID (when no party selected)."
   if (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) return "Complete draft payee and instrument details."
   if (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) return "Complete vault transfer direction, locations, and reason details."
   if (hasInvalidDraftFields) return "Draft amount and fee values are invalid."

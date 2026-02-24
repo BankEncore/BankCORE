@@ -11,6 +11,13 @@ module Teller
       @parties = @parties.where(relationship_kind: params[:relationship_kind]) if params[:relationship_kind].present?
     end
 
+    def search
+      scope = Party.where(is_active: true, party_kind: "individual").order(display_name: :asc).limit(20)
+      scope = scope.where("display_name LIKE ?", "%#{sanitize_sql_like(params[:q].to_s)}%") if params[:q].present?
+      parties = scope.pluck(:id, :display_name, :party_kind).map { |id, display_name, party_kind| { id: id, display_name: display_name.presence || "Party ##{id}", party_kind: party_kind } }
+      render json: parties
+    end
+
     def show
     end
 
@@ -23,7 +30,15 @@ module Teller
       if @party.save
         begin
           create_party_detail
-          redirect_to teller_party_path(@party), notice: "Party created."
+          return_to = params[:return_to].presence
+          if return_to.present?
+            uri = URI.parse(return_to)
+            new_query = "party_id=#{@party.id}"
+            uri.query = uri.query.present? ? "#{uri.query}&#{new_query}" : new_query
+            redirect_to uri.to_s, notice: "Party created."
+          else
+            redirect_to teller_party_path(@party), notice: "Party created."
+          end
         rescue ActiveRecord::RecordInvalid => e
           @party.errors.add(:base, e.record.errors.full_messages.join(", "))
           render :new, status: :unprocessable_entity

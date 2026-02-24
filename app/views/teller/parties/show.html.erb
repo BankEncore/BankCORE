@@ -32,6 +32,10 @@
         <dt class="ui-kv-key text-xs">Status</dt>
         <dd class="ui-kv-value text-sm"><%= @party.is_active? ? "Active" : "Inactive" %></dd>
       </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Tax ID</dt>
+        <dd class="ui-kv-value text-sm font-mono"><%= mask_last_four(@party.tax_id) %></dd>
+      </div>
       <% if @party.individual? && @party.party_individual.present? %>
         <div class="ui-kv-row">
           <dt class="ui-kv-key text-xs">First name</dt>
@@ -44,6 +48,14 @@
         <div class="ui-kv-row">
           <dt class="ui-kv-key text-xs">DOB</dt>
           <dd class="ui-kv-value text-sm mono"><%= @party.party_individual.dob&.strftime("%Y-%m-%d") || "—" %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Govt ID type</dt>
+          <dd class="ui-kv-value text-sm"><%= @party.party_individual.govt_id_type.present? ? @party.party_individual.govt_id_type.titleize : "—" %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Govt ID</dt>
+          <dd class="ui-kv-value text-sm font-mono"><%= mask_last_four(@party.party_individual.govt_id) %></dd>
         </div>
       <% elsif @party.organization? && @party.party_organization.present? %>
         <div class="ui-kv-row">

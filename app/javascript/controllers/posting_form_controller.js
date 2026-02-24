@@ -10,6 +10,7 @@ import {
   getRequiresCounterpartyAccount,
   getRequiresCashAccount,
   getRequiresSettlementAccount,
+  getRequiresParty,
   hasSection as workflowHasSectionInConfig,
   blockedReason as workflowBlockedReason
 } from "services/posting_workflows"
@@ -29,9 +30,13 @@ export default class extends Controller {
     "draftSection",
     "vaultTransferSection",
     "checkCashingSection",
+    "partyId",
+    "checkCashingIdRow",
     "checkRows",
     "checkTemplate",
     "amountCents",
+    "cashAmountRow",
+    "primaryAccountRow",
     "checkAmountCents",
     "feeCents",
     "settlementAccountReference",
@@ -197,7 +202,8 @@ export default class extends Controller {
       payerName: this.hasPayerNameTarget ? this.payerNameTarget.value : "",
       presenterType: this.hasPresenterTypeTarget ? this.presenterTypeTarget.value : "",
       idType: this.hasIdTypeTarget ? this.idTypeTarget.value : "",
-      idNumber: this.hasIdNumberTarget ? this.idNumberTarget.value : ""
+      idNumber: this.hasIdNumberTarget ? this.idNumberTarget.value : "",
+      partyId: this.hasPartyIdTarget ? this.partyIdTarget.value : ""
     }
   }
 
@@ -229,6 +235,8 @@ export default class extends Controller {
     const requiresCounterparty = getRequiresCounterpartyAccount(transactionType, this.workflowSchema)
     const requiresCashAccount = getRequiresCashAccount(transactionType, this.workflowSchema, workflowContext)
     const requiresSettlementAccount = getRequiresSettlementAccount(transactionType, this.workflowSchema)
+    const requiresParty = getRequiresParty(transactionType, this.workflowSchema)
+    const hasParty = state.partyId.trim().length > 0
     const requiresDraftDetails = showDraftSection
     const requiresVaultTransferDetails = showVaultTransferSection
     const hasCounterparty = state.counterpartyAccountReference.trim().length > 0
@@ -245,7 +253,7 @@ export default class extends Controller {
     const hasInvalidCheckCashingFields = this.hasInvalidCheckCashingFields(checkCashingAmounts)
     const hasInvalidDraftFields = this.hasInvalidDraftFields(draftAmounts)
     const hasInvalidVaultTransferFields = this.hasInvalidVaultTransferFields(vaultTransferDetails)
-    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || (requiresSettlementAccount && !hasSettlementAccount) || (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) || (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) || hasInvalidCheckRows || hasInvalidCheckCashingFields || hasInvalidDraftFields || hasInvalidVaultTransferFields
+    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || (requiresSettlementAccount && !hasSettlementAccount) || (requiresParty && !hasParty) || (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) || (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) || hasInvalidCheckRows || hasInvalidCheckCashingFields || hasInvalidDraftFields || hasInvalidVaultTransferFields
 
     const entries = buildEntries(transactionType, state)
     const { debitTotal, creditTotal, imbalance, balanced } = computeTotals(entries)
@@ -261,6 +269,8 @@ export default class extends Controller {
       hasCashAccount,
       requiresSettlementAccount,
       hasSettlementAccount,
+      requiresParty,
+      hasParty,
       requiresDraftDetails,
       hasDraftPayee,
       hasDraftInstrumentNumber,
@@ -304,8 +314,18 @@ export default class extends Controller {
       this.settlementAccountReferenceTarget.setAttribute("aria-required", requiresSettlementAccount ? "true" : "false")
     }
     if (this.hasIdNumberTarget) {
-      this.idNumberTarget.required = showCheckCashingSection
-      this.idNumberTarget.setAttribute("aria-required", showCheckCashingSection ? "true" : "false")
+      const idRequired = showCheckCashingSection && !hasParty
+      this.idNumberTarget.required = idRequired
+      this.idNumberTarget.setAttribute("aria-required", idRequired ? "true" : "false")
+    }
+    if (this.hasCheckCashingIdRowTarget) {
+      this.checkCashingIdRowTarget.hidden = !showCheckCashingSection
+    }
+    if (this.hasPrimaryAccountRowTarget) {
+      this.primaryAccountRowTarget.hidden = showCheckCashingSection
+    }
+    if (this.hasCashAmountRowTarget) {
+      this.cashAmountRowTarget.hidden = showCheckCashingSection
     }
 
     if (this.hasCashSubtotalTarget) this.cashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
@@ -822,13 +842,13 @@ export default class extends Controller {
   }
 
   checkCashingAmounts() {
-    const checkAmountCents = this.hasCheckAmountCentsTarget ? Math.max(parseInt(this.checkAmountCentsTarget.value || "0", 10), 0) : 0
+    const checkSubtotalCents = this.checkSubtotalCents()
     const feeCents = this.hasFeeCentsTarget ? Math.max(parseInt(this.feeCentsTarget.value || "0", 10), 0) : 0
 
     return {
-      checkAmountCents,
+      checkAmountCents: checkSubtotalCents,
       feeCents,
-      netCashPayoutCents: Math.max(checkAmountCents - feeCents, 0)
+      netCashPayoutCents: Math.max(checkSubtotalCents - feeCents, 0)
     }
   }
 
@@ -1001,44 +1021,22 @@ export default class extends Controller {
       return false
     }
 
-    const hasSettlementAccount = this.hasSettlementAccountReferenceTarget && this.settlementAccountReferenceTarget.value.trim().length > 0
+    const hasParty = this.hasPartyIdTarget && this.partyIdTarget.value.trim().length > 0
     const hasIdType = this.hasIdTypeTarget && this.idTypeTarget.value.trim().length > 0
     const hasIdNumber = this.hasIdNumberTarget && this.idNumberTarget.value.trim().length > 0
+    const idRequired = !hasParty
+    const hasValidId = !idRequired || (hasIdType && hasIdNumber)
 
-    return checkAmountCents <= 0 || feeCents < 0 || netCashPayoutCents <= 0 || !hasSettlementAccount || !hasIdType || !hasIdNumber
+    return checkAmountCents <= 0 || feeCents < 0 || feeCents > checkAmountCents || netCashPayoutCents <= 0 || !hasValidId
   }
 
   resetCheckCashingFields() {
-    if (this.hasCheckAmountCentsTarget) {
-      this.setAmountCents(this.checkAmountCentsTarget, 0)
-    }
-
     if (this.hasFeeCentsTarget) {
       this.setAmountCents(this.feeCentsTarget, 0)
     }
 
-    if (this.hasSettlementAccountReferenceTarget) {
-      this.settlementAccountReferenceTarget.value = ""
-    }
-
-    if (this.hasCheckNumberTarget) {
-      this.checkNumberTarget.value = ""
-    }
-
-    if (this.hasRoutingNumberTarget) {
-      this.routingNumberTarget.value = ""
-    }
-
-    if (this.hasAccountNumberTarget) {
-      this.accountNumberTarget.value = ""
-    }
-
-    if (this.hasPayerNameTarget) {
-      this.payerNameTarget.value = ""
-    }
-
-    if (this.hasPresenterTypeTarget) {
-      this.presenterTypeTarget.value = "customer"
+    if (this.hasPartyIdTarget) {
+      this.partyIdTarget.value = ""
     }
 
     if (this.hasIdTypeTarget) {

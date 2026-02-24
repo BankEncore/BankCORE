@@ -55,6 +55,11 @@ module Teller
           :vault_transfer_destination_cash_account_reference,
           :vault_transfer_reason_code,
           :vault_transfer_memo,
+          :fee_cents,
+          :fee_income_account_reference,
+          :party_id,
+          :id_type,
+          :id_number,
           :draft_funding_source,
           :draft_amount_cents,
           :draft_fee_cents,
@@ -62,6 +67,7 @@ module Teller
           :draft_instrument_number,
           :draft_liability_account_reference,
           :draft_fee_income_account_reference,
+          check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :hold_reason, :hold_until ],
           entries: [ :side, :account_reference, :amount_cents ]
         )
       end

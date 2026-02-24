@@ -3,7 +3,11 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
   namespace :teller do
     root "dashboard#index"
-    resources :parties, only: [ :index, :show, :new, :create, :edit, :update ]
+    resources :parties, only: [ :index, :show, :new, :create, :edit, :update ] do
+      collection do
+        get :search
+      end
+    end
     resources :accounts, only: [ :index, :show, :new, :create, :edit, :update ]
     resources :deposits, only: [ :new, :create ]
     resources :withdrawals, only: [ :new, :create ]

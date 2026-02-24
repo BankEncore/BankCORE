@@ -106,14 +106,22 @@ export function buildEntries(transactionType, state) {
   }
 
   if (entryProfile === "check_cashing") {
-    if (checkAmountCents <= 0 || netCashPayoutCents <= 0 || !settlementAccountReference) {
+    const checkItems = checks.filter((c) => (c.amount_cents ?? 0) > 0)
+    if (checkItems.length === 0 || netCashPayoutCents <= 0) {
       return []
     }
 
-    const entries = [
-      { side: "debit", account_reference: settlementAccountReference, amount_cents: checkAmountCents },
-      { side: "credit", account_reference: cashAccountReference, amount_cents: netCashPayoutCents }
-    ]
+    const entries = []
+
+    checkItems.forEach((check) => {
+      entries.push({
+        side: "debit",
+        account_reference: check.account_reference ?? "",
+        amount_cents: check.amount_cents
+      })
+    })
+
+    entries.push({ side: "credit", account_reference: cashAccountReference, amount_cents: netCashPayoutCents })
 
     if (feeCents > 0) {
       entries.push({ side: "credit", account_reference: feeIncomeAccountReference, amount_cents: feeCents })
