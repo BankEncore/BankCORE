@@ -15,7 +15,8 @@
       <% num = (item["number"] || item[:number]).to_s.presence || "—" %>
       <% indicator = check_hold_indicator(item) %>
       <tr>
-        <td class="font-small"><%= num %> <%= indicator %></td>
+        <td class="font-small"><%= num %></td>
+        <td><%= indicator %></td>
         <td class="text-right tabular-nums font-small"><%= receipt_money(amt) %></td>
       </tr>
     <% end %>

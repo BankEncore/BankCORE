@@ -7,7 +7,7 @@
 
 <div class="receipt-account-block mt-3 text-sm grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
   <p class="font-semibold col-span-2">Account <%= masked_account_number(account.account_number) %> (<%= account.account_type.upcase[0, 3] %>)</p>
-  <span>Previous Bal.:</span>
+  <span>Previous Balance:</span>
   <span class="tabular-nums text-right"><%= receipt_money(prev) %></span>
   <% if credit.positive? %>
     <span>Credit:</span>
@@ -17,7 +17,7 @@
     <span>Debit:</span>
     <span class="tabular-nums text-right"><%= receipt_money(debit) %></span>
   <% end %>
-  <span>Pending Bal.:</span>
+  <span>Pending Balance:</span>
   <span class="tabular-nums text-right"><%= receipt_money(pending) %></span>
 </div>
 <% end %>
