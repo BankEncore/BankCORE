@@ -2,7 +2,7 @@
 <% total = total_cents || items.sum { |i| (i["amount_cents"] || i[:amount_cents] || 0).to_i } %>
 
 <% if items.any? %>
-<table class="receipt-check-table table table-sm text-sm font-mono mt-2 w-full">
+<table class="receipt-check-table table table-sm text-xs mt-2 w-full">
   <thead>
     <tr>
       <th class="text-left">Check #</th>
@@ -23,7 +23,7 @@
   <tfoot>
     <tr class="border-t">
       <td><%= items.size %> items</td>
-      <td class="text-right tabular-nums font-medium"><%= receipt_money(total) %></td>
+      <td class="text-right tabular-nums font-medium"><%= receipt_money(total) %>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
     </tr>
   </tfoot>
 </table>

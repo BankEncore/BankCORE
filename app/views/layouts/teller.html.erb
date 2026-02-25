@@ -13,7 +13,6 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -30,8 +29,9 @@
 
     <div class="min-h-screen">
       <div class="no-print sticky top-0 z-50">
-        <%= render "teller/shared/teller_header", teller_session: current_teller_session %>
-        <%= render "teller/shared/command_bar", teller_session: current_teller_session %>
+        <%= render "shared/application_header" %>
+        <%= render "shared/status_bar", workspace: :teller %>
+        <%= render "teller/shared/command_bar" %>
       </div>
 
       <main id="main" class="mx-auto w-full max-w-7xl px-4 py-3 space-y-3">

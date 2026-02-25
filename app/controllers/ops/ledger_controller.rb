@@ -1,6 +1,5 @@
 module Ops
-  class LedgerController < ApplicationController
-    layout "ops"
+  class LedgerController < BaseController
     before_action :require_ops_access
 
     def index

@@ -3,14 +3,25 @@
 <% check_items = check_items_from_metadata(posting_batch) %>
 <% cash_back = (meta["cash_back_cents"] || meta[:cash_back_cents] || 0).to_i %>
 <% checks_total = check_items.sum { |i| (i["amount_cents"] || i[:amount_cents] || 0).to_i } %>
-<% total_debit = posting_legs.select { |l| l.side == "debit" }.sum(&:amount_cents) %>
-<% cash_in_from_cash = total_debit - checks_total %>
-<% cash_in_from_checks = checks_total %>
+<% cash_in = posting_legs.select { |l| l.side == "debit" && l.account_reference.to_s.start_with?("cash:") }.sum(&:amount_cents) %>
+<% cash_in_from_checks = check_items.any? ? checks_total : 0 %>
+<% cash_in_from_cash = cash_in - cash_in_from_checks %>
 
-<div class="receipt-type-details text-sm font-mono">
-  <p>Cash In:    <%= receipt_money(cash_in_from_cash) %></p>
-  <p>Checks In:  <%= receipt_money(cash_in_from_checks) %></p>
-  <p>Cash Out:   <%= receipt_money(cash_back) %></p>
+<div class="receipt-type-details text-sm">
+  <table class="table table-sm text-sm w-full">
+    <tr>
+      <td>Cash In:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(cash_in) %></td>
+    </tr>
+    <tr>
+      <td>Checks In:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(cash_in_from_checks) %></td>
+    </tr> 
+    <tr>
+      <td>Cash Out:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(cash_back) %></td>
+    </tr>
+  </table>
 </div>
 
 <% if check_items.any? %>

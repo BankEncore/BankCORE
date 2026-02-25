@@ -29,11 +29,11 @@
               <tr class="row-border">
                 <td class="py-2"><%= transaction.posted_at.strftime("%b %-d, %Y at %-l:%M %p") %></td>
                 <td class="py-2"><%= transaction.transaction_type.titleize %></td>
-                <td class="py-2 text-right mono tabular-nums <%= signed_cents.negative? ? 'text-error font-medium' : 'ui-money' %>">
+                <td class="py-2 text-right tabular-nums <%= signed_cents.negative? ? 'text-error font-medium' : 'ui-money' %>">
                   <%= signed_cents.negative? ? "" : "+" %><%= number_to_currency(signed_cents / 100.0) %>
                 </td>
                 <td class="py-2"><span class="badge badge-outline"><%= transaction.status %></span></td>
-                <td class="py-2 mono text-xs"><%= transaction.request_id %></td>
+                <td class="py-2 text-xs tabular-nums"><%= transaction.request_id %></td>
                 <td class="no-print py-2 text-right">
                   <% if transaction.posting_batch.present? %>
                     <div class="flex gap-1 justify-end">

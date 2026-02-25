@@ -1,0 +1,69 @@
+<%# Status/context bar: workspace-specific (Branch, Workstation, Teller, Session, Drawer). Labels lighter than values. %>
+<%# Pass workspace: :teller, :csr, :ops, :admin, or :minimal for home/root %>
+<% workspace = local_assigns[:workspace] || :minimal %>
+
+<section aria-label="Status" class="border-b border-base-300 bg-base-200/70 no-print">
+  <div class="mx-auto max-w-7xl px-4 py-2">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
+      <% case workspace %>
+      <% when :teller %>
+        <span class="flex items-baseline gap-1">
+          Branch <span class="font-medium text-slate-800"><%= current_branch&.name || "—" %></span>
+        </span>
+        <span class="hidden sm:inline opacity-50">•</span>
+        <span class="flex items-baseline gap-1">
+          Workstation <span class="font-medium text-slate-800"><%= current_workstation&.name || "—" %></span>
+        </span>
+        <span class="hidden sm:inline opacity-50">•</span>
+        <span class="flex items-baseline gap-1">
+          Teller <span class="font-medium text-slate-800"><%= Current.user&.display_label || Current.user&.teller_number || "—" %></span>
+        </span>
+        <span class="hidden sm:inline opacity-50">•</span>
+        <span class="flex items-baseline gap-1">
+          Session <span class="font-medium text-slate-800 mono"><%= current_teller_session&.id || "—" %></span>
+        </span>
+        <span class="hidden md:inline opacity-50">•</span>
+        <span class="hidden md:flex items-baseline gap-1">
+          Drawer <span class="font-medium text-slate-800"><%= current_teller_session&.cash_location&.name || "—" %></span>
+        </span>
+      <% when :csr %>
+        <span class="flex items-baseline gap-1">
+          Branch <span class="font-medium text-slate-800"><%= current_branch&.name || "—" %></span>
+        </span>
+        <span class="hidden sm:inline opacity-50">•</span>
+        <span class="flex items-baseline gap-1">
+          User <span class="font-medium text-slate-800"><%= Current.user&.display_label || "—" %></span>
+        </span>
+      <% when :ops %>
+        <span class="flex items-baseline gap-1">
+          User <span class="font-medium text-slate-800"><%= Current.user&.display_label || "—" %></span>
+        </span>
+      <% when :admin %>
+        <span class="flex items-baseline gap-1">
+          User <span class="font-medium text-slate-800"><%= Current.user&.display_label || "—" %></span>
+        </span>
+      <% else %>
+        <%# Minimal: home/root - show whatever context is available from teller or CSR %>
+        <% if current_branch.present? || current_workstation.present? || Current.user.present? %>
+          <% if current_branch.present? %>
+            <span class="flex items-baseline gap-1">
+              Branch <span class="font-medium text-slate-800"><%= current_branch.name %></span>
+            </span>
+            <% if current_workstation.present? || Current.user.present? %><span class="hidden sm:inline opacity-50">•</span><% end %>
+          <% end %>
+          <% if current_workstation.present? %>
+            <span class="flex items-baseline gap-1">
+              Workstation <span class="font-medium text-slate-800"><%= current_workstation.name %></span>
+            </span>
+            <% if Current.user.present? %><span class="hidden sm:inline opacity-50">•</span><% end %>
+          <% end %>
+          <% if Current.user.present? %>
+            <span class="flex items-baseline gap-1">
+              User <span class="font-medium text-slate-800"><%= Current.user.display_label %></span>
+            </span>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</section>

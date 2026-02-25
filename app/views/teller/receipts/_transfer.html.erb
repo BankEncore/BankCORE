@@ -10,7 +10,7 @@
 <% meta = meta.with_indifferent_access if meta.respond_to?(:with_indifferent_access) %>
 <% fee_cents = (meta["fee_cents"] || meta[:fee_cents] || 0).to_i %>
 
-<div class="receipt-type-details text-sm font-mono">
+<div class="receipt-type-details text-sm">
   <p>From:                <%= from_masked %></p>
   <p>To:                  <%= to_masked %></p>
   <p>Amount:      <%= receipt_money(teller_transaction.amount_cents) %></p>

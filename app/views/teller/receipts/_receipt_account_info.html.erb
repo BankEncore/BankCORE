@@ -5,15 +5,19 @@
   <% debit = summary[:debit_cents] %>
   <% pending = summary[:pending_balance_cents] %>
 
-<div class="receipt-account-block mt-3 text-sm font-mono">
-  <p class="font-semibold">ACCOUNT <%= masked_account_number(account.account_number) %> (<%= account.account_type.upcase[0, 3] %>)</p>
-  <p>Previous Bal: <%= receipt_money(prev) %></p>
+<div class="receipt-account-block mt-3 text-sm grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+  <p class="font-semibold col-span-2">Account <%= masked_account_number(account.account_number) %> (<%= account.account_type.upcase[0, 3] %>)</p>
+  <span>Previous Bal.:</span>
+  <span class="tabular-nums text-right"><%= receipt_money(prev) %></span>
   <% if credit.positive? %>
-    <p>Credit:       <%= receipt_money(credit) %></p>
+    <span>Credit:</span>
+    <span class="tabular-nums text-right"><%= receipt_money(credit) %></span>
   <% end %>
   <% if debit.positive? %>
-    <p>Debit:        <%= receipt_money(debit) %></p>
+    <span>Debit:</span>
+    <span class="tabular-nums text-right"><%= receipt_money(debit) %></span>
   <% end %>
-  <p>Pending Bal:  <%= receipt_money(pending) %></p>
+  <span>Pending Bal.:</span>
+  <span class="tabular-nums text-right"><%= receipt_money(pending) %></span>
 </div>
 <% end %>
