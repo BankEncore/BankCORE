@@ -1,2 +1,24 @@
-<h1>BankCORE</h1>
-<p>Authenticated session active.</p>
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h1 class="card-title text-lg">Select Workspace</h1>
+    <p class="text-sm text-slate-600 mt-1">Choose a workspace to continue.</p>
+
+    <% workspaces = authorized_workspaces %>
+    <% if workspaces.any? %>
+      <div class="mt-4 flex flex-col sm:flex-row flex-wrap gap-3">
+        <% workspaces.each do |ws| %>
+          <%= link_to ws[:path], class: "btn btn-outline btn-sm w-full sm:w-auto" do %>
+            <%= ws[:name] %>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="mt-4">
+        <p class="text-sm text-base-content/70">
+          No workspaces available.
+          <%= link_to "Contact admin", "mailto:admin@bankcore.local", class: "link link-hover" %> to request access.
+        </p>
+      </div>
+    <% end %>
+  </div>
+</section>
