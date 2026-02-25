@@ -44,7 +44,7 @@ module Teller
         @page_title = title
         vaults = current_branch.cash_locations.active.where(location_type: "vault").order(:name)
         @cash_locations = if transaction_type == "vault_transfer" && (session = current_teller_session) && session.cash_location.present?
-          [session.cash_location] + vaults.to_a
+          [ session.cash_location ] + vaults.to_a
         else
           vaults
         end

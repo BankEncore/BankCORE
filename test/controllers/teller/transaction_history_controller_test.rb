@@ -76,8 +76,8 @@ module Teller
       assert_select "td", text: /hist-req-002/
       assert_select "td", text: /hist-req-999/, count: 0
 
-      assert_select "a[href='#{teller_receipt_path(request_id: own_recent.request_id)}']", "View Receipt"
-      assert_select "a[href='#{teller_receipt_path(request_id: own_older.request_id)}']", "View Receipt"
+      assert_select "a[href='#{teller_receipt_path(request_id: own_recent.request_id)}']", "Receipt"
+      assert_select "a[href='#{teller_receipt_path(request_id: own_older.request_id)}']", "Receipt"
     end
 
     private
