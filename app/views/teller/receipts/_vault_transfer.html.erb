@@ -8,13 +8,13 @@
 <% branch = teller_transaction.branch %>
 <% user = teller_transaction.user %>
 
-<div class="receipt-type-details text-sm font-mono">
+<div class="receipt-type-details text-sm">
   <p>From:          <%= cash_location_display_name(source_ref, branch) %></p>
   <p>To:            <%= cash_location_display_name(dest_ref, branch) %></p>
   <p>Reason:        <%= reason %></p>
   <p>Amount:        <%= receipt_money(teller_transaction.amount_cents) %></p>
 </div>
 
-<div class="receipt-auth mt-3 text-sm font-mono">
+<div class="receipt-auth mt-3 text-sm">
   <p>Auth: <%= user.teller_number.presence || teller_transaction.workstation&.code || "—" %> - <%= user.display_label %></p>
 </div>

@@ -3,7 +3,7 @@
 <% account = from_ref.present? ? Account.find_by(account_number: from_ref) : nil %>
 <% masked = account ? masked_account_number(from_ref) : (from_ref || "—") %>
 
-<div class="receipt-type-details text-sm font-mono">
+<div class="receipt-type-details text-sm">
   <p>From:                <%= masked %></p>
   <p>Amount:      <%= receipt_money(teller_transaction.amount_cents) %></p>
 </div>

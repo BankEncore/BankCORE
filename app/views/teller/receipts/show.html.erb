@@ -26,7 +26,7 @@
         teller_transaction: @teller_transaction,
         posting_legs: @posting_legs %>
     <% else %>
-      <div class="receipt-type-details text-sm font-mono text-slate-500">
+      <div class="receipt-type-details text-sm text-slate-500">
         <p>Receipt format for <%= @teller_transaction.transaction_type %> — not yet implemented.</p>
       </div>
     <% end %>

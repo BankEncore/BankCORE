@@ -88,6 +88,12 @@
 	.t-head { @apply text-slate-600 text-xs font-semibold; }
 	.row-border { @apply border-b border-slate-200; }
 	.mono { @apply font-mono tabular-nums; }
+
+	/* Customer receipt: IBM Plex Sans, tabular-nums for currency/check alignment */
+	.receipt-printable {
+		font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+		font-variant-numeric: tabular-nums;
+	}
 }
 
 @layer utilities {
@@ -110,10 +116,11 @@
 			page-break-inside: avoid;
 		}
 
-		/* Customer receipt: compact, monospace-friendly */
+		/* Customer receipt: IBM Plex Sans, tabular-nums */
 		.receipt-printable {
 			page-break-inside: avoid;
-			font-family: 'IBM Plex Mono', ui-monospace, monospace;
+			font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+			font-variant-numeric: tabular-nums;
 		}
 
 		.receipt-header,

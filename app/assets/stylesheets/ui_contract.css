@@ -44,7 +44,7 @@
 }
 
 .ui-money {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: var(--tw-text-opacity, #16a34a);

@@ -5,9 +5,20 @@
 <% drawer = session_record&.cash_location %>
 <% posted = tt.posted_at %>
 
-<div class="receipt-header text-sm font-mono">
-  <p>Branch:  <%= branch.code %> - <%= branch.name %></p>
-  <p>Teller:  <%= user.teller_number.presence || tt.workstation&.code || "—" %> - <%= user.display_label %></p>
-  <p>Session: <%= session_record&.id || "—" %>               Drawer: <%= drawer&.code || "—" %></p>
-  <p>Date:    <%= posted ? posted.strftime("%m/%d/%Y %-l:%M%P") : "—" %></p>
+<div class="receipt-header text-sm">
+  <table class="w-full">
+    <tr>
+      <td colspan="2" class="text-base font-bold"><%= branch.name %></td>
+    </tr>
+    <tr>
+      <td>Teller:</td>
+      <td><%= user.display_label %> - <span class="text-xs"><%= user.teller_number.presence || tt.workstation&.code || "—" %></span></td>
+    </tr>
+    <tr>
+      <td>Date:</td>
+      <td><%= posted ? posted.strftime("%m/%d/%Y %-l:%M%P") : "—" %></td>
+    </tr>
+  </table>
+  <p class="divider"></p>
+  <p class="text-xs text-center"> BR: <%= branch.code %> WS: <%= tt.workstation&.code %> S: <%= session_record&.id || "—" %> D: <%= drawer&.code || "—" %></p>
 </div>

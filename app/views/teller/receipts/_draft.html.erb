@@ -9,24 +9,41 @@
 <% funding = (draft["funding_source"] || draft[:funding_source]).to_s %>
 <% user = teller_transaction.user %>
 
-<div class="receipt-type-details text-sm font-mono">
-  <p>Draft #:      <%= instrument.presence || "—" %></p>
-  <p>Amount:      <%= receipt_money(draft_amt) %></p>
-  <p>Fee:         <%= receipt_money(fee) %></p>
-  <p>Total Due:   <%= receipt_money(total) %></p>
-  <% if funding == "cash" %>
-    <p>Cash In:     <%= receipt_money(teller_transaction.amount_cents) %></p>
-    <p>Checks In:   $           0.00</p>
-    <p>Transfer:    $           0.00</p>
-  <% else %>
-    <p>Cash In:     $           0.00</p>
-    <p>Checks In:   $           0.00</p>
-    <p>Transfer:    <%= receipt_money(total) %></p>
-  <% end %>
-</div>
+<div class="receipt-type-details text-sm">
+  <table class="table table-sm text-sm w-full">
+    <tr>
+      <td>Draft #:</td>
+      <td class="tabular-nums text-right"><%= instrument.presence || "—" %></td>
+    </tr>
+    <tr>
+      <td>Amount:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(draft_amt) %></td>
+    </tr>
+    <tr>
+      <td>Fee:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(fee) %></td>
+    </tr>
+    <tr>
+      <td>Total Due:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(total) %></td>
+    </tr>
+    <tr>
+      <td>Cash In:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(teller_transaction.amount_cents) %></td>
+    </tr>
+    <tr>
+      <td>Checks In:</td>
+      <td class="tabular-nums text-right">$           0.00</td>
+    </tr>
+    <tr>
+      <td>Transfer:</td>
+      <td class="tabular-nums text-right">$           0.00</td>
+    </tr>
+  </table>
+</div> 
 
 <%= render "teller/receipts/receipt_account_info", posting_batch: posting_batch %>
 
-<div class="receipt-auth mt-3 text-sm font-mono">
+<div class="receipt-auth mt-3 text-sm">
   <p>Auth: <%= user.teller_number.presence || teller_transaction.workstation&.code || "—" %> - <%= user.display_label %></p>
 </div>
