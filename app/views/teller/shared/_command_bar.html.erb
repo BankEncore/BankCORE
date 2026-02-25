@@ -22,8 +22,6 @@
         </ul>
       </details>
 
-      <%= link_to "History", teller_history_path, class: "btn btn-sm btn-ghost #{active.call(teller_history_path)}", aria: (current_page?(teller_history_path) ? { current: "page" } : {}) %>
-
       <details class="relative">
         <summary class="btn btn-sm btn-ghost cursor-pointer list-none [&::-webkit-details-marker]:hidden">
           CIF ▼
@@ -35,6 +33,8 @@
       </details>
 
       <div class="flex-1"></div>
+
+       <%= link_to "History", teller_history_path, class: "btn btn-sm btn-ghost #{active.call(teller_history_path)}", aria: (current_page?(teller_history_path) ? { current: "page" } : {}) %>
 
       <%= link_to "Session", new_teller_teller_session_path, class: "btn btn-sm btn-outline #{active.call(new_teller_teller_session_path)}" %>
     </div>
