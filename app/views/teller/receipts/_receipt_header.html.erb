@@ -21,4 +21,7 @@
   </table>
   <p class="divider"></p>
   <p class="text-xs text-center"> BR: <%= branch.code %> WS: <%= tt.workstation&.code %> S: <%= session_record&.id || "—" %> D: <%= drawer&.code || "—" %></p>
+  <% if tt.approved_by_user.present? %>
+    <p class="text-xs text-center">Authorizer: <%= tt.approved_by_user.display_label %> (<%= tt.approved_by_user.teller_number.presence || tt.approved_by_user.email_address %>)</p>
+  <% end %>
 </div>

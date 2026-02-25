@@ -25,7 +25,7 @@ module Posting
       attr_reader :request, :legs
 
       def create_teller_transaction!
-        TellerTransaction.create!(
+        attrs = {
           user: request.fetch(:user),
           teller_session: request.fetch(:teller_session),
           branch: request.fetch(:branch),
@@ -36,7 +36,9 @@ module Posting
           amount_cents: request.fetch(:amount_cents),
           status: "posted",
           posted_at: Time.current
-        )
+        }
+        attrs[:approved_by_user_id] = request[:approved_by_user_id] if request[:approved_by_user_id].present?
+        TellerTransaction.create!(attrs)
       end
 
       def create_posting_batch!(teller_transaction)

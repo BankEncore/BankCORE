@@ -4,6 +4,8 @@ class PostingBatch < ApplicationRecord
   attribute :metadata, :json, default: {}
 
   belongs_to :teller_transaction
+  belongs_to :reversal_of_posting_batch, class_name: "PostingBatch", optional: true
+  has_one :reversed_by_posting_batch, class_name: "PostingBatch", foreign_key: :reversal_of_posting_batch_id
   has_many :posting_legs, dependent: :destroy
   has_many :account_transactions, dependent: :destroy
 

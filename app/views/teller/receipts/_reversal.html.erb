@@ -1,0 +1,91 @@
+<% meta = posting_batch.metadata || {} %>
+<% meta = meta.with_indifferent_access if meta.respond_to?(:with_indifferent_access) %>
+<% reversal_meta = meta.dig("reversal") || meta.dig(:reversal) || {} %>
+<% reversal_meta = reversal_meta.with_indifferent_access if reversal_meta.respond_to?(:with_indifferent_access) %>
+<% original_ref = reversal_meta["original_request_id"] || reversal_meta[:original_request_id] || "—" %>
+<% original_type = reversal_meta["original_transaction_type"] || reversal_meta[:original_transaction_type] || "—" %>
+<% reason_code = teller_transaction.reversal_reason_code || reversal_meta["reason_code"] || reversal_meta[:reason_code] || "—" %>
+<% memo = teller_transaction.reversal_memo || reversal_meta["memo"] || reversal_meta[:memo] || "—" %>
+<% original_tt = teller_transaction.reversal_of_teller_transaction %>
+
+<table class="table table-xs text-xs w-full">
+  <tr>
+    <td>Reverses:</td>
+    <td class="font-mono">
+      <% if original_tt.present? %>
+        <%= link_to original_ref, teller_receipt_path(request_id: original_tt.request_id), class: "link link-hover" %>
+      <% else %>
+        <%= original_ref %>
+      <% end %>
+    </td>
+  </tr>
+  <tr>
+    <td>Original Type:</td>
+    <td><%= original_type.to_s.titleize %></td>
+  </tr>
+  <% if original_tt.present? %>
+    <tr>
+      <td>Original Date:</td>
+      <td><%= original_tt.posted_at&.strftime("%m/%d/%Y %-l:%M%P") || "—" %></td>
+    </tr>
+    <tr>
+      <td>Original Teller:</td>
+      <td><%= original_tt.user&.display_label || "—" %></td>
+    </tr>
+  <% end %>
+  <tr>
+    <td>Amount:</td>
+    <td class="tabular-nums"><%= receipt_money(teller_transaction.amount_cents) %></td>
+  </tr>
+  <tr>
+    <td>Reason:</td>
+    <td><%= reason_code %></td>
+  </tr>
+  <tr>
+    <td>Memo:</td>
+    <td><%= memo %></td>
+  </tr>
+  <% if teller_transaction.approved_by_user.present? %>
+    <tr>
+      <td>Authorized by:</td>
+      <td><%= teller_transaction.approved_by_user.display_label %> (<%= teller_transaction.approved_by_user.teller_number.presence || teller_transaction.approved_by_user.email_address %>)</td>
+    </tr>
+  <% end %>
+</table>
+
+<section class="mt-3">
+  <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Reversal Legs</h3>
+  <table class="table table-xs text-xs w-full">
+    <thead>
+      <tr class="row-border t-head">
+        <th class="py-1 text-left">Side</th>
+        <th class="py-1 text-left">Account</th>
+        <th class="py-1 text-right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% posting_legs.each do |leg| %>
+        <tr class="row-border">
+          <td class="py-1"><%= leg.side %></td>
+          <td class="py-1 font-mono text-xs"><%= leg.account_reference %></td>
+          <td class="py-1 text-right tabular-nums"><%= receipt_money(leg.amount_cents) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
+
+<% if @cash_movements.present? && @cash_movements.any? %>
+  <section class="mt-3">
+    <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Cash Impact</h3>
+    <table class="table table-xs text-xs w-full">
+      <% @cash_movements.each do |mov| %>
+        <tr>
+          <td><%= mov.direction == "in" ? "Cash In" : "Cash Out" %></td>
+          <td><%= mov.cash_location&.code || "—" %></td>
+          <td class="text-right tabular-nums"><%= receipt_money(mov.amount_cents) %></td>
+        </tr>
+      <% end %>
+    </table>
+  </section>
+<% end %>

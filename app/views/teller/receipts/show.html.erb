@@ -4,10 +4,21 @@
       <div class="card-body py-3">
         <h2 class="card-title text-lg">Receipt</h2>
         <p class="text-sm opacity-80">Customer-facing transaction receipt</p>
-        <p class="flex gap-2 flex-wrap">
-          <%= link_to "Back to Dashboard", teller_root_path, class: "btn btn-ghost btn-sm" %>
-          <%= link_to "Audit View", teller_receipt_path(request_id: @posting_batch.request_id, view: "audit"), class: "btn btn-outline btn-sm" %>
-          <button type="button" onclick="window.print()" class="btn btn-outline btn-sm">Print</button>
+        <p class="flex flex-wrap justify-between gap-2 items-center">
+          <span class="flex gap-2">
+            <% if @teller_transaction.reversible? %>
+              <%= link_to "Reverse", reversal_teller_transaction_path(@teller_transaction), class: "btn btn-outline btn-error btn-sm" %>
+            <% elsif @teller_transaction.reversed? %>
+              <%= link_to "Reversed by #{@teller_transaction.reversed_by_teller_transaction.request_id}", teller_receipt_path(request_id: @teller_transaction.reversed_by_teller_transaction.request_id), class: "btn btn-ghost btn-sm" %>
+            <% elsif @teller_transaction.transaction_type == "reversal" && @teller_transaction.reversal_of_teller_transaction.present? %>
+              <%= link_to "Original #{@teller_transaction.reversal_of_teller_transaction.request_id}", teller_receipt_path(request_id: @teller_transaction.reversal_of_teller_transaction.request_id), class: "btn btn-ghost btn-sm" %>
+            <% end %>
+          </span>
+          <span class="flex gap-2 flex-wrap">
+            <%= link_to "Audit View", teller_receipt_path(request_id: @posting_batch.request_id, view: "audit"), class: "btn btn-outline btn-sm" %>
+            <button type="button" onclick="window.print()" class="btn btn-secondary btn-sm">Print</button>
+            <%= link_to "Back to Dashboard", teller_root_path, class: "btn btn-ghost btn-sm" %>
+          </span>
         </p>
       </div>
     </section>
@@ -17,6 +28,18 @@
     <%= render "teller/receipts/receipt_header", teller_transaction: @teller_transaction %>
 
     <h2 class="receipt-type-title text-lg font-bold mt-4 mb-2"><%= @teller_transaction.transaction_type.humanize.upcase %></h2>
+
+    <% if @teller_transaction.reversed? %>
+      <div class="alert alert-warning my-3" role="alert">
+        <p class="font-bold">REVERSED</p>
+        <p class="text-sm mt-1">
+          This transaction was reversed.
+          <%= link_to "View reversal receipt (#{@teller_transaction.reversed_by_teller_transaction.request_id})",
+            teller_receipt_path(request_id: @teller_transaction.reversed_by_teller_transaction.request_id),
+            class: "link link-hover font-medium" %>
+        </p>
+      </div>
+    <% end %>
 
     <% partial_name = @teller_transaction.transaction_type.to_s %>
     <% partial_path = "teller/receipts/#{partial_name}" %>

@@ -15,6 +15,7 @@ module TellerPostingExecution
         return
       end
 
+      approved_by_user_id = nil
       if approval_required?(request_params)
         token = request_params[:approval_token].to_s
         if token.blank?
@@ -28,6 +29,7 @@ module TellerPostingExecution
             render json: { ok: false, error: "Approval token does not match request" }, status: :unprocessable_entity
             return
           end
+          approved_by_user_id = payload["supervisor_user_id"]
         rescue ActiveSupport::MessageVerifier::InvalidSignature
           render json: { ok: false, error: "Approval token is invalid or expired" }, status: :unprocessable_entity
           return
@@ -44,7 +46,8 @@ module TellerPostingExecution
         amount_cents: request_params[:amount_cents],
         entries: normalized_entries(request_params),
         metadata: posting_metadata(request_params),
-        currency: request_params[:currency].presence || "USD"
+        currency: request_params[:currency].presence || "USD",
+        approved_by_user_id: approved_by_user_id
       ).call
 
       render json: {

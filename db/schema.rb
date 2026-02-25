@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_25_151529) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_233034) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -174,10 +174,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_151529) do
     t.string "currency", default: "USD", null: false
     t.text "metadata", size: :long, collation: "utf8mb4_bin"
     t.string "request_id", null: false
+    t.bigint "reversal_of_posting_batch_id"
     t.string "status", default: "committed", null: false
     t.bigint "teller_transaction_id", null: false
     t.datetime "updated_at", null: false
     t.index ["request_id"], name: "index_posting_batches_on_request_id", unique: true
+    t.index ["reversal_of_posting_batch_id"], name: "index_posting_batches_on_reversal_of_posting_batch_id"
     t.index ["teller_transaction_id"], name: "index_posting_batches_on_teller_transaction_id"
     t.check_constraint "json_valid(`metadata`)", name: "metadata"
   end
@@ -248,19 +250,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_151529) do
 
   create_table "teller_transactions", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.integer "amount_cents", null: false
+    t.bigint "approved_by_user_id"
     t.bigint "branch_id", null: false
     t.datetime "created_at", null: false
     t.string "currency", default: "USD", null: false
     t.datetime "posted_at", null: false
     t.string "request_id", null: false
+    t.text "reversal_memo"
+    t.bigint "reversal_of_teller_transaction_id"
+    t.string "reversal_reason_code"
+    t.datetime "reversed_at"
+    t.bigint "reversed_by_teller_transaction_id"
     t.string "status", default: "posted", null: false
     t.bigint "teller_session_id", null: false
     t.string "transaction_type", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.bigint "workstation_id", null: false
+    t.index ["approved_by_user_id"], name: "index_teller_transactions_on_approved_by_user_id"
     t.index ["branch_id"], name: "index_teller_transactions_on_branch_id"
     t.index ["request_id"], name: "index_teller_transactions_on_request_id", unique: true
+    t.index ["reversal_of_teller_transaction_id"], name: "index_teller_transactions_on_reversal_of_teller_transaction_id"
+    t.index ["reversed_by_teller_transaction_id"], name: "index_teller_transactions_on_reversed_by_teller_transaction_id", unique: true
     t.index ["teller_session_id", "posted_at"], name: "index_teller_transactions_on_teller_session_id_and_posted_at"
     t.index ["teller_session_id"], name: "index_teller_transactions_on_teller_session_id"
     t.index ["user_id"], name: "index_teller_transactions_on_user_id"
@@ -325,6 +336,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_151529) do
   add_foreign_key "cash_movements", "teller_transactions"
   add_foreign_key "party_individuals", "parties"
   add_foreign_key "party_organizations", "parties"
+  add_foreign_key "posting_batches", "posting_batches", column: "reversal_of_posting_batch_id"
   add_foreign_key "posting_batches", "teller_transactions"
   add_foreign_key "posting_legs", "posting_batches"
   add_foreign_key "role_permissions", "permissions"
@@ -336,7 +348,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_151529) do
   add_foreign_key "teller_sessions", "workstations"
   add_foreign_key "teller_transactions", "branches"
   add_foreign_key "teller_transactions", "teller_sessions"
+  add_foreign_key "teller_transactions", "teller_transactions", column: "reversal_of_teller_transaction_id"
+  add_foreign_key "teller_transactions", "teller_transactions", column: "reversed_by_teller_transaction_id"
   add_foreign_key "teller_transactions", "users"
+  add_foreign_key "teller_transactions", "users", column: "approved_by_user_id"
   add_foreign_key "teller_transactions", "workstations"
   add_foreign_key "user_roles", "branches"
   add_foreign_key "user_roles", "roles"

@@ -37,6 +37,8 @@ module Posting
             "out"
           when "vault_transfer"
             vault_transfer_cash_direction(cash_legs)
+          when "reversal"
+            reversal_cash_direction(cash_legs)
           when "session_close_variance", "session_handoff_variance"
             nil
           end
@@ -50,10 +52,37 @@ module Posting
             cash_legs.select { |leg| leg.fetch(:side) == "credit" }.sum { |leg| leg.fetch(:amount_cents) }
           when "vault_transfer"
             vault_transfer_cash_amount(cash_legs, direction)
+          when "reversal"
+            reversal_cash_amount(cash_legs, direction)
           when "session_close_variance", "session_handoff_variance"
             0
           else
             0
+          end
+        end
+
+        def reversal_cash_direction(cash_legs)
+          original_type = request.dig(:metadata, :reversal, :original_transaction_type).to_s
+          case original_type
+          when "deposit", "draft"
+            "out"
+          when "withdrawal", "check_cashing"
+            "in"
+          when "vault_transfer"
+            inverted = vault_transfer_cash_direction(cash_legs)
+            inverted == "in" ? "out" : (inverted == "out" ? "in" : nil)
+          else
+            nil
+          end
+        end
+
+        def reversal_cash_amount(cash_legs, direction)
+          return 0 if direction.blank?
+
+          if direction == "in"
+            cash_legs.select { |leg| leg.fetch(:side) == "debit" }.sum { |leg| leg.fetch(:amount_cents) }
+          else
+            cash_legs.select { |leg| leg.fetch(:side) == "credit" }.sum { |leg| leg.fetch(:amount_cents) }
           end
         end
 

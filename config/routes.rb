@@ -35,6 +35,10 @@ Rails.application.routes.draw do
     post "posting", to: "postings#create", as: :posting
     get "history", to: "transaction_history#index", as: :history
     get "receipts/:request_id", to: "receipts#show", as: :receipt
+    resources :transactions, only: [], controller: "reversals" do
+      get :reversal, on: :member, action: :new
+      post :reversal, on: :member, action: :create
+    end
     resource :teller_session, only: [ :new, :create ] do
       get :previous_closing
       patch :close

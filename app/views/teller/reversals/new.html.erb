@@ -1,0 +1,84 @@
+<%= render "teller/shared/page_header",
+  title: "Reversal",
+  description: "Reverse a previously posted transaction. Requires supervisor approval.",
+  secondary_button_path: teller_root_path,
+  secondary_button_label: "Cancel" %>
+
+<div data-controller="reversal-form approval-panel"
+  data-approval-panel-approval-url-value="<%= teller_approvals_path %>"
+  data-action="tx:approval-required->approval-panel#show tx:approval-granted->reversal-form#handleApprovalGranted tx:approval-error->reversal-form#handleApprovalError"
+  data-original-transaction-id="<%= @original_transaction.id %>"
+  data-original-ref="<%= @original_transaction.request_id %>"
+  data-original-amount="<%= @original_transaction.amount_cents %>"
+  data-original-type="<%= @original_transaction.transaction_type %>">
+  <%= render "teller/shared/approval_modal" %>
+
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <h2 class="card-title text-base">Original Transaction</h2>
+      <div class="divider my-2"></div>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+        <dt class="text-slate-500">Ref #</dt>
+        <dd class="font-mono"><%= @original_transaction.request_id %></dd>
+        <dt class="text-slate-500">Type</dt>
+        <dd><%= @original_transaction.transaction_type.titleize %></dd>
+        <dt class="text-slate-500">Amount</dt>
+        <dd class="tabular-nums"><%= number_to_currency(@original_transaction.amount_cents / 100.0) %></dd>
+        <dt class="text-slate-500">Posted</dt>
+        <dd><%= @original_transaction.posted_at.strftime("%b %-d, %Y at %-l:%M %p") %></dd>
+        <dt class="text-slate-500">Teller</dt>
+        <dd><%= @original_transaction.user.display_label %></dd>
+        <dt class="text-slate-500">Session</dt>
+        <dd><%= @original_transaction.teller_session_id %> <%= @original_transaction.teller_session.closed? ? "(closed)" : "" %></dd>
+      </dl>
+      <% if @original_transaction.teller_session.closed? %>
+        <p class="mt-3 text-sm text-slate-600 bg-slate-100 dark:bg-slate-800 p-2 rounded">
+          This reversal will post to the current open session.
+        </p>
+      <% end %>
+    </div>
+  </section>
+
+  <%= form_with url: reversal_teller_transaction_path(@original_transaction), method: :post, html: { id: "reversal-form", data: { reversal_form_target: "form" } } do |form| %>
+    <section class="card bg-base-100 border border-base-300 mt-4">
+      <div class="card-body">
+        <h2 class="card-title text-base">Reversal Details</h2>
+        <div class="divider my-2"></div>
+
+        <% if flash[:alert].present? %>
+          <p class="alert alert-error text-sm"><%= flash[:alert] %></p>
+        <% end %>
+        <p class="alert alert-error text-sm hidden" data-reversal-form-target="errorMessage" role="alert"></p>
+
+        <%= form.hidden_field :request_id, value: "reversal-#{@original_transaction.id}-#{Time.current.to_i}-#{SecureRandom.hex(4)}", data: { reversal_form_target: "requestId", posting_form_target: "requestId" } %>
+        <%= form.hidden_field :approval_token, value: "", data: { reversal_form_target: "approvalToken" } %>
+
+        <div class="form-control">
+          <%= form.label :reversal_reason_code, "Reason Code", class: "text-xs font-medium text-slate-700" %>
+          <%= form.select :reversal_reason_code,
+            options_for_select(@reversal_reason_codes, params[:reversal_reason_code]),
+            { include_blank: "Select reason" },
+            { required: true, class: "select select-bordered w-full", data: { reversal_form_target: "reasonCode" } } %>
+        </div>
+
+        <div class="form-control mt-3">
+          <%= form.label :reversal_memo, "Memo", class: "text-xs font-medium text-slate-700" %>
+          <%= form.text_area :reversal_memo,
+            required: true,
+            rows: 3,
+            placeholder: "Required narrative explaining the reversal",
+            class: "textarea textarea-bordered w-full",
+            data: { reversal_form_target: "memo" },
+            value: params[:reversal_memo] %>
+        </div>
+
+        <div class="modal-action mt-4 px-0">
+          <%= link_to "Cancel", teller_root_path, class: "btn btn-ghost" %>
+          <button type="button" class="btn btn-primary" data-action="click->reversal-form#submitReversal">
+            Reverse (Post)
+          </button>
+        </div>
+      </div>
+    </section>
+  <% end %>
+</div>
