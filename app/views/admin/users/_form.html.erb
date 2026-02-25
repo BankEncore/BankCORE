@@ -37,6 +37,24 @@
     </div>
 
     <div class="form-control">
+      <%= f.label :default_workspace, "Default workspace", class: "label" %>
+      <%= f.select :default_workspace,
+          options_for_select(
+            [
+              [ "None", "" ],
+              [ "Teller Workspace", "teller" ],
+              [ "CSR Workspace", "csr" ],
+              [ "Operations Workspace", "ops" ],
+              [ "Administration Workspace", "admin" ]
+            ],
+            user.default_workspace
+          ),
+          {},
+          class: "select select-bordered" %>
+      <p class="text-xs text-slate-600 mt-1">Workspace to open on login and when clicking the BankCORE logo.</p>
+    </div>
+
+    <div class="form-control">
       <%= f.label :pin, "PIN", class: "label" %>
       <%= f.password_field :pin, class: "input input-bordered" %>
       <p class="text-xs text-slate-600 mt-1">Optional. For future authentication tasks. Leave blank to keep current.</p>

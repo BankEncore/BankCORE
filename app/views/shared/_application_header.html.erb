@@ -3,7 +3,7 @@
   <div class="mx-auto max-w-7xl px-4 py-3">
     <div class="navbar">
       <div class="flex items-center gap-3">
-        <%= link_to "BankCORE", root_path, class: "font-semibold tracking-tight" %>
+        <%= link_to "BankCORE", default_workspace_or_root_path, class: "font-semibold tracking-tight" %>
 
         <% if authenticated? %>
           <% workspaces = authorized_workspaces %>

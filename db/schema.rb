@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_24_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_151529) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -283,6 +283,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_120000) do
 
   create_table "users", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "default_workspace"
     t.string "display_name"
     t.string "email_address", null: false
     t.string "first_name"
@@ -291,6 +292,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_120000) do
     t.string "password_hash"
     t.string "teller_number", limit: 4
     t.datetime "updated_at", null: false
+    t.index ["default_workspace"], name: "index_users_on_default_workspace"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
     t.index ["teller_number"], name: "index_users_on_teller_number", unique: true
   end

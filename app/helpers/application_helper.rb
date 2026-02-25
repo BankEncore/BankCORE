@@ -1,4 +1,19 @@
 module ApplicationHelper
+  def default_workspace_or_root_path
+    return root_path unless Current.user.present?
+    default_workspace_path_for(Current.user) || root_path
+  end
+
+  def default_workspace_path_for(user)
+    return nil if user.default_workspace.blank?
+    case user.default_workspace
+    when "teller" then teller_root_path if user.has_permission?("teller.dashboard.view")
+    when "csr"   then csr_root_path   if user.has_permission?("csr.dashboard.view")
+    when "ops"   then ops_root_path
+    when "admin" then admin_root_path  if user.has_permission?("administration.workspace.view")
+    end
+  end
+
   def authorized_workspaces
     return [] unless Current.user.present?
 

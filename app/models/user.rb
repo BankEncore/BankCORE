@@ -15,6 +15,7 @@ class User < ApplicationRecord
   before_validation :set_display_name, if: -> { display_name.blank? && (first_name.present? || last_name.present?) }
 
   validates :teller_number, length: { maximum: 4 }, uniqueness: { case_sensitive: false }, allow_blank: true
+  validates :default_workspace, inclusion: { in: %w[teller csr ops admin], allow_nil: true }
 
   attr_accessor :pin
 
