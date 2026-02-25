@@ -3,9 +3,11 @@
 <% account = from_ref.present? ? Account.find_by(account_number: from_ref) : nil %>
 <% masked = account ? masked_account_number(from_ref) : (from_ref || "—") %>
 
-<div class="receipt-type-details text-sm">
-  <p>From:                <%= masked %></p>
-  <p>Amount:      <%= receipt_money(teller_transaction.amount_cents) %></p>
-</div>
+<table class="table table-xs text-xs w-full">
+  <tr>
+    <td>Amount:</td>
+    <td class="text-right tabular-nums"><%= receipt_money(teller_transaction.amount_cents) %></td>
+  </tr>
+</table>
 
 <%= render "teller/receipts/receipt_account_info", posting_batch: posting_batch %>

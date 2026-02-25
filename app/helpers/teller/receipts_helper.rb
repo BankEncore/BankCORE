@@ -2,6 +2,8 @@
 
 module Teller
   module ReceiptsHelper
+    INTERNAL_ACCOUNT_PREFIXES = %w[cash: check: income: official_check:].freeze
+
     HOLD_REASONS = [
       [ "Large check amount", "large_item" ],
       [ "New account holder", "new_account" ],
@@ -11,6 +13,12 @@ module Teller
       [ "Possible duplicate", "duplicate_deposit" ],
       [ "Other", "other" ]
     ].freeze
+
+    def customer_account_reference?(ref)
+      ref = ref.to_s.strip
+      return false if ref.blank?
+      INTERNAL_ACCOUNT_PREFIXES.none? { |p| ref.start_with?(p) }
+    end
 
     def masked_account_number(account_number)
       return "—" if account_number.blank?
@@ -47,28 +55,38 @@ module Teller
     end
 
     def account_summaries_by_account(posting_batch)
-      by_account = posting_batch.account_transactions
-        .select { |at| at.account_id.present? }
-        .group_by(&:account_id)
+      customer_txns = posting_batch.account_transactions
+        .select { |at| customer_account_reference?(at.account_reference) }
+      by_ref = customer_txns.group_by { |at| at.account_reference.to_s.strip }
 
-      by_account.map do |account_id, transactions|
-        account = Account.find_by(id: account_id)
-        next nil unless account
-
+      by_ref.map do |ref, transactions|
         total_credit = transactions.select { |t| t.direction == "credit" }.sum(&:amount_cents)
         total_debit = transactions.select { |t| t.direction == "debit" }.sum(&:amount_cents)
-        net_cents = total_credit - total_debit
-        current_balance = account.balance_cents
-        previous_balance = current_balance - net_cents
+        account = Account.find_by(account_number: ref)
 
-        {
-          account: account,
-          previous_balance_cents: previous_balance,
-          credit_cents: total_credit,
-          debit_cents: total_debit,
-          pending_balance_cents: current_balance
-        }
-      end.compact
+        if account
+          net_cents = total_credit - total_debit
+          current_balance = account.balance_cents
+          previous_balance = current_balance - net_cents
+          {
+            account: account,
+            account_reference: ref,
+            previous_balance_cents: previous_balance,
+            credit_cents: total_credit,
+            debit_cents: total_debit,
+            pending_balance_cents: current_balance
+          }
+        else
+          {
+            account: nil,
+            account_reference: ref,
+            previous_balance_cents: nil,
+            credit_cents: total_credit,
+            debit_cents: total_debit,
+            pending_balance_cents: nil
+          }
+        end
+      end.sort_by { |s| s[:account_reference] }
     end
 
     def check_items_from_metadata(posting_batch)

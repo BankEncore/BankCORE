@@ -10,13 +10,25 @@
 <% meta = meta.with_indifferent_access if meta.respond_to?(:with_indifferent_access) %>
 <% fee_cents = (meta["fee_cents"] || meta[:fee_cents] || 0).to_i %>
 
-<div class="receipt-type-details text-sm">
-  <p>From:                <%= from_masked %></p>
-  <p>To:                  <%= to_masked %></p>
-  <p>Amount:      <%= receipt_money(teller_transaction.amount_cents) %></p>
+<table class="table table-xs text-xs w-full">
+  <tr>
+    <td>From:</td>
+    <td><%= from_masked %></td>
+  </tr>
+  <tr>
+    <td>To:</td>
+    <td><%= to_masked %></td>
+  </tr>
+  <tr>
+    <td>Amount:</td>
+    <td class="tabular-nums"><%= receipt_money(teller_transaction.amount_cents) %></td>
+  </tr>
   <% if fee_cents.positive? %>
-    <p>Fee:         <%= receipt_money(fee_cents) %></p>
+    <tr>
+      <td>Fee:</td>
+      <td class="tabular-nums"><%= receipt_money(fee_cents) %></td>
+    </tr>
   <% end %>
-</div>
+</table>
 
 <%= render "teller/receipts/receipt_account_info", posting_batch: posting_batch %>
