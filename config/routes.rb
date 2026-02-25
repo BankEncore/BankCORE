@@ -53,6 +53,7 @@ Rails.application.routes.draw do
   namespace :ops do
     root "dashboard#index"
     get "ledger", to: "ledger#index", as: :ledger
+    resources :sessions, only: [ :index, :show ], controller: "sessions", path: "sessions"
   end
 
   namespace :admin do

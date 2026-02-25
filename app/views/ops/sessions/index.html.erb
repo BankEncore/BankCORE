@@ -1,0 +1,100 @@
+<% content_for :title, "Teller Sessions" %>
+<% money = ->(cents) { number_to_currency((cents || 0) / 100.0) } %>
+
+<section class="ui-panel bg-base-100 border-base-300">
+  <div class="ui-panel-pad">
+    <h2 class="ui-section-title text-lg mb-4">Teller Sessions</h2>
+    <p class="text-sm text-slate-600 mb-4">Search and filter teller sessions for cash reconciliation oversight.</p>
+
+    <%= form_with url: ops_sessions_path, method: :get, local: true, class: "mb-6 space-y-4" do |f| %>
+      <div class="flex flex-wrap gap-4 items-end">
+        <div class="form-control">
+          <%= f.label :branch_id, "Branch", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= f.collection_select :branch_id, @branches, :id, :name, { include_blank: "All branches", selected: @filter[:branch_id] }, class: "select select-bordered select-sm" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :date_from, "From date", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= f.date_field :date_from, value: @filter[:date_from], class: "input input-bordered input-sm" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :date_to, "To date", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= f.date_field :date_to, value: @filter[:date_to], class: "input input-bordered input-sm" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :user_id, "Teller", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= f.collection_select :user_id, @users, :id, :display_label, { include_blank: "All tellers", selected: @filter[:user_id] }, class: "select select-bordered select-sm" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :workstation_id, "Workstation", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= f.collection_select :workstation_id, @workstations, :id, :name, { include_blank: "All workstations", selected: @filter[:workstation_id] }, class: "select select-bordered select-sm" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :status, "Status", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= f.select :status, [ [ "All", "all" ], [ "Open", "open" ], [ "Closed", "closed" ] ], { selected: @filter[:status] }, class: "select select-bordered select-sm" %>
+        </div>
+        <div class="form-control">
+          <%= f.submit "Run Report", class: "btn btn-primary btn-sm" %>
+        </div>
+      </div>
+    <% end %>
+
+    <table class="table w-full table-zebra">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Teller</th>
+          <th>Branch</th>
+          <th>Workstation</th>
+          <th>Drawer</th>
+          <th>Opened</th>
+          <th>Closed</th>
+          <th class="text-right">Opening</th>
+          <th class="text-right">Expected</th>
+          <th class="text-right">Declared</th>
+          <th class="text-right">Variance</th>
+          <th class="text-right">Txns</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @sessions.any? %>
+          <% @sessions.each do |session| %>
+            <tr>
+              <td class="mono text-sm"><%= session.id %></td>
+              <td><%= session.user&.display_label || "—" %></td>
+              <td><%= session.branch&.name || "—" %></td>
+              <td><%= session.workstation&.name || "—" %></td>
+              <td><%= session.cash_location&.name || "—" %></td>
+              <td><%= session.opened_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
+              <td><%= session.closed_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
+              <td class="text-right ui-money mono"><%= money[session.opening_cash_cents] %></td>
+              <td class="text-right ui-money mono">
+                <%= session.closed? ? money[session.expected_closing_cash_cents] : money[session.expected_cash_cents] %>
+              </td>
+              <td class="text-right ui-money mono">
+                <%= session.closed? ? money[session.closing_cash_cents] : "—" %>
+              </td>
+              <td class="text-right ui-money mono">
+                <% if session.closed? && session.cash_variance_cents.present? && session.cash_variance_cents != 0 %>
+                  <span class="<%= session.cash_variance_cents.negative? ? 'text-error' : 'text-success' %>">
+                    <%= money[session.cash_variance_cents] %>
+                  </span>
+                <% else %>
+                  —
+                <% end %>
+              </td>
+              <td class="text-right"><%= @transaction_counts[session.id] || 0 %></td>
+              <td>
+                <%= link_to "Detail", ops_session_path(session), class: "btn btn-ghost btn-xs" %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="13" class="text-center text-slate-500 py-8">No sessions match the selected filters.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>
