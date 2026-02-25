@@ -1,0 +1,10 @@
+<nav aria-label="Operations Commands" class="border-b border-base-300 bg-base-100 no-print" data-testid="ops-command-bar">
+  <div class="mx-auto max-w-7xl px-4">
+    <div class="flex flex-wrap items-center gap-2 py-2">
+      <% active = ->(path) { current_page?(path) ? "btn-active" : "" } %>
+
+      <%= link_to "Dashboard", ops_root_path, class: "btn btn-sm btn-ghost #{active.call(ops_root_path)}", aria: (current_page?(ops_root_path) ? { current: "page" } : {}) %>
+      <%= link_to "Ledger", ops_ledger_path, class: "btn btn-sm btn-ghost #{active.call(ops_ledger_path)}" %>
+    </div>
+  </div>
+</nav>

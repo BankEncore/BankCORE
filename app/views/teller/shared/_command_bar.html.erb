@@ -1,29 +1,42 @@
-<nav aria-label="Teller Commands" class="border-b border-base-300 bg-base-100 px-3 py-2" data-testid="command-bar">
-  <div class="flex flex-wrap items-center gap-2">
-    <% active = ->(path) { current_page?(path) ? "btn-active" : "" } %>
+<nav aria-label="Teller Commands" class="border-b border-base-300 bg-base-100 no-print" data-testid="command-bar">
+  <div class="mx-auto max-w-7xl px-4">
+    <div class="flex flex-wrap items-center gap-2 py-2">
+      <% active = ->(path) { current_page?(path) ? "btn-active" : "" } %>
 
-    <%= link_to "Dashboard", teller_root_path, class: "btn btn-sm btn-ghost #{active.call(teller_root_path)}", aria: (current_page?(teller_root_path) ? { current: "page" } : {}) %>
-    <%= link_to "History", teller_history_path, class: "btn btn-sm btn-ghost #{active.call(teller_history_path)}", aria: (current_page?(teller_history_path) ? { current: "page" } : {}) %>
-    <%= link_to "Parties", teller_parties_path, class: "btn btn-sm btn-ghost #{active.call(teller_parties_path)}" %>
-    <%= link_to "Accounts", teller_accounts_path, class: "btn btn-sm btn-ghost #{active.call(teller_accounts_path)}" %>
-    <!-- = link_to "CSR", csr_root_path, class: "btn btn-sm btn-ghost", title: "CSR Workspace" % -->
+      <%= link_to "Dashboard", teller_root_path, class: "btn btn-sm btn-ghost #{active.call(teller_root_path)}", aria: (current_page?(teller_root_path) ? { current: "page" } : {}) %>
 
-    <div class="h-5 w-px bg-base-300/70 mx-1"></div>
+      <%= link_to "Deposit", new_teller_deposit_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_deposit_path)}" %>
+      <%= link_to "Withdrawal", new_teller_withdrawal_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_withdrawal_path)}" %>
+      <%= link_to "Transfer", new_teller_transfer_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_transfer_path)}" %>
+      <%= link_to "Vault Transfer", new_teller_vault_transfer_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_vault_transfer_path)}" %>
 
-    <%= link_to "Deposit", new_teller_deposit_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_deposit_path)}" %>
-    <%= link_to "Withdrawal", new_teller_withdrawal_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_withdrawal_path)}" %>
-    <%= link_to "Check Cashing", new_teller_check_cashing_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_check_cashing_path)}" %>
-    <%= link_to "Transfer", new_teller_transfer_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_transfer_path)}" %>
+      <details class="relative">
+        <summary class="btn btn-sm btn-ghost cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+          Other ▼
+        </summary>
+        <ul class="absolute left-0 z-10 mt-2 w-48 rounded-lg border border-base-300 bg-base-100 p-2 shadow-lg">
+          <li><%= link_to "Check Cashing", new_teller_check_cashing_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
+          <li><%= link_to "Bank Draft", new_teller_draft_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
+          <li><span class="block rounded px-3 py-2 text-base-content/50 cursor-not-allowed">Bill Payment</span></li>
+          <li><span class="block rounded px-3 py-2 text-base-content/50 cursor-not-allowed">Misc Receipt</span></li>
+        </ul>
+      </details>
 
-    <div class="h-5 w-px bg-base-300/70 mx-1"></div>
+      <%= link_to "History", teller_history_path, class: "btn btn-sm btn-ghost #{active.call(teller_history_path)}", aria: (current_page?(teller_history_path) ? { current: "page" } : {}) %>
 
-    <%= link_to "Bank Draft", new_teller_draft_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_draft_path)}" %>
-    <%= link_to "Vault Transfer", new_teller_vault_transfer_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_vault_transfer_path)}" %>
-    <button type="button" class="btn btn-sm btn-ghost btn-disabled" disabled aria-disabled="true">Bill Payment</button>
-    <button type="button" class="btn btn-sm btn-ghost btn-disabled" disabled aria-disabled="true">Misc Receipt</button>
+      <details class="relative">
+        <summary class="btn btn-sm btn-ghost cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+          CIF ▼
+        </summary>
+        <ul class="absolute left-0 z-10 mt-2 w-48 rounded-lg border border-base-300 bg-base-100 p-2 shadow-lg">
+          <li><%= link_to "Parties", teller_parties_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
+          <li><%= link_to "Accounts", teller_accounts_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
+        </ul>
+      </details>
 
-    <div class="flex-1"></div>
+      <div class="flex-1"></div>
 
-    <%= link_to "Session", new_teller_teller_session_path, class: "btn btn-sm btn-outline #{active.call(new_teller_teller_session_path)}" %>
+      <%= link_to "Session", new_teller_teller_session_path, class: "btn btn-sm btn-outline #{active.call(new_teller_teller_session_path)}" %>
+    </div>
   </div>
 </nav>

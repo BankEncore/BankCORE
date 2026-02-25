@@ -26,7 +26,8 @@
 
     <div class="min-h-screen">
       <div class="no-print sticky top-0 z-50">
-        <%= render "admin/shared/admin_header" %>
+        <%= render "shared/application_header" %>
+        <%= render "shared/status_bar", workspace: :admin %>
         <%= render "admin/shared/command_bar" %>
       </div>
 

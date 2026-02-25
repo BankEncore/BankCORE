@@ -29,11 +29,10 @@
     </a>
 
     <div class="min-h-screen">
-      <% if authenticated? %>
-        <div class="sticky top-0 z-50">
-          <%= render "shared/global_header" %>
-        </div>
-      <% end %>
+      <div class="no-print sticky top-0 z-50">
+        <%= render "shared/application_header" %>
+        <%= render "shared/status_bar", workspace: :minimal %>
+      </div>
 
       <main id="main" class="mx-auto w-full max-w-7xl px-4 py-3 space-y-3">
         <%= tag.div(flash[:alert], class: "alert alert-error") if flash[:alert] %>
