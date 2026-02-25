@@ -80,6 +80,49 @@ module Teller
       Array(items).map { |i| i.is_a?(Hash) ? i.with_indifferent_access : {} }
     end
 
+    def add_business_days(date, days)
+      d = date.to_date
+      count = 0
+      while count < days
+        d += 1
+        count += 1 unless d.saturday? || d.sunday?
+      end
+      d
+    end
+
+    def deposit_availability_rows(posting_batch, cash_in_from_cash_cents, check_items)
+      as_of = posting_batch.committed_at&.to_date || Date.current
+      rows = []
+
+      if cash_in_from_cash_cents.to_i.positive?
+        rows << { label: "Immediate", date: as_of, amount_cents: cash_in_from_cash_cents }
+      end
+
+      held = check_items.select { |i| (i["hold_reason"] || i[:hold_reason]).to_s.present? }
+      non_held = check_items.reject { |i| (i["hold_reason"] || i[:hold_reason]).to_s.present? }
+      non_held_total = non_held.sum { |i| (i["amount_cents"] || i[:amount_cents] || 0).to_i }
+
+      if non_held_total.positive?
+        first_250_cents = [ 25_000, non_held_total ].min
+        rest_cents = non_held_total - first_250_cents
+        next_biz = add_business_days(as_of, 1)
+        two_biz = add_business_days(as_of, 2)
+        rows << { label: next_biz.strftime("%B %-d, %Y"), date: next_biz, amount_cents: first_250_cents }
+        rows << { label: two_biz.strftime("%B %-d, %Y"), date: two_biz, amount_cents: rest_cents } if rest_cents.positive?
+      end
+
+      held_by_date = held.group_by { |i| (i["hold_until"] || i[:hold_until]).to_s }
+      held_by_date.each do |date_str, items|
+        next if date_str.blank?
+        date = Date.parse(date_str) rescue nil
+        next unless date
+        amt = items.sum { |i| (i["amount_cents"] || i[:amount_cents] || 0).to_i }
+        rows << { label: date.strftime("%B %-d, %Y"), date: date, amount_cents: amt }
+      end
+
+      rows.sort_by { |r| [ r[:date], r[:label] == "Immediate" ? 0 : 1 ] }
+    end
+
     def receipt_money(cents)
       number_to_currency((cents || 0) / 100.0)
     end
