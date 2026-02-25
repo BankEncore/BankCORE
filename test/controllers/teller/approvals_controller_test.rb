@@ -18,8 +18,7 @@ module Teller
       grant_supervisor_permissions(@supervisor, @branch, @workstation)
       sign_in_as(@user)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
-      post teller_teller_session_path, params: { opening_cash_cents: 10_000 }
-      patch assign_drawer_teller_teller_session_path, params: { cash_location_id: @drawer.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000, cash_location_id: @drawer.id }
     end
 
     test "creates approval token with valid supervisor credentials" do

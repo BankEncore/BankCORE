@@ -54,30 +54,25 @@
     <div class="divider my-3"></div>
 
     <% if teller_session.blank? %>
-      <%= form_with url: teller_teller_session_path, method: :post do |form| %>
+      <%= form_with scope: :teller_session, url: teller_teller_session_path, method: :post, data: { controller: "session-open-form", session_open_form_previous_closing_url_value: previous_closing_teller_teller_session_path } do |form| %>
+        <p class="form-control">
+          <%= form.label :cash_location_id, "Drawer", class: "block text-xs font-medium text-slate-700 mb-1" %>
+          <%= form.select :cash_location_id,
+            options_from_collection_for_select(drawers, :id, :name),
+            { include_blank: "Select drawer" },
+            { required: true, class: "select select-bordered w-full", data: { action: "change->session-open-form#fetchPreviousClosing" } } %>
+        </p>
         <p class="form-control">
           <%= form.label :opening_cash_cents, "Opening cash", class: "block text-xs font-medium text-slate-700 mb-1" %>
-          <div data-controller="currency-input">
-            <%= form.hidden_field :opening_cash_cents, value: 0, data: { currency_input_target: "hiddenInput" } %>
-            <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Opening cash" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:opening_cash_cents) %>" required />
+          <p class="text-xs text-slate-500 mb-1" data-session-open-form-target="priorBalanceDisplay" data-session-open-form-prior-label="Previous closing: "></p>
+          <div data-controller="currency-input" data-session-open-form-target="openingWrapper">
+            <%= form.hidden_field :opening_cash_cents, value: 0, data: { currency_input_target: "hiddenInput", session_open_form_target: "openingInput" } %>
+            <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Opening cash" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" data-session-open-form-target="openingDisplay" required />
           </div>
         </p>
         <%= form.submit "Open Teller Session", class: "btn btn-primary" %>
       <% end %>
     <% else %>
-      <% if teller_session.cash_location.blank? %>
-        <%= form_with url: assign_drawer_teller_teller_session_path, method: :patch do |form| %>
-          <p class="form-control">
-            <%= form.label :cash_location_id, "Assign drawer", class: "block text-xs font-medium text-slate-700 mb-1" %>
-            <%= form.select :cash_location_id,
-              options_from_collection_for_select(drawers, :id, :name),
-              { include_blank: "Select drawer" },
-              { required: true, class: "select select-bordered w-full" } %>
-          </p>
-          <%= form.submit "Assign Drawer", class: "btn btn-primary" %>
-        <% end %>
-      <% end %>
-
       <%= form_with url: close_teller_teller_session_path, method: :patch do |form| %>
         <p class="form-control">
           <%= form.label :closing_cash_cents, "Declared closing cash", class: "block text-xs font-medium text-slate-700 mb-1" %>

@@ -1,6 +1,7 @@
 module Posting
   class PolicyChecker
     CASH_AFFECTING_TRANSACTION_TYPES = %w[deposit withdrawal check_cashing].freeze
+    VARIANCE_TRANSACTION_TYPES = %w[session_close_variance session_handoff_variance].freeze
 
     def self.call(request:, error_class: Posting::Engine::Error)
       teller_session = request.fetch(:teller_session)
@@ -10,6 +11,7 @@ module Posting
     end
 
     def self.drawer_required?(request)
+      return false if VARIANCE_TRANSACTION_TYPES.include?(request.fetch(:transaction_type))
       return true if CASH_AFFECTING_TRANSACTION_TYPES.include?(request.fetch(:transaction_type))
 
       cash_legs_include_drawer_reference?(request)

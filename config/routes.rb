@@ -36,7 +36,7 @@ Rails.application.routes.draw do
     get "history", to: "transaction_history#index", as: :history
     get "receipts/:request_id", to: "receipts#show", as: :receipt
     resource :teller_session, only: [ :new, :create ] do
-      patch :assign_drawer
+      get :previous_closing
       patch :close
     end
   end
@@ -53,6 +53,7 @@ Rails.application.routes.draw do
   namespace :ops do
     root "dashboard#index"
     get "ledger", to: "ledger#index", as: :ledger
+    resources :sessions, only: [ :index, :show ], controller: "sessions", path: "sessions"
   end
 
   namespace :admin do

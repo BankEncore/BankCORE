@@ -45,8 +45,7 @@ module Teller
       grant_posting_access(@user, @branch, @workstation)
       sign_in_as(@user)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
-      post teller_teller_session_path, params: { opening_cash_cents: 10_000 }
-      patch assign_drawer_teller_teller_session_path, params: { cash_location_id: @drawer.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000, cash_location_id: @drawer.id }
 
       get teller_deposit_transaction_path
       assert_response :success
@@ -115,11 +114,11 @@ module Teller
       assert_select "section[data-posting-form-target='vaultTransferSection']:not([hidden])", count: 1
     end
 
-    test "allows transfer page without assigned drawer" do
+    test "allows transfer page with session" do
       grant_posting_access(@user, @branch, @workstation)
       sign_in_as(@user)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
-      post teller_teller_session_path, params: { opening_cash_cents: 10_000 }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000, cash_location_id: @drawer.id }
 
       get teller_transfer_transaction_path
 
@@ -128,24 +127,23 @@ module Teller
       assert_select "input[name='transaction_type'][value='transfer']", count: 1
     end
 
-    test "requires drawer for check cashing page" do
+    test "allows check cashing page when session has drawer" do
       grant_posting_access(@user, @branch, @workstation)
       sign_in_as(@user)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
-      post teller_teller_session_path, params: { opening_cash_cents: 10_000 }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000, cash_location_id: @drawer.id }
 
       get teller_check_cashing_transaction_path
 
-      assert_redirected_to new_teller_teller_session_path
-      follow_redirect!
-      assert_select "div", /Assign a drawer before continuing\./i
+      assert_response :success
+      assert_select "h2", "Check Cashing"
     end
 
-    test "allows draft page without assigned drawer" do
+    test "allows draft page with session" do
       grant_posting_access(@user, @branch, @workstation)
       sign_in_as(@user)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
-      post teller_teller_session_path, params: { opening_cash_cents: 10_000 }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000, cash_location_id: @drawer.id }
 
       get teller_draft_transaction_path
 
@@ -153,11 +151,11 @@ module Teller
       assert_select "h2", "Draft Issuance"
     end
 
-    test "allows vault transfer page without assigned drawer" do
+    test "allows vault transfer page with session" do
       grant_posting_access(@user, @branch, @workstation)
       sign_in_as(@user)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
-      post teller_teller_session_path, params: { opening_cash_cents: 10_000 }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000, cash_location_id: @drawer.id }
 
       get teller_vault_transfer_transaction_path
 

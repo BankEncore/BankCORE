@@ -28,8 +28,7 @@ module Teller
       grant_permissions(@user, @branch, @workstation)
       sign_in_as(@user)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
-      post teller_teller_session_path, params: { opening_cash_cents: 5_000 }
-      patch assign_drawer_teller_teller_session_path, params: { cash_location_id: @drawer.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 5_000, cash_location_id: @drawer.id }
     end
 
     test "deposit create enforces deposit transaction type" do

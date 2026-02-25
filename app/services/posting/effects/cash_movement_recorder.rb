@@ -37,6 +37,8 @@ module Posting
             "out"
           when "vault_transfer"
             vault_transfer_cash_direction(cash_legs)
+          when "session_close_variance", "session_handoff_variance"
+            nil
           end
         end
 
@@ -48,6 +50,8 @@ module Posting
             cash_legs.select { |leg| leg.fetch(:side) == "credit" }.sum { |leg| leg.fetch(:amount_cents) }
           when "vault_transfer"
             vault_transfer_cash_amount(cash_legs, direction)
+          when "session_close_variance", "session_handoff_variance"
+            0
           else
             0
           end

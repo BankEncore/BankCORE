@@ -1,0 +1,152 @@
+<% content_for :title, "Session #{@session.id}" %>
+<% money = ->(cents) { number_to_currency((cents || 0) / 100.0) } %>
+
+<div class="space-y-4">
+  <section class="ui-panel bg-base-100 border-base-300">
+    <div class="ui-panel-pad">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <h2 class="ui-section-title text-lg">Session <%= @session.id %></h2>
+        <%= link_to "Back to Sessions", ops_sessions_path, class: "btn btn-ghost btn-sm" %>
+      </div>
+
+      <h3 class="font-semibold text-sm text-slate-700 mb-2">Session Summary</h3>
+      <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Teller</dt>
+          <dd class="ui-kv-value"><%= @session.user&.display_label || "—" %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Branch</dt>
+          <dd class="ui-kv-value"><%= @session.branch&.name || "—" %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Workstation</dt>
+          <dd class="ui-kv-value"><%= @session.workstation&.name || "—" %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Drawer</dt>
+          <dd class="ui-kv-value"><%= @session.cash_location&.name || "—" %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Opened at</dt>
+          <dd class="ui-kv-value"><%= @session.opened_at&.strftime("%Y-%m-%d %H:%M") || "—" %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Closed at</dt>
+          <dd class="ui-kv-value"><%= @session.closed_at&.strftime("%Y-%m-%d %H:%M") || "—" %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Opening cash</dt>
+          <dd class="ui-kv-value ui-money mono"><%= money[@session.opening_cash_cents] %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs"><%= @session.closed? ? "Expected closing" : "Expected cash now" %></dt>
+          <dd class="ui-kv-value ui-money mono">
+            <%= @session.closed? ? money[@session.expected_closing_cash_cents] : money[@session.expected_cash_cents] %>
+          </dd>
+        </div>
+        <% if @session.closed? %>
+          <div class="ui-kv-row">
+            <dt class="ui-kv-key text-xs">Declared closing</dt>
+            <dd class="ui-kv-value ui-money mono"><%= money[@session.closing_cash_cents] %></dd>
+          </div>
+          <div class="ui-kv-row">
+            <dt class="ui-kv-key text-xs">Variance</dt>
+            <dd class="ui-kv-value ui-money mono">
+              <% if @session.cash_variance_cents.present? && @session.cash_variance_cents != 0 %>
+                <span class="<%= @session.cash_variance_cents.negative? ? 'text-error' : 'text-success' %>">
+                  <%= money[@session.cash_variance_cents] %>
+                </span>
+              <% else %>
+                —
+              <% end %>
+            </dd>
+          </div>
+          <% if @session.cash_variance_reason.present? %>
+            <div class="ui-kv-row sm:col-span-2">
+              <dt class="ui-kv-key text-xs">Variance reason</dt>
+              <dd class="ui-kv-value"><%= @session.cash_variance_reason %></dd>
+            </div>
+          <% end %>
+          <% if @session.cash_variance_notes.present? %>
+            <div class="ui-kv-row sm:col-span-2">
+              <dt class="ui-kv-key text-xs">Variance notes</dt>
+              <dd class="ui-kv-value"><%= @session.cash_variance_notes %></dd>
+            </div>
+          <% end %>
+        <% end %>
+      </dl>
+    </div>
+  </section>
+
+  <section class="ui-panel bg-base-100 border-base-300">
+    <div class="ui-panel-pad">
+      <h3 class="font-semibold text-sm text-slate-700 mb-2">Cash Reconciliation</h3>
+      <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-1 text-sm mb-4">
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Cash in</dt>
+          <dd class="ui-kv-value ui-money mono"><%= money[@cash_in_cents] %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Cash out</dt>
+          <dd class="ui-kv-value ui-money mono"><%= money[@cash_out_cents] %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Net cash movement</dt>
+          <dd class="ui-kv-value ui-money mono"><%= money[@cash_in_cents - @cash_out_cents] %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Expected (opening + net)</dt>
+          <dd class="ui-kv-value ui-money mono"><%= money[@session.opening_cash_cents + @cash_in_cents - @cash_out_cents] %></dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="ui-panel bg-base-100 border-base-300">
+    <div class="ui-panel-pad">
+      <h3 class="font-semibold text-sm text-slate-700 mb-4">Transactions</h3>
+      <table class="table w-full table-zebra">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Type</th>
+            <th>Ref #</th>
+            <th class="text-right">Amount</th>
+            <th class="text-right">Cash impact</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @transactions.any? %>
+            <% @transactions.each do |tx| %>
+              <% cash_impact = tx.cash_movements.sum { |m| m.direction == "in" ? m.amount_cents : -m.amount_cents } %>
+              <tr>
+                <td><%= tx.posted_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
+                <td><%= tx.transaction_type.humanize %></td>
+                <td class="mono text-sm"><%= tx.request_id %></td>
+                <td class="text-right ui-money mono"><%= money[tx.amount_cents] %></td>
+                <td class="text-right ui-money mono">
+                  <% if cash_impact != 0 %>
+                    <span class="<%= cash_impact.positive? ? 'text-success' : 'text-error' %>">
+                      <%= cash_impact.positive? ? "+" : "" %><%= money[cash_impact] %>
+                    </span>
+                  <% else %>
+                    —
+                  <% end %>
+                </td>
+                <td>
+                  <%= link_to "Receipt", teller_receipt_path(tx.request_id), class: "btn btn-ghost btn-xs", target: "_blank" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="6" class="text-center text-slate-500 py-4">No transactions in this session.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
