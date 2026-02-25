@@ -1,5 +1,5 @@
 class TellerTransaction < ApplicationRecord
-  TRANSACTION_TYPES = %w[deposit withdrawal transfer vault_transfer draft check_cashing].freeze
+  TRANSACTION_TYPES = %w[deposit withdrawal transfer vault_transfer draft check_cashing session_close_variance session_handoff_variance].freeze
   STATUSES = %w[posted failed].freeze
 
   belongs_to :user

@@ -55,11 +55,13 @@ module Teller
     end
 
     test "clears teller session when switching branch and workstation" do
+      drawer = CashLocation.create!(branch: @branch, code: "DR1", name: "Drawer 1", location_type: "drawer")
       grant_sessions_permissions(@user)
+      grant_permissions(@user, @branch, @workstation)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
       follow_redirect!
 
-      post teller_teller_session_path, params: { opening_cash_cents: 5_000 }
+      post teller_teller_session_path, params: { opening_cash_cents: 5_000, cash_location_id: drawer.id }
       assert TellerSession.open_sessions.exists?(user: @user, branch: @branch, workstation: @workstation)
 
       second_branch = Branch.create!(code: "203", name: "Switch Branch")
@@ -74,12 +76,12 @@ module Teller
     end
 
     test "restores teller session when returning to branch and workstation" do
+      drawer = CashLocation.create!(branch: @branch, code: "DR2", name: "Drawer 2", location_type: "drawer")
       grant_sessions_permissions(@user)
+      grant_permissions(@user, @branch, @workstation)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
 
-      post teller_teller_session_path, params: { opening_cash_cents: 5_000 }
-      drawer = CashLocation.create!(branch: @branch, code: "DR2", name: "Drawer 2", location_type: "drawer")
-      patch assign_drawer_teller_teller_session_path, params: { cash_location_id: drawer.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 5_000, cash_location_id: drawer.id }
 
       second_branch = Branch.create!(code: "204", name: "Away Branch")
       second_workstation = Workstation.create!(branch: second_branch, code: "CTX4", name: "Away WS")

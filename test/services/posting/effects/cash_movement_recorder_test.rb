@@ -89,6 +89,21 @@ module Posting
         end
       end
 
+      test "skips recording for session variance transactions" do
+        recorder = CashMovementRecorder.new(
+          request: base_request.merge(transaction_type: "session_close_variance"),
+          legs: [
+            { side: "debit", account_reference: "expense:cash_short", amount_cents: 200 },
+            { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 200 }
+          ],
+          teller_transaction: @teller_transaction
+        )
+
+        assert_no_difference -> { CashMovement.count } do
+          recorder.call
+        end
+      end
+
       private
         def base_request
           {

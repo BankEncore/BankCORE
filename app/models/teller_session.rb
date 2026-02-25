@@ -13,10 +13,17 @@ class TellerSession < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
   validates :opening_cash_cents, numericality: { greater_than_or_equal_to: 0 }
   validates :closing_cash_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :expected_closing_cash_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :expected_closing_cash_cents, numericality: { only_integer: true }, allow_nil: true
   validates :opened_at, presence: true
 
   scope :open_sessions, -> { where(status: "open") }
+
+  def self.previous_closing_cents_for_drawer(cash_location_id)
+    return 0 if cash_location_id.blank?
+
+    TellerSession.where(cash_location_id: cash_location_id, status: "closed")
+      .order(closed_at: :desc).first&.closing_cash_cents || 0
+  end
 
   def open?
     status == "open"
@@ -60,15 +67,15 @@ class TellerSession < ApplicationRecord
     opening_cash_cents + net_cash_movement_cents
   end
 
-  def close!(declared_cash_cents, variance_reason: nil, variance_notes: nil)
-    expected_cents = expected_cash_cents
-    variance_cents = declared_cash_cents - expected_cents
+  def close!(declared_cash_cents, variance_reason: nil, variance_notes: nil, expected_cents: nil, variance_cents: nil)
+    expected = expected_cents || expected_cash_cents
+    variance = variance_cents || (declared_cash_cents - expected)
 
     update!(
       status: "closed",
       closing_cash_cents: declared_cash_cents,
-      expected_closing_cash_cents: expected_cents,
-      cash_variance_cents: variance_cents,
+      expected_closing_cash_cents: expected,
+      cash_variance_cents: variance,
       cash_variance_reason: variance_reason.presence,
       cash_variance_notes: variance_notes.presence,
       closed_at: Time.current

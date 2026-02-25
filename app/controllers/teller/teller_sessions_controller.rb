@@ -19,13 +19,34 @@ module Teller
         return
       end
 
+      op = open_params.to_h.symbolize_keys
+      drawer = available_drawers.find_by(id: op[:cash_location_id])
+      if drawer.blank?
+        redirect_to new_teller_teller_session_path, alert: "Select a valid drawer."
+        return
+      end
+
+      opening_cents = op[:opening_cash_cents].to_i
+      previous_closing = TellerSession.previous_closing_cents_for_drawer(drawer.id)
+
       teller_session = TellerSession.create!(
         user: Current.user,
         branch: current_branch,
         workstation: current_workstation,
+        cash_location: drawer,
         opened_at: Time.current,
-        opening_cash_cents: open_params[:opening_cash_cents].to_i
+        opening_cash_cents: opening_cents
       )
+
+      teller_session.cash_location_assignments.create!(cash_location: drawer, assigned_at: Time.current)
+
+      if opening_cents != previous_closing
+        Posting::SessionHandoffVarianceService.new(
+          teller_session: teller_session,
+          opening_cents: opening_cents,
+          previous_closing_cents: previous_closing
+        ).call
+      end
 
       session[:current_teller_session_id] = teller_session.id
       AuditEvent.create!(
@@ -38,37 +59,16 @@ module Teller
         occurred_at: Time.current
       )
 
-      redirect_to new_teller_teller_session_path, notice: "Teller session opened. Assign a drawer to continue."
+      redirect_to consume_teller_return_to(teller_root_path), notice: "Teller session opened."
     end
 
-    def assign_drawer
-      authorize([ :teller, :teller_session ], :assign_drawer?)
-
-      teller_session = current_teller_session
-      if teller_session.blank?
-        redirect_to new_teller_teller_session_path, alert: "Open a teller session first."
-        return
-      end
+    def previous_closing
+      authorize([ :teller, :teller_session ], :new?)
 
       drawer = available_drawers.find_by(id: params[:cash_location_id])
-      if drawer.blank?
-        redirect_to new_teller_teller_session_path, alert: "Select a valid drawer."
-        return
-      end
+      cents = drawer.present? ? TellerSession.previous_closing_cents_for_drawer(drawer.id) : 0
 
-      teller_session.assign_drawer!(drawer)
-      AuditEvent.create!(
-        event_type: "teller_session.drawer_assigned",
-        actor_user: Current.user,
-        branch: current_branch,
-        workstation: current_workstation,
-        teller_session: teller_session,
-        auditable: drawer,
-        metadata: { cash_location_id: drawer.id }.to_json,
-        occurred_at: Time.current
-      )
-
-      redirect_to consume_teller_return_to(teller_root_path), notice: "Drawer assigned."
+      render json: { previous_closing_cents: cents }
     end
 
     def close
@@ -80,10 +80,26 @@ module Teller
         return
       end
 
+      declared_cents = close_params[:closing_cash_cents].to_i
+      expected_cents = teller_session.expected_cash_cents
+      variance_cents = declared_cents - expected_cents
+
+      if variance_cents != 0 && teller_session.cash_location.present?
+        Posting::SessionCloseVarianceService.new(
+          teller_session: teller_session,
+          declared_cents: declared_cents,
+          expected_cents: expected_cents,
+          variance_reason: close_params[:cash_variance_reason],
+          variance_notes: close_params[:cash_variance_notes]
+        ).call
+      end
+
       teller_session.close!(
-        close_params[:closing_cash_cents].to_i,
+        declared_cents,
         variance_reason: close_params[:cash_variance_reason],
-        variance_notes: close_params[:cash_variance_notes]
+        variance_notes: close_params[:cash_variance_notes],
+        expected_cents: expected_cents,
+        variance_cents: variance_cents
       )
       AuditEvent.create!(
         event_type: "teller_session.closed",
@@ -108,7 +124,8 @@ module Teller
 
     private
       def open_params
-        params.permit(:opening_cash_cents)
+        p = params[:teller_session].presence || params
+        p.permit(:opening_cash_cents, :cash_location_id)
       end
 
       def close_params

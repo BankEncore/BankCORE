@@ -8,10 +8,6 @@ module Teller
       open?
     end
 
-    def assign_drawer?
-      open?
-    end
-
     def close?
       user.present? && user.has_permission?(
         "sessions.close",

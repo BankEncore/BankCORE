@@ -26,19 +26,21 @@ module Teller
       assert_select "div", /Open a teller session before continuing\./i
     end
 
-    test "blocks posting when drawer is not assigned" do
+    test "blocks posting when opening without drawer" do
       post teller_teller_session_path, params: { opening_cash_cents: 1_000 }
+
+      assert_redirected_to new_teller_teller_session_path
+      assert_equal "Select a valid drawer.", flash[:alert]
 
       post teller_posting_check_path, params: { transaction_type: "deposit" }
 
       assert_redirected_to new_teller_teller_session_path
       follow_redirect!
-      assert_select "div", /Assign a drawer before continuing\./i
+      assert_select "div", /Open a teller session before continuing\./i
     end
 
-    test "allows posting when session is open and drawer is assigned" do
-      post teller_teller_session_path, params: { opening_cash_cents: 1_000 }
-      patch assign_drawer_teller_teller_session_path, params: { cash_location_id: @drawer.id }
+    test "allows posting when session is open with drawer" do
+      post teller_teller_session_path, params: { opening_cash_cents: 1_000, cash_location_id: @drawer.id }
 
       post teller_posting_check_path, params: { transaction_type: "deposit" }
 
@@ -46,8 +48,8 @@ module Teller
       assert_equal({ "ok" => true, "message" => "Posting prerequisites satisfied" }, JSON.parse(response.body))
     end
 
-    test "allows transfer check without assigned drawer" do
-      post teller_teller_session_path, params: { opening_cash_cents: 1_000 }
+    test "allows transfer check with session" do
+      post teller_teller_session_path, params: { opening_cash_cents: 1_000, cash_location_id: @drawer.id }
 
       post teller_posting_check_path, params: { transaction_type: "transfer" }
 
@@ -55,14 +57,13 @@ module Teller
       assert_equal({ "ok" => true, "message" => "Posting prerequisites satisfied" }, JSON.parse(response.body))
     end
 
-    test "blocks check cashing when drawer is not assigned" do
-      post teller_teller_session_path, params: { opening_cash_cents: 1_000 }
+    test "allows check cashing when session has drawer" do
+      post teller_teller_session_path, params: { opening_cash_cents: 1_000, cash_location_id: @drawer.id }
 
       post teller_posting_check_path, params: { transaction_type: "check_cashing" }
 
-      assert_redirected_to new_teller_teller_session_path
-      follow_redirect!
-      assert_select "div", /Assign a drawer before continuing\./i
+      assert_response :success
+      assert_equal({ "ok" => true, "message" => "Posting prerequisites satisfied" }, JSON.parse(response.body))
     end
 
     private

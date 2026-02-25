@@ -158,10 +158,9 @@ module Teller
 
       def open_teller_session_and_assign_drawer
         visit new_teller_teller_session_path
-        fill_in "Opening cash (cents)", with: "5000"
+        select @drawer.name, from: "Drawer"
+        fill_in "Opening cash", with: "50"
         click_button "Open Teller Session"
-        select @drawer.name, from: "Assign drawer"
-        click_button "Assign Drawer"
       end
 
       def assert_posted_amount_cents(expected_cents)
