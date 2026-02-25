@@ -120,7 +120,10 @@ export default class extends Controller {
     "referenceRestrictions",
     "accountHistoryList",
     "thresholdWarning",
-    "message"
+    "message",
+    "availabilitySection",
+    "availabilityBody",
+    "availabilityEmpty"
   ]
 
   static values = {
@@ -387,6 +390,13 @@ export default class extends Controller {
 
     if (this.hasPostingPreviewBodyTarget) {
       this.renderPostingPreview(entries)
+    }
+
+    if (transactionType === "deposit" && this.hasAvailabilitySectionTarget) {
+      this.availabilitySectionTarget.hidden = false
+      this.renderFundsAvailability(state)
+    } else if (this.hasAvailabilitySectionTarget) {
+      this.availabilitySectionTarget.hidden = true
     }
 
     this.element.dispatchEvent(new CustomEvent("tx:recalc", {
@@ -1146,6 +1156,94 @@ export default class extends Controller {
       style: "currency",
       currency: "USD"
     }).format((Number(cents) || 0) / 100)
+  }
+
+  addBusinessDays(date, days) {
+    const d = new Date(date)
+    let count = 0
+    while (count < days) {
+      d.setDate(d.getDate() + 1)
+      if (d.getDay() !== 0 && d.getDay() !== 6) count++
+    }
+    return d
+  }
+
+  computeDepositAvailabilityRows(cashInFromCashCents, checkItems) {
+    const rows = []
+    const asOf = new Date()
+
+    if ((cashInFromCashCents || 0) > 0) {
+      rows.push({ label: "Immediate", date: asOf, amountCents: cashInFromCashCents })
+    }
+
+    const held = checkItems.filter((i) => (i.hold_reason || "").toString().trim().length > 0)
+    const nonHeld = checkItems.filter((i) => (i.hold_reason || "").toString().trim().length === 0)
+    const nonHeldTotal = nonHeld.reduce((sum, i) => sum + (i.amount_cents || 0), 0)
+
+    if (nonHeldTotal > 0) {
+      const first250Cents = Math.min(25_000, nonHeldTotal)
+      const restCents = nonHeldTotal - first250Cents
+      const nextBiz = this.addBusinessDays(asOf, 1)
+      const twoBiz = this.addBusinessDays(asOf, 2)
+      rows.push({
+        label: nextBiz.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+        date: nextBiz,
+        amountCents: first250Cents
+      })
+      if (restCents > 0) {
+        rows.push({
+          label: twoBiz.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+          date: twoBiz,
+          amountCents: restCents
+        })
+      }
+    }
+
+    const heldByDate = {}
+    held.forEach((i) => {
+      const dateStr = (i.hold_until || "").toString().trim()
+      if (!dateStr) return
+      const date = new Date(dateStr)
+      if (isNaN(date.getTime())) return
+      const key = dateStr
+      if (!heldByDate[key]) heldByDate[key] = { date, amountCents: 0 }
+      heldByDate[key].amountCents += i.amount_cents || 0
+    })
+    Object.values(heldByDate).forEach(({ date, amountCents }) => {
+      rows.push({
+        label: date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+        date,
+        amountCents
+      })
+    })
+
+    rows.sort((a, b) => {
+      const aOrder = a.label === "Immediate" ? 0 : 1
+      const bOrder = b.label === "Immediate" ? 0 : 1
+      if (aOrder !== bOrder) return aOrder - bOrder
+      return a.date - b.date
+    })
+    return rows
+  }
+
+  renderFundsAvailability(state) {
+    if (!this.hasAvailabilityBodyTarget || !this.hasAvailabilityEmptyTarget) return
+
+    const cashInFromCashCents = state.amountCents || 0
+    const checkItems = this.collectCheckRows().filter((c) => (c.amount_cents || 0) > 0)
+    const rows = this.computeDepositAvailabilityRows(cashInFromCashCents, checkItems)
+
+    this.availabilityBodyTarget.innerHTML = ""
+    this.availabilityEmptyTarget.hidden = rows.length > 0
+
+    rows.forEach((row) => {
+      const tr = document.createElement("tr")
+      tr.innerHTML = `
+        <td>${row.label.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+        <td class="text-right tabular-nums">${this.formatCents(row.amountCents)}</td>
+      `
+      this.availabilityBodyTarget.appendChild(tr)
+    })
   }
 
   renderPostingPreview(entries) {
