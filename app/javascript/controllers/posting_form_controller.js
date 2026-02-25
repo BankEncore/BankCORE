@@ -1103,7 +1103,7 @@ export default class extends Controller {
       const account = row.querySelector('[data-check-field="account"]')?.value?.trim() || ""
       const number = row.querySelector('[data-check-field="number"]')?.value?.trim() || ""
       const amountCents = parseInt(row.querySelector('[data-check-field="amount"]')?.value || "0", 10)
-
+      const checkType = row.querySelector('[data-check-field="checkType"]')?.value?.trim() || "transit"
       const holdReason = row.querySelector('[data-check-field="holdReason"]')?.value?.trim() || ""
       const holdUntil = row.querySelector('[data-check-field="holdUntil"]')?.value?.trim() || ""
 
@@ -1113,6 +1113,7 @@ export default class extends Controller {
         number,
         account_reference: this.checkAccountReference({ routing, account, number }, index),
         amount_cents: amountCents > 0 ? amountCents : 0,
+        check_type: checkType,
         hold_reason: holdReason,
         hold_until: holdUntil
       }

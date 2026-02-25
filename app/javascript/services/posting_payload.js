@@ -41,6 +41,7 @@ function appendCheckItems(formData, state) {
       formData.append("check_items[][number]", check.number ?? "")
       formData.append("check_items[][account_reference]", check.account_reference ?? "")
       formData.append("check_items[][amount_cents]", String(check.amount_cents ?? 0))
+      formData.append("check_items[][check_type]", check.check_type ?? "transit")
       formData.append("check_items[][hold_reason]", check.hold_reason ?? "")
       formData.append("check_items[][hold_until]", check.hold_until ?? "")
     })

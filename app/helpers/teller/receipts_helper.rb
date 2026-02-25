@@ -2,6 +2,16 @@
 
 module Teller
   module ReceiptsHelper
+    HOLD_REASONS = [
+      [ "Large check amount", "large_item" ],
+      [ "New account holder", "new_account" ],
+      [ "Repeated overdrafts", "repeated_overdraft" ],
+      [ "Third-party check", "third_party" ],
+      [ "Foreign check", "foreign_item" ],
+      [ "Possible duplicate", "duplicate_deposit" ],
+      [ "Other", "other" ]
+    ].freeze
+
     def masked_account_number(account_number)
       return "—" if account_number.blank?
       str = account_number.to_s.strip
@@ -75,10 +85,11 @@ module Teller
     end
 
     def check_hold_indicator(item)
+      check_type = (item["check_type"] || item[:check_type]).to_s
+      letter = check_type == "on_us" ? "O" : "T"
       hold_reason = (item["hold_reason"] || item[:hold_reason]).to_s
-      return "T*" if hold_reason.blank? || hold_reason == "on_us"
-      return "T" if hold_reason.include?("teller") || hold_reason == "teller"
-      "O"
+      asterisk = hold_reason.present? ? "*" : ""
+      "#{letter}#{asterisk}"
     end
 
     def cash_location_display_name(reference, branch)

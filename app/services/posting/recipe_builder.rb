@@ -27,6 +27,7 @@ module Posting
             number: item[:number].to_s,
             account_reference: item[:account_reference].to_s,
             amount_cents: item[:amount_cents].to_i,
+            check_type: item[:check_type].to_s.presence || "transit",
             hold_reason: item[:hold_reason].to_s,
             hold_until: item[:hold_until].to_s
           }
