@@ -9,13 +9,24 @@
 <% disbursement = (cc["net_cash_payout_cents"] || cc[:net_cash_payout_cents] || 0).to_i %>
 <% check_items = check_items_from_metadata(posting_batch) %>
 
-<div class="receipt-type-details text-sm">
-  <p>Party:        <%= party&.display_name || "ID #{party_id}" %> <%= "(#{party_id})" if party_id.present? %></p>
-  <p>Checks In:    <%= receipt_money(check_amount) %></p>
-  <p>Fee:         <%= receipt_money(fee) %></p>
-  <p>Disbursement: <%= receipt_money(disbursement) %></p>
-</div>
-
+<table class="table table-xs text-xs w-full">
+  <tr>
+    <td>Party:</td>
+    <td class="text-right"><%= party&.display_name || "ID #{party_id}" %> <%= "(#{party_id})" if party_id.present? %></td>
+  </tr>
+  <tr>
+    <td>Checks In:</td>
+    <td class="text-right tabular-nums"><%= receipt_money(check_amount) %></td>
+  </tr>
+  <tr>
+    <td>Fee:</td>
+    <td class="text-right tabular-nums"><%= receipt_money(fee) %></td>
+  </tr>
+  <tr>
+    <td class="font-semibold">Disbursement:</td>
+    <td class="text-right tabular-nums font-semibold"><%= receipt_money(disbursement) %></td>
+  </tr>
+</table>
 <% if check_items.any? %>
   <%= render "teller/receipts/receipt_check_details", check_items: check_items, total_cents: check_amount %>
 <% end %>

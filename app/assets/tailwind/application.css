@@ -116,11 +116,18 @@
 			page-break-inside: avoid;
 		}
 
-		/* Customer receipt: IBM Plex Sans, tabular-nums */
+		/* Customer receipt: IBM Plex Sans, tabular-nums, text-xs body */
+		.receipt-printable,
+		.receipt-printable * {
+			font-size: 0.75rem !important;
+		}
+
 		.receipt-printable {
 			page-break-inside: avoid;
 			font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
 			font-variant-numeric: tabular-nums;
+			border: none !important;
+			border-radius: 0;
 		}
 
 		.receipt-header,
@@ -134,9 +141,9 @@
 			font-size: 0.875rem;
 		}
 
-		/* Consistent print margins */
+		/* No print margin */
 		@page {
-			margin: 1cm;
+			margin: 0;
 		}
 	}
 }

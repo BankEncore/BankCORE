@@ -5,7 +5,7 @@ module Ops
     def index
       @ledger_legs = PostingLeg
         .includes(:posting_batch)
-        .order('posting_batches.committed_at DESC, posting_legs.id ASC')
+        .order("posting_batches.committed_at DESC, posting_legs.id ASC")
         .references(:posting_batch)
         .limit(100)
     end

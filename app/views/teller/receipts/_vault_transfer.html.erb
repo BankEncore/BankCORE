@@ -15,6 +15,25 @@
   <p>Amount:        <%= receipt_money(teller_transaction.amount_cents) %></p>
 </div>
 
+<table class="table table-xs text-xs w-full">
+  <tr>
+    <td>From:</td>
+    <td><%= cash_location_display_name(source_ref, branch) %></td>
+  </tr>
+  <tr>
+    <td>To:</td>
+    <td><%= cash_location_display_name(dest_ref, branch) %></td>
+  </tr>
+  <tr>
+    <td>Reason:</td>
+    <td><%= reason %></td>
+  </tr>
+  <tr>
+    <td>Amount:</td>
+    <td class="tabular-nums"><%= receipt_money(teller_transaction.amount_cents) %></td>
+  </tr>
+</table>
+
 <div class="receipt-auth mt-3 text-sm">
   <p>Auth: <%= user.teller_number.presence || teller_transaction.workstation&.code || "—" %> - <%= user.display_label %></p>
 </div>

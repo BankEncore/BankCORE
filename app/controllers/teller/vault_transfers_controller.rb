@@ -12,7 +12,7 @@ module Teller
       @page_title = "Vault Transfer"
       @form_url = teller_vault_transfers_path
       vaults = current_branch.cash_locations.active.where(location_type: "vault").order(:name)
-      @cash_locations = (@teller_session.cash_location.present? ? [@teller_session.cash_location] + vaults.to_a : vaults)
+      @cash_locations = (@teller_session.cash_location.present? ? [ @teller_session.cash_location ] + vaults.to_a : vaults)
       render "teller/transaction_pages/show"
     end
 

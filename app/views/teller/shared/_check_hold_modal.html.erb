@@ -1,0 +1,26 @@
+<dialog aria-label="Check Hold" data-hold-modal-target="modal" class="modal" data-action="close->hold-modal#handleClose">
+  <div class="modal-box">
+    <h2 class="font-semibold text-lg">Extended Hold</h2>
+    <p class="text-sm opacity-70 mt-1">Place this check on hold for 5 business days.</p>
+    <p class="form-control mt-4">
+      <label for="check_hold_reason">Hold Reason</label><br>
+      <select id="check_hold_reason" class="select select-bordered w-full" data-hold-modal-target="reasonSelect" data-action="change->hold-modal#onReasonChange">
+        <option value="">Select reason</option>
+        <% Teller::ReceiptsHelper::HOLD_REASONS.each do |label, value| %>
+          <option value="<%= value %>"><%= label %></option>
+        <% end %>
+      </select>
+    </p>
+    <p class="form-control mt-2">
+      <label for="check_hold_until">Hold Until</label><br>
+      <input id="check_hold_until" type="date" class="input input-bordered w-full" data-hold-modal-target="untilInput" readonly>
+    </p>
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" data-action="hold-modal#clear">Clear Hold</button>
+      <button type="button" class="btn btn-primary" data-action="hold-modal#apply">Apply</button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button type="submit">close</button>
+  </form>
+</dialog>

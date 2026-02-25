@@ -7,8 +7,9 @@
 <% cash_in_from_checks = check_items.any? ? checks_total : 0 %>
 <% cash_in_from_cash = cash_in - cash_in_from_checks %>
 
-<div class="receipt-type-details text-sm">
-  <table class="table table-sm text-sm w-full">
+<div class="receipt-type-details text-xs">
+  <table class="table table-xs text-xs w-full">
+
     <tr>
       <td>Cash In:</td>
       <td class="tabular-nums text-right"><%= receipt_money(cash_in) %></td>
@@ -26,6 +27,23 @@
 
 <% if check_items.any? %>
   <%= render "teller/receipts/receipt_check_details", check_items: check_items, total_cents: checks_total %>
+<% end %>
+
+<% availability_rows = deposit_availability_rows(posting_batch, cash_in, check_items) %>
+<% if availability_rows.any? %>
+  <table class="table table-sm text-xs w-full mt-3">
+    <thead>
+      <tr><th class="text-left">Availability</th><th class="text-right tabular-nums">Amount</th></tr>
+    </thead>
+    <tbody>
+      <% availability_rows.each do |row| %>
+        <tr>
+          <td><%= row[:label] %></td>
+          <td class="text-right tabular-nums"><%= receipt_money(row[:amount_cents]) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 <% end %>
 
 <%= render "teller/receipts/receipt_account_info", posting_batch: posting_batch %>

@@ -96,6 +96,7 @@ module Teller
             number: "9001",
             account_reference: "check:111000:222000:9001",
             amount_cents: 20_000,
+            check_type: "transit",
             hold_reason: "large_item",
             hold_until: "2026-03-01"
           }
@@ -107,6 +108,7 @@ module Teller
       posting_batch = PostingBatch.find_by!(request_id: "http-post-hold-1")
       assert_equal "large_item", posting_batch.metadata.dig("check_items", 0, "hold_reason")
       assert_equal "2026-03-01", posting_batch.metadata.dig("check_items", 0, "hold_until")
+      assert_equal "transit", posting_batch.metadata.dig("check_items", 0, "check_type")
       assert_equal "check:111000:222000:9001", posting_batch.metadata.dig("check_items", 0, "account_reference")
     end
 

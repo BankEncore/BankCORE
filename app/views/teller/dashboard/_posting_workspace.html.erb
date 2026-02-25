@@ -116,6 +116,8 @@
                     <th class="py-2 text-left">Account</th>
                     <th class="py-2 text-left">Check #</th>
                     <th class="py-2 text-right">Amount</th>
+                    <th class="py-2 text-left">Type</th>
+                    <th class="py-2 text-right">Hold</th>
                     <th class="py-2 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -133,6 +135,17 @@
                     <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
                     <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm text-right tabular-nums" inputmode="decimal" placeholder="$0.00" aria-label="Check amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur">
                   </div>
+                </td>
+                <td class="py-2 pl-2">
+                  <select class="select select-bordered h-9 min-h-0 py-1 text-sm" data-check-field="checkType" data-action="change->posting-form#recalculate">
+                    <option value="transit">Transit</option>
+                    <option value="on_us">On Us</option>
+                  </select>
+                </td>
+                <td class="py-2 pl-2">
+                  <input type="hidden" data-check-field="holdReason" value="">
+                  <input type="hidden" data-check-field="holdUntil" value="">
+                  <button type="button" class="btn btn-ghost btn-sm hold-button" data-action="click->hold-modal#openFromButton" title="Add or edit hold">Hold</button>
                 </td>
                 <td class="py-2 pl-2 text-right"><button type="button" class="btn btn-ghost btn-sm" data-action="line-items#removeCheckRow">Remove</button></td>
               </tr>
@@ -337,12 +350,14 @@
         <%#= render "teller/shared/reference_panel", teller_session: teller_session %>
         <%= render "teller/shared/live_account_panel" %>
         <%= render "teller/shared/drawer_totals", teller_session: teller_session %>
+        <%= render "teller/shared/funds_availability_panel" %>
         <%= render "teller/shared/recent_activity", teller_session: teller_session %>
       </aside>
     </div>
 
     <%= render "teller/shared/approval_modal" %>
     <%= render "teller/shared/post_success_modal" %>
+    <%= render "teller/shared/check_hold_modal" %>
 
     <section aria-label="Receipt Confirmation" data-posting-form-target="receiptPanel" class="card bg-base-100 border border-base-300" hidden>
       <div class="card-body">

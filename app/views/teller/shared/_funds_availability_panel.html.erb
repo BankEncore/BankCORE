@@ -1,0 +1,21 @@
+<section aria-label="Funds Availability" class="card bg-base-100 border border-base-300" data-posting-form-target="availabilitySection" hidden>
+  <div class="card-body p-3 md:p-4">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Funds Availability</h2>
+        <p class="text-xs text-slate-600 mt-1">When funds will be available after posting.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+    <table class="table table-sm text-sm w-full">
+      <thead>
+        <tr>
+          <th class="text-left">Availability</th>
+          <th class="text-right tabular-nums">Amount</th>
+        </tr>
+      </thead>
+      <tbody data-posting-form-target="availabilityBody"></tbody>
+    </table>
+    <p class="mt-2 text-xs text-slate-600" data-posting-form-target="availabilityEmpty">Enter cash and/or checks to see availability.</p>
+  </div>
+</section>

@@ -1,23 +1,25 @@
 <% account_summaries_by_account(posting_batch).each do |summary| %>
   <% account = summary[:account] %>
+  <% account_ref = account&.account_number || summary[:account_reference] %>
   <% prev = summary[:previous_balance_cents] %>
   <% credit = summary[:credit_cents] %>
   <% debit = summary[:debit_cents] %>
   <% pending = summary[:pending_balance_cents] %>
+  <% account_type_label = account&.account_type&.upcase&.[](0, 3) || "—" %>
 
 <div class="receipt-account-block mt-3 text-sm grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-  <p class="font-semibold col-span-2">Account <%= masked_account_number(account.account_number) %> (<%= account.account_type.upcase[0, 3] %>)</p>
-  <span>Previous Bal.:</span>
-  <span class="tabular-nums text-right"><%= receipt_money(prev) %></span>
-  <% if credit.positive? %>
+  <p class="font-semibold col-span-2">Account <%= masked_account_number(account_ref) %> (<%= account_type_label %>)</p>
+  <span>Previous Balance:</span>
+  <span class="tabular-nums text-right"><%= prev.present? ? receipt_money(prev) : "—" %></span>
+  <% if (credit || 0).positive? %>
     <span>Credit:</span>
     <span class="tabular-nums text-right"><%= receipt_money(credit) %></span>
   <% end %>
-  <% if debit.positive? %>
+  <% if (debit || 0).positive? %>
     <span>Debit:</span>
     <span class="tabular-nums text-right"><%= receipt_money(debit) %></span>
   <% end %>
-  <span>Pending Bal.:</span>
-  <span class="tabular-nums text-right"><%= receipt_money(pending) %></span>
+  <span>Pending Balance:</span>
+  <span class="tabular-nums text-right"><%= pending.present? ? receipt_money(pending) : "—" %></span>
 </div>
 <% end %>

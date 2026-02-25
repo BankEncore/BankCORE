@@ -6,7 +6,7 @@
   <thead>
     <tr>
       <th class="text-left">Check #</th>
-      <th class="text-right">Amount</th>
+      <th class="text-right" colspan="2">Amount</th>
     </tr>
   </thead>
   <tbody>
@@ -15,15 +15,17 @@
       <% num = (item["number"] || item[:number]).to_s.presence || "—" %>
       <% indicator = check_hold_indicator(item) %>
       <tr>
-        <td><%= num %></td>
-        <td class="text-right tabular-nums"><%= receipt_money(amt) %> <%= indicator %></td>
+        <td class="font-small"><%= num %></td>
+        <td><%= indicator %></td>
+        <td class="text-right tabular-nums font-small"><%= receipt_money(amt) %></td>
       </tr>
     <% end %>
   </tbody>
   <tfoot>
     <tr class="border-t">
       <td><%= items.size %> items</td>
-      <td class="text-right tabular-nums font-medium"><%= receipt_money(total) %>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+      <td></td>
+      <td class="text-right tabular-nums font-small"><%= receipt_money(total) %></td>
     </tr>
   </tfoot>
 </table>

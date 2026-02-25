@@ -8,12 +8,17 @@
 <% total = draft_amt + fee %>
 <% funding = (draft["funding_source"] || draft[:funding_source]).to_s %>
 <% user = teller_transaction.user %>
+<% payee = (draft["payee_name"] || draft[:payee_name]).to_s %>
 
 <div class="receipt-type-details text-sm">
   <table class="table table-sm text-sm w-full">
     <tr>
       <td>Draft #:</td>
       <td class="tabular-nums text-right"><%= instrument.presence || "—" %></td>
+    </tr>
+    <tr>
+      <td>Payee:</td>
+      <td class="text-right"><%= payee.presence || "—" %></td>
     </tr>
     <tr>
       <td>Amount:</td>
@@ -24,8 +29,8 @@
       <td class="tabular-nums text-right"><%= receipt_money(fee) %></td>
     </tr>
     <tr>
-      <td>Total Due:</td>
-      <td class="tabular-nums text-right"><%= receipt_money(total) %></td>
+      <td class="font-semibold">Total Due:</td>
+      <td class="tabular-nums text-right font-semibold"><%= receipt_money(total) %></td>
     </tr>
     <tr>
       <td>Cash In:</td>
