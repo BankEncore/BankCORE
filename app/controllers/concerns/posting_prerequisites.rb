@@ -25,6 +25,7 @@ module PostingPrerequisites
 
     def drawer_required_for_request?
       transaction_type = params[:transaction_type].to_s.presence || inferred_transaction_type
+      return true if transaction_type == "reversal"
       return params[:draft_funding_source].to_s == "cash" if transaction_type == "draft"
       if transaction_type == "vault_transfer"
         direction = params[:vault_transfer_direction].to_s
@@ -50,6 +51,8 @@ module PostingPrerequisites
         "draft"
       when "teller/check_cashings"
         "check_cashing"
+      when "teller/reversals"
+        "reversal"
       when "teller/transaction_pages"
         case action_name
         when "deposit"

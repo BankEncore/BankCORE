@@ -121,10 +121,24 @@
           <% if @transactions.any? %>
             <% @transactions.each do |tx| %>
               <% cash_impact = tx.cash_movements.sum { |m| m.direction == "in" ? m.amount_cents : -m.amount_cents } %>
-              <tr>
+              <tr class="<%= tx.transaction_type == "reversal" ? "bg-slate-50 dark:bg-slate-800/50" : "" %>">
                 <td><%= tx.posted_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
-                <td><%= tx.transaction_type.humanize %></td>
-                <td class="mono text-sm"><%= tx.request_id %></td>
+                <td>
+                  <%= tx.transaction_type.humanize %>
+                  <% if tx.transaction_type == "reversal" %>
+                    <span class="badge badge-ghost text-xs ml-1">Reversal</span>
+                  <% elsif tx.reversed? %>
+                    <span class="badge badge-ghost text-xs ml-1">Reversed</span>
+                  <% end %>
+                </td>
+                <td class="mono text-sm">
+                  <%= tx.request_id %>
+                  <% if tx.transaction_type == "reversal" && tx.reversal_of_teller_transaction.present? %>
+                    <br><span class="text-xs text-slate-500">Reverses <%= tx.reversal_of_teller_transaction.request_id %></span>
+                  <% elsif tx.reversed? && tx.reversed_by_teller_transaction.present? %>
+                    <br><span class="text-xs text-slate-500">Reversed by <%= link_to tx.reversed_by_teller_transaction.request_id, teller_receipt_path(request_id: tx.reversed_by_teller_transaction.request_id), class: "link link-hover", target: "_blank" %></span>
+                  <% end %>
+                </td>
                 <td class="text-right ui-money mono"><%= money[tx.amount_cents] %></td>
                 <td class="text-right ui-money mono">
                   <% if cash_impact != 0 %>
@@ -136,7 +150,7 @@
                   <% end %>
                 </td>
                 <td>
-                  <%= link_to "Receipt", teller_receipt_path(tx.request_id), class: "btn btn-ghost btn-xs", target: "_blank" %>
+                  <%= link_to "Receipt", teller_receipt_path(request_id: tx.request_id), class: "btn btn-ghost btn-xs", target: "_blank" %>
                 </td>
               </tr>
             <% end %>

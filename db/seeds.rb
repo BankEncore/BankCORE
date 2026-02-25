@@ -19,6 +19,7 @@ permissions = {
   "transactions.vault_transfer.create" => "Create vault transfers",
   "transactions.draft.create" => "Create draft issuances",
   "transactions.check_cashing.create" => "Create check cashing transactions",
+  "transactions.reversal.create" => "Initiate transaction reversals",
   "approvals.override.execute" => "Execute supervisor override",
   "administration.workspace.view" => "Access Administration workspace (manage branches, cash locations, users, roles)"
 }
@@ -42,7 +43,8 @@ roles = {
       "transactions.transfer.create",
       "transactions.vault_transfer.create",
       "transactions.draft.create",
-      "transactions.check_cashing.create"
+      "transactions.check_cashing.create",
+      "transactions.reversal.create"
     ]
   },
   "supervisor" => {
@@ -58,6 +60,7 @@ roles = {
       "transactions.vault_transfer.create",
       "transactions.draft.create",
       "transactions.check_cashing.create",
+      "transactions.reversal.create",
       "approvals.override.execute"
     ]
   },

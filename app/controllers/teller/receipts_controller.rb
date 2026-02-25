@@ -20,7 +20,19 @@ module Teller
 
       def load_posting_batch
         @posting_batch = PostingBatch
-          .includes(:posting_legs, { account_transactions: :account }, teller_transaction: [ :branch, :workstation, :user, { teller_session: :cash_location } ])
+          .includes(
+            :posting_legs,
+            { account_transactions: :account },
+            teller_transaction: [
+              :branch,
+              :workstation,
+              :user,
+              :approved_by_user,
+              :reversed_by_teller_transaction,
+              :reversal_of_teller_transaction,
+              { teller_session: :cash_location }
+            ]
+          )
           .find_by!(request_id: params[:request_id].to_s)
       end
   end

@@ -79,6 +79,40 @@ module Teller
       assert_equal 1, TellerTransaction.where(request_id: "http-post-4").count
     end
 
+    test "stores approved_by_user_id when posting with approval token" do
+      supervisor = User.create!(email_address: "posting-supervisor@example.com", password: "password")
+      grant_supervisor_permissions(supervisor, @branch, @workstation)
+
+      request_id = "http-post-approved-#{Time.current.to_i}"
+      approval_token = ActiveSupport::MessageVerifier.new(Rails.application.secret_key_base, serializer: JSON).generate(
+        {
+          supervisor_user_id: supervisor.id,
+          request_id: request_id,
+          reason: "threshold_exceeded",
+          policy_trigger: "amount_threshold",
+          policy_context: {},
+          approved_at: Time.current.to_i
+        }
+      )
+
+      post teller_posting_path, params: valid_posting_payload(
+        request_id: request_id,
+        amount_cents: 150_000,
+        entries: [
+          { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 150_000 },
+          { side: "credit", account_reference: "acct:deposit", amount_cents: 150_000 }
+        ]
+      ).merge(approval_token: approval_token)
+
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal true, body["ok"]
+
+      tt = TellerTransaction.find_by!(request_id: request_id)
+      assert_equal supervisor.id, tt.approved_by_user_id
+      assert_equal supervisor, tt.approved_by_user
+    end
+
     test "persists check hold metadata into posting batch metadata" do
       post teller_posting_path, params: valid_posting_payload(
         request_id: "http-post-hold-1",
@@ -134,6 +168,21 @@ module Teller
 
           role = Role.find_or_create_by!(key: "teller") do |record|
             record.name = "Teller"
+          end
+
+          RolePermission.find_or_create_by!(role: role, permission: permission)
+          UserRole.find_or_create_by!(user: user, role: role, branch: branch, workstation: workstation)
+        end
+      end
+
+      def grant_supervisor_permissions(user, branch, workstation)
+        [ "approvals.override.execute" ].each do |permission_key|
+          permission = Permission.find_or_create_by!(key: permission_key) do |record|
+            record.description = permission_key.humanize
+          end
+
+          role = Role.find_or_create_by!(key: "supervisor") do |record|
+            record.name = "Supervisor"
           end
 
           RolePermission.find_or_create_by!(role: role, permission: permission)

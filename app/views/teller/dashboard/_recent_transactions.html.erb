@@ -32,13 +32,21 @@
                 <td class="py-2 text-right tabular-nums <%= signed_cents.negative? ? 'text-error font-medium' : 'ui-money' %>">
                   <%= signed_cents.negative? ? "" : "+" %><%= number_to_currency(signed_cents / 100.0) %>
                 </td>
-                <td class="py-2"><span class="badge badge-outline"><%= transaction.status %></span></td>
+                <td class="py-2">
+                  <span class="badge badge-outline"><%= transaction.status %></span>
+                  <% if transaction.reversed? %>
+                    <span class="badge badge-ghost text-xs ml-1">Reversed</span>
+                  <% end %>
+                </td>
                 <td class="py-2 text-xs tabular-nums"><%= transaction.request_id %></td>
                 <td class="no-print py-2 text-right">
                   <% if transaction.posting_batch.present? %>
                     <div class="flex gap-1 justify-end">
                       <%= link_to "Receipt", teller_receipt_path(request_id: transaction.request_id), class: "btn btn-ghost btn-sm" %>
                       <%= link_to "Audit", teller_receipt_path(request_id: transaction.request_id, view: "audit"), class: "btn btn-ghost btn-sm" %>
+                      <% if transaction.reversible? %>
+                        <%= link_to "Reverse", reversal_teller_transaction_path(transaction), class: "btn btn-outline btn-sm" %>
+                      <% end %>
                     </div>
                   <% else %>
                     <span class="text-slate-500 text-xs">—</span>

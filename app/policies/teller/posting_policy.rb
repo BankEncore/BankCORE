@@ -9,7 +9,8 @@ module Teller
         "transactions.transfer.create",
         "transactions.vault_transfer.create",
         "transactions.draft.create",
-        "transactions.check_cashing.create"
+        "transactions.check_cashing.create",
+        "transactions.reversal.create"
       ].any? do |permission_key|
         user.has_permission?(permission_key, branch: Current.branch, workstation: Current.workstation)
       end

@@ -4,10 +4,21 @@
       <div class="card-body py-3">
         <h2 class="card-title text-lg">Audit Receipt</h2>
         <p class="text-sm opacity-80">Full posting context, legs, and cash movements</p>
-        <p class="flex gap-2 flex-wrap">
-          <%= link_to "Back to Dashboard", teller_root_path, class: "btn btn-ghost btn-sm" %>
-          <%= link_to "Customer Receipt", teller_receipt_path(request_id: @posting_batch.request_id), class: "btn btn-outline btn-sm" %>
-          <button type="button" onclick="window.print()" class="btn btn-outline btn-sm">Print</button>
+        <p class="flex flex-wrap justify-between gap-2 items-center">
+          <span class="flex gap-2">
+            <% if @teller_transaction.reversible? %>
+              <%= link_to "Reverse", reversal_teller_transaction_path(@teller_transaction), class: "btn btn-outline btn-error btn-sm" %>
+            <% elsif @teller_transaction.reversed? %>
+              <%= link_to "Reversed by #{@teller_transaction.reversed_by_teller_transaction.request_id}", teller_receipt_path(request_id: @teller_transaction.reversed_by_teller_transaction.request_id, view: "audit"), class: "btn btn-ghost btn-sm" %>
+            <% elsif @teller_transaction.transaction_type == "reversal" && @teller_transaction.reversal_of_teller_transaction.present? %>
+              <%= link_to "Original #{@teller_transaction.reversal_of_teller_transaction.request_id}", teller_receipt_path(request_id: @teller_transaction.reversal_of_teller_transaction.request_id, view: "audit"), class: "btn btn-ghost btn-sm" %>
+            <% end %>
+          </span>
+          <span class="flex gap-2 flex-wrap">
+            <%= link_to "Customer Receipt", teller_receipt_path(request_id: @posting_batch.request_id), class: "btn btn-outline btn-sm" %>
+            <button type="button" onclick="window.print()" class="btn btn-secondary btn-sm">Print</button>
+            <%= link_to "Back to Dashboard", teller_root_path, class: "btn btn-ghost btn-sm" %>
+          </span>
         </p>
       </div>
     </section>
@@ -19,6 +30,25 @@
       <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm font-mono">
         <dt class="text-slate-500">Request ID</dt>
         <dd><%= @posting_batch.request_id %></dd>
+        <% if @teller_transaction.reversed? %>
+          <dt class="text-slate-500">Reversed by</dt>
+          <dd>
+            <%= link_to @teller_transaction.reversed_by_teller_transaction.request_id,
+              teller_receipt_path(request_id: @teller_transaction.reversed_by_teller_transaction.request_id, view: "audit"),
+              class: "link link-hover" %>
+          </dd>
+        <% elsif @teller_transaction.transaction_type == "reversal" && @teller_transaction.reversal_of_teller_transaction.present? %>
+          <dt class="text-slate-500">Reverses</dt>
+          <dd>
+            <%= link_to @teller_transaction.reversal_of_teller_transaction.request_id,
+              teller_receipt_path(request_id: @teller_transaction.reversal_of_teller_transaction.request_id, view: "audit"),
+              class: "link link-hover" %>
+          </dd>
+        <% end %>
+        <% if @teller_transaction.approved_by_user.present? %>
+          <dt class="text-slate-500">Authorized by</dt>
+          <dd><%= @teller_transaction.approved_by_user.display_label %> (<%= @teller_transaction.approved_by_user.teller_number.presence || @teller_transaction.approved_by_user.email_address %>)</dd>
+        <% end %>
         <dt class="text-slate-500">Status</dt>
         <dd><%= @posting_batch.status %> / <%= @teller_transaction.status %></dd>
         <dt class="text-slate-500">Branch</dt>

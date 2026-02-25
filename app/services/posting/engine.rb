@@ -4,7 +4,7 @@ module Posting
 
     attr_reader :request
 
-    def initialize(user:, teller_session:, branch:, workstation:, request_id:, transaction_type:, amount_cents:, entries:, metadata: {}, currency: "USD")
+    def initialize(user:, teller_session:, branch:, workstation:, request_id:, transaction_type:, amount_cents:, entries:, metadata: {}, currency: "USD", approved_by_user_id: nil)
       @request = build_request(
         user: user,
         teller_session: teller_session,
@@ -15,7 +15,8 @@ module Posting
         amount_cents: amount_cents,
         entries: entries,
         metadata: metadata,
-        currency: currency
+        currency: currency,
+        approved_by_user_id: approved_by_user_id
       )
     end
 
@@ -33,7 +34,7 @@ module Posting
     end
 
     private
-      def build_request(user:, teller_session:, branch:, workstation:, request_id:, transaction_type:, amount_cents:, entries:, metadata:, currency:)
+      def build_request(user:, teller_session:, branch:, workstation:, request_id:, transaction_type:, amount_cents:, entries:, metadata:, currency:, approved_by_user_id: nil)
         {
           user: user,
           teller_session: teller_session,
@@ -44,6 +45,7 @@ module Posting
           amount_cents: amount_cents.to_i,
           metadata: metadata.presence || {},
           currency: currency.to_s,
+          approved_by_user_id: approved_by_user_id,
           entries: Array(entries).map.with_index do |entry, index|
             {
               side: entry.fetch(:side).to_s,

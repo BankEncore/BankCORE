@@ -104,6 +104,41 @@ module Posting
         end
       end
 
+      test "records cash out for reversal of deposit (inverted from original in)" do
+        reversal_tt = TellerTransaction.create!(
+          user: @user,
+          teller_session: @teller_session,
+          branch: @branch,
+          workstation: @workstation,
+          request_id: "ce-reversal-1",
+          transaction_type: "reversal",
+          currency: "USD",
+          amount_cents: 5_000,
+          status: "posted",
+          posted_at: Time.current
+        )
+        request = base_request.merge(
+          transaction_type: "reversal",
+          metadata: { reversal: { original_transaction_type: "deposit" } }
+        )
+        recorder = CashMovementRecorder.new(
+          request: request,
+          legs: [
+            { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 5_000 },
+            { side: "debit", account_reference: "acct:deposit", amount_cents: 5_000 }
+          ],
+          teller_transaction: reversal_tt
+        )
+
+        assert_difference -> { CashMovement.count }, 1 do
+          recorder.call
+        end
+
+        movement = CashMovement.order(:id).last
+        assert_equal "out", movement.direction
+        assert_equal 5_000, movement.amount_cents
+      end
+
       private
         def base_request
           {
