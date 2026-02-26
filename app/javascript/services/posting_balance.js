@@ -54,7 +54,8 @@ export function buildEntries(transactionType, state) {
         })
       })
 
-    const cappedCashBackCents = Math.min(cashBackCents, cashAmountCents)
+    const totalDepositCents = cashAmountCents + checks.reduce((sum, c) => sum + (c.amount_cents ?? 0), 0)
+    const cappedCashBackCents = Math.min(cashBackCents, totalDepositCents)
     if (cappedCashBackCents > 0 && cashAccountReference) {
       entries.push({ side: "credit", account_reference: cashAccountReference, amount_cents: cappedCashBackCents })
     }

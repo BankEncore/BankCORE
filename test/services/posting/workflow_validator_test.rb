@@ -95,5 +95,39 @@ module Posting
       assert errors.none? { |e| e.include?("ID type") }, "Should not report ID type error"
       assert errors.none? { |e| e.include?("ID number") }, "Should not report ID number error"
     end
+
+    test "deposit returns error when cash_back exceeds total deposit" do
+      errors = WorkflowValidator.errors({
+        transaction_type: "deposit",
+        amount_cents: 13_000,
+        primary_account_reference: "acct:customer",
+        cash_back_cents: 20_000,
+        entries: [
+          { side: "debit", account_reference: "cash:D01", amount_cents: 10_000 },
+          { side: "debit", account_reference: "check:111:222:333", amount_cents: 5_000 },
+          { side: "credit", account_reference: "cash:D01", amount_cents: 2_000 },
+          { side: "credit", account_reference: "acct:customer", amount_cents: 13_000 }
+        ]
+      }, mode: :post)
+
+      assert_includes errors, "Cash back cannot exceed total deposit"
+    end
+
+    test "deposit returns no error when cash_back within total deposit" do
+      errors = WorkflowValidator.errors({
+        transaction_type: "deposit",
+        amount_cents: 13_000,
+        primary_account_reference: "acct:customer",
+        cash_back_cents: 2_000,
+        entries: [
+          { side: "debit", account_reference: "cash:D01", amount_cents: 10_000 },
+          { side: "debit", account_reference: "check:111:222:333", amount_cents: 5_000 },
+          { side: "credit", account_reference: "cash:D01", amount_cents: 2_000 },
+          { side: "credit", account_reference: "acct:customer", amount_cents: 13_000 }
+        ]
+      }, mode: :post)
+
+      assert errors.none? { |e| e.include?("Cash back") }, "Should not report cash back error"
+    end
   end
 end

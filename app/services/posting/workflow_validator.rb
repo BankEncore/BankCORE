@@ -20,6 +20,11 @@ module Posting
         case transaction_type
         when "deposit", "withdrawal"
           errors << "Primary account reference is required" if params[:primary_account_reference].blank?
+          if transaction_type == "deposit"
+            total_deposit = Array(entries).select { |e| (e[:side] || e["side"]) == "debit" }.sum { |e| (e[:amount_cents] || e["amount_cents"]).to_i }
+            cash_back = params[:cash_back_cents].to_i
+            errors << "Cash back cannot exceed total deposit" if total_deposit.positive? && cash_back > total_deposit
+          end
         when "transfer"
           if entries.blank?
             errors << "From account reference is required" if params[:primary_account_reference].blank?

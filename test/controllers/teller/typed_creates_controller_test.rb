@@ -46,6 +46,28 @@ module Teller
       assert_equal "cash:#{@drawer.code}", transaction.posting_batch.posting_legs.find_by!(side: "debit").account_reference
     end
 
+    test "deposit create with cash_back stores metadata" do
+      post teller_deposits_path, params: {
+        request_id: "typed-dep-cb-1",
+        transaction_type: "deposit",
+        amount_cents: 8_000,
+        primary_account_reference: "acct:dep",
+        cash_account_reference: "cash:#{@drawer.code}",
+        cash_back_cents: 2_000,
+        entries: [
+          { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 10_000 },
+          { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 2_000 },
+          { side: "credit", account_reference: "acct:dep", amount_cents: 8_000 }
+        ]
+      }
+
+      assert_response :success
+      transaction = TellerTransaction.find_by!(request_id: "typed-dep-cb-1")
+      assert_equal "deposit", transaction.transaction_type
+      assert_equal 8_000, transaction.amount_cents
+      assert_equal 2_000, transaction.posting_batch.metadata["cash_back_cents"]
+    end
+
     test "withdrawal create enforces withdrawal transaction type" do
       post teller_withdrawals_path, params: {
         request_id: "typed-wd-1",

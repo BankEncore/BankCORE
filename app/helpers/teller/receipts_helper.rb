@@ -108,12 +108,17 @@ module Teller
       d
     end
 
-    def deposit_availability_rows(posting_batch, cash_in_from_cash_cents, check_items)
+    def deposit_availability_rows(posting_batch, cash_in_from_cash_cents, check_items, cash_back_cents: 0)
       as_of = posting_batch.committed_at&.to_date || Date.current
       rows = []
+      remaining_cash_back = [ cash_back_cents.to_i, 0 ].max
 
-      if cash_in_from_cash_cents.to_i.positive?
-        rows << { label: "Immediate", date: as_of, amount_cents: cash_in_from_cash_cents }
+      immediate_cents = [ cash_in_from_cash_cents.to_i, 0 ].max
+      if immediate_cents.positive?
+        deduct = [ remaining_cash_back, immediate_cents ].min
+        remaining_cash_back -= deduct
+        net_cents = immediate_cents - deduct
+        rows << { label: "Immediate", date: as_of, amount_cents: net_cents } if net_cents.positive?
       end
 
       held = check_items.select { |i| (i["hold_reason"] || i[:hold_reason]).to_s.present? }
@@ -125,20 +130,35 @@ module Teller
         rest_cents = non_held_total - first_250_cents
         next_biz = add_business_days(as_of, 1)
         two_biz = add_business_days(as_of, 2)
-        rows << { label: next_biz.strftime("%B %-d, %Y"), date: next_biz, amount_cents: first_250_cents }
-        rows << { label: two_biz.strftime("%B %-d, %Y"), date: two_biz, amount_cents: rest_cents } if rest_cents.positive?
+
+        deduct_first250 = [ remaining_cash_back, first_250_cents ].min
+        remaining_cash_back -= deduct_first250
+        net_first250 = first_250_cents - deduct_first250
+        rows << { label: next_biz.strftime("%B %-d, %Y"), date: next_biz, amount_cents: net_first250 } if net_first250.positive?
+
+        deduct_rest = [ remaining_cash_back, rest_cents ].min
+        remaining_cash_back -= deduct_rest
+        net_rest = rest_cents - deduct_rest
+        rows << { label: two_biz.strftime("%B %-d, %Y"), date: two_biz, amount_cents: net_rest } if net_rest.positive?
       end
 
       held_by_date = held.group_by { |i| (i["hold_until"] || i[:hold_until]).to_s }
-      held_by_date.each do |date_str, items|
+      held_rows = held_by_date.each_with_object([]) do |(date_str, items), arr|
         next if date_str.blank?
         date = Date.parse(date_str) rescue nil
         next unless date
         amt = items.sum { |i| (i["amount_cents"] || i[:amount_cents] || 0).to_i }
-        rows << { label: date.strftime("%B %-d, %Y"), date: date, amount_cents: amt }
+        arr << { label: date.strftime("%B %-d, %Y"), date: date, amount_cents: amt }
+      end.sort_by { |r| r[:date] }
+
+      held_rows.each do |row|
+        deduct = [ remaining_cash_back, row[:amount_cents] ].min
+        remaining_cash_back -= deduct
+        net_cents = row[:amount_cents] - deduct
+        rows << { **row, amount_cents: net_cents } if net_cents.positive?
       end
 
-      rows.sort_by { |r| [ r[:date], r[:label] == "Immediate" ? 0 : 1 ] }
+      rows.sort_by { |r| [ r[:label] == "Immediate" ? 0 : 1, r[:date] ] }
     end
 
     def receipt_money(cents)

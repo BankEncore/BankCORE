@@ -54,6 +54,20 @@ module Posting
       assert_equal({ side: "credit", account_reference: "cash:D01", amount_cents: 5_000 }, entries[1])
     end
 
+    test "builds deposit metadata with cash_back_cents" do
+      builder = RecipeBuilder.new(
+        posting_params: {
+          transaction_type: "deposit",
+          amount_cents: 10_000,
+          cash_back_cents: 3_000
+        },
+        default_cash_account_reference: "cash:D01"
+      )
+
+      metadata = builder.posting_metadata
+      assert_equal 3_000, metadata[:cash_back_cents]
+    end
+
     test "normalizes explicit deposit debit entries to drawer cash unless check" do
       builder = RecipeBuilder.new(
         posting_params: {
