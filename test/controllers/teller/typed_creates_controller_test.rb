@@ -152,9 +152,10 @@ module Teller
         request_id: "typed-dr-1",
         transaction_type: "deposit",
         amount_cents: 8_000,
-        draft_funding_source: "account",
         draft_amount_cents: 8_000,
         draft_fee_cents: 0,
+        draft_cash_cents: 0,
+        draft_account_cents: 8_000,
         draft_payee_name: "Acme Title",
         draft_instrument_number: "D-1001",
         primary_account_reference: "acct:customer"
@@ -169,9 +170,10 @@ module Teller
         request_id: "typed-dr-2",
         transaction_type: "draft",
         amount_cents: 10_250,
-        draft_funding_source: "account",
         draft_amount_cents: 10_000,
         draft_fee_cents: 250,
+        draft_cash_cents: 0,
+        draft_account_cents: 10_250,
         draft_payee_name: "City Utilities",
         draft_instrument_number: "OD-2001",
         primary_account_reference: "acct:customer",
@@ -184,13 +186,14 @@ module Teller
       assert_equal "draft", transaction.transaction_type
 
       posting_batch = transaction.posting_batch
-      assert_equal 4, posting_batch.posting_legs.count
-      assert_equal 10_000, posting_batch.posting_legs.find_by!(side: "debit", account_reference: "acct:customer").amount_cents
+      assert_equal 3, posting_batch.posting_legs.count
+      assert_equal 10_250, posting_batch.posting_legs.find_by!(side: "debit", account_reference: "acct:customer").amount_cents
       assert_equal 10_000, posting_batch.posting_legs.find_by!(side: "credit", account_reference: "official_check:outstanding").amount_cents
       assert_equal 250, posting_batch.posting_legs.find_by!(side: "credit", account_reference: "income:draft_fee").amount_cents
 
       metadata = posting_batch.metadata
-      assert_equal "account", metadata.dig("draft", "funding_source")
+      assert_equal 0, metadata.dig("draft", "draft_cash_cents")
+      assert_equal 10_250, metadata.dig("draft", "draft_account_cents")
       assert_equal 10_000, metadata.dig("draft", "draft_amount_cents")
       assert_equal 250, metadata.dig("draft", "fee_cents")
       assert_equal "City Utilities", metadata.dig("draft", "payee_name")
@@ -202,9 +205,10 @@ module Teller
         request_id: "typed-dr-3",
         transaction_type: "draft",
         amount_cents: 5_150,
-        draft_funding_source: "cash",
         draft_amount_cents: 5_000,
         draft_fee_cents: 150,
+        draft_cash_cents: 5_150,
+        draft_account_cents: 0,
         draft_payee_name: "County Clerk",
         draft_instrument_number: "OD-3001",
         draft_liability_account_reference: "official_check:outstanding",

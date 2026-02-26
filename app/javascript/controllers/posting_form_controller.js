@@ -46,9 +46,13 @@ export default class extends Controller {
     "feeCents",
     "settlementAccountReference",
     "feeIncomeAccountReference",
-    "draftFundingSource",
     "draftAmountCents",
     "draftFeeCents",
+    "draftCashCents",
+    "draftAccountCents",
+    "draftCheckSubtotal",
+    "draftTotalDue",
+    "draftBalance",
     "draftPayeeName",
     "draftInstrumentNumber",
     "draftLiabilityAccountReference",
@@ -200,7 +204,6 @@ export default class extends Controller {
       settlementAccountReference: this.hasSettlementAccountReferenceTarget ? this.settlementAccountReferenceTarget.value : "",
       feeIncomeAccountReference: this.hasFeeIncomeAccountReferenceTarget ? this.feeIncomeAccountReferenceTarget.value : "income:check_cashing_fee",
       draftAmounts,
-      draftFundingSource: this.hasDraftFundingSourceTarget ? this.draftFundingSourceTarget.value : "account",
       draftLiabilityAccountReference: this.hasDraftLiabilityAccountReferenceTarget ? this.draftLiabilityAccountReferenceTarget.value : "official_check:outstanding",
       draftFeeIncomeAccountReference: this.hasDraftFeeIncomeAccountReferenceTarget ? this.draftFeeIncomeAccountReferenceTarget.value : "income:draft_fee",
       draftPayeeName: this.hasDraftPayeeNameTarget ? this.draftPayeeNameTarget.value : "",
@@ -244,7 +247,7 @@ export default class extends Controller {
     }
 
     const totalAmountCents = state.effectiveAmountCents
-    const workflowContext = { draftFundingSource: state.draftFundingSource }
+    const workflowContext = {}
     const hasPrimaryAccount = state.primaryAccountReference.trim().length > 0
     const requiresPrimaryAccount = getRequiresPrimaryAccount(transactionType, this.workflowSchema, workflowContext)
     const requiresCounterparty = getRequiresCounterpartyAccount(transactionType, this.workflowSchema)
@@ -370,6 +373,13 @@ export default class extends Controller {
     }
     const feeCentsForComputed = showCheckCashingSection ? checkCashingAmounts.feeCents : (showDraftSection ? draftAmounts.draftFeeCents : (showTransferSection ? transferAmounts.feeCents : 0))
     if (this.hasComputedFeeSubtotalTarget) this.computedFeeSubtotalTarget.textContent = feeCentsForComputed > 0 ? `-${this.formatCents(feeCentsForComputed)}` : this.formatCents(0)
+    if (showDraftSection && this.hasDraftCheckSubtotalTarget) this.draftCheckSubtotalTarget.textContent = this.formatCents(draftAmounts.draftCheckCents || 0)
+    if (showDraftSection && this.hasDraftTotalDueTarget) this.draftTotalDueTarget.textContent = `Total due: ${this.formatCents(draftAmounts.totalDueCents || 0)}`
+    if (showDraftSection && this.hasDraftBalanceTarget) {
+      const balance = draftAmounts.balanceCents ?? 0
+      this.draftBalanceTarget.textContent = `Balance: ${this.formatCents(balance)}`
+      this.draftBalanceTarget.classList.toggle("text-error", balance !== 0)
+    }
     if (this.hasComputedNetTotalTarget) this.computedNetTotalTarget.textContent = this.formatCents(totalAmountCents)
     if (this.hasDebitTotalTarget) this.debitTotalTarget.textContent = this.formatCents(debitTotal)
     if (this.hasCreditTotalTarget) this.creditTotalTarget.textContent = this.formatCents(creditTotal)
@@ -769,8 +779,7 @@ export default class extends Controller {
 
     if (cashImpactProfile === "inflow") return amountCents
     if (cashImpactProfile === "draft_funding") {
-      if (this.draftCashFunding()) return this.draftAmounts().totalFundingCents
-      return 0
+      return this.draftAmounts().draftCashCents || 0
     }
     if (cashImpactProfile === "vault_directional") {
       const amt = Math.max(parseInt(this.amountCentsTarget.value || "0", 10), 0)
@@ -818,7 +827,7 @@ export default class extends Controller {
   }
 
   workflowRequiresPrimaryAccount(transactionType) {
-    return getRequiresPrimaryAccount(transactionType, this.workflowSchema, { draftFundingSource: this.hasDraftFundingSourceTarget ? this.draftFundingSourceTarget.value : "account" })
+    return getRequiresPrimaryAccount(transactionType, this.workflowSchema, {})
   }
 
   workflowRequiresCounterpartyAccount(transactionType) {
@@ -826,7 +835,7 @@ export default class extends Controller {
   }
 
   workflowRequiresCashAccount(transactionType) {
-    return getRequiresCashAccount(transactionType, this.workflowSchema, { draftFundingSource: this.hasDraftFundingSourceTarget ? this.draftFundingSourceTarget.value : "account" })
+    return getRequiresCashAccount(transactionType, this.workflowSchema, {})
   }
 
   workflowRequiresSettlementAccount(transactionType) {
@@ -919,24 +928,20 @@ export default class extends Controller {
   draftAmounts() {
     const draftAmountCents = this.hasDraftAmountCentsTarget ? Math.max(parseInt(this.draftAmountCentsTarget.value || "0", 10), 0) : 0
     const draftFeeCents = this.hasDraftFeeCentsTarget ? Math.max(parseInt(this.draftFeeCentsTarget.value || "0", 10), 0) : 0
+    const draftCashCents = this.hasDraftCashCentsTarget ? Math.max(parseInt(this.draftCashCentsTarget.value || "0", 10), 0) : 0
+    const draftAccountCents = this.hasDraftAccountCentsTarget ? Math.max(parseInt(this.draftAccountCentsTarget.value || "0", 10), 0) : 0
+    const draftCheckCents = this.checkSubtotalCents()
 
     return {
       draftAmountCents,
       draftFeeCents,
-      totalFundingCents: draftAmountCents + draftFeeCents
+      draftCashCents,
+      draftAccountCents,
+      draftCheckCents,
+      totalDueCents: draftAmountCents + draftFeeCents,
+      totalPaymentCents: draftCashCents + draftAccountCents + draftCheckCents,
+      balanceCents: draftAmountCents + draftFeeCents - (draftCashCents + draftAccountCents + draftCheckCents)
     }
-  }
-
-  draftFundingSource() {
-    return this.hasDraftFundingSourceTarget ? this.draftFundingSourceTarget.value.trim() : "account"
-  }
-
-  draftCashFunding() {
-    return this.draftFundingSource() === "cash"
-  }
-
-  draftAccountFunding() {
-    return !this.draftCashFunding()
   }
 
   vaultTransferDetails() {
@@ -1026,25 +1031,30 @@ export default class extends Controller {
     }
   }
 
-  hasInvalidDraftFields({ draftAmountCents, draftFeeCents }) {
+  hasInvalidDraftFields(draftAmounts) {
     if (!this.workflowHasSection(this.transactionTypeTarget.value, "draft")) {
       return false
     }
 
-    return draftAmountCents <= 0 || draftFeeCents < 0
+    const { draftAmountCents = 0, draftFeeCents = 0, balanceCents = 0 } = draftAmounts
+    return draftAmountCents <= 0 || draftFeeCents < 0 || balanceCents !== 0
   }
 
   resetDraftFields() {
-    if (this.hasDraftFundingSourceTarget) {
-      this.draftFundingSourceTarget.value = "account"
-    }
-
     if (this.hasDraftAmountCentsTarget) {
       this.setAmountCents(this.draftAmountCentsTarget, 0)
     }
 
     if (this.hasDraftFeeCentsTarget) {
       this.setAmountCents(this.draftFeeCentsTarget, 0)
+    }
+
+    if (this.hasDraftCashCentsTarget) {
+      this.setAmountCents(this.draftCashCentsTarget, 0)
+    }
+
+    if (this.hasDraftAccountCentsTarget) {
+      this.setAmountCents(this.draftAccountCentsTarget, 0)
     }
 
     if (this.hasDraftPayeeNameTarget) {

@@ -60,20 +60,24 @@ module Posting
 
       private
         def validate_draft(errors, params, mode:)
-          funding_source = params[:draft_funding_source].to_s
-          errors << "Draft amount must be greater than zero" unless params[:draft_amount_cents].to_i.positive?
+          draft_amount_cents = params[:draft_amount_cents].to_i
+          draft_fee_cents = params[:draft_fee_cents].to_i
+          draft_cash_cents = params[:draft_cash_cents].to_i
+          draft_account_cents = params[:draft_account_cents].to_i
+          check_items = Array(params[:check_items]).map { |item| item.to_h.symbolize_keys }
+          draft_check_cents = check_items.sum { |item| item[:amount_cents].to_i }
+          total_due_cents = draft_amount_cents + draft_fee_cents
+          total_payment_cents = draft_cash_cents + draft_account_cents + draft_check_cents
+
+          errors << "Draft amount must be greater than zero" unless draft_amount_cents.positive?
           errors << "Payee name is required" if params[:draft_payee_name].blank?
           errors << "Instrument number is required" if params[:draft_instrument_number].blank?
+          errors << "Payment (cash + checks + account) must equal total due" unless total_payment_cents == total_due_cents
+
           if mode == :validate
             errors << "Liability account reference is required" if params[:draft_liability_account_reference].blank?
-          end
-
-          if funding_source == "cash"
-            if mode == :validate
-              errors << "Cash account reference is required" if params[:cash_account_reference].blank?
-            end
-          else
-            errors << "Primary account reference is required" if params[:primary_account_reference].blank?
+            errors << "Cash account reference is required" if draft_cash_cents.positive? && params[:cash_account_reference].blank?
+            errors << "Primary account reference is required" if draft_account_cents.positive? && params[:primary_account_reference].blank?
           end
         end
 

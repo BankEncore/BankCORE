@@ -60,15 +60,15 @@ module Teller
       "draft" => {
         label: "Bank Draft",
         required_fields: %i[draft_amount_cents draft_payee_name draft_instrument_number draft_liability_account_reference],
-        funding_modes: %w[account cash],
+        funding_modes: %w[account cash check],
         ui_sections: %w[draft checks],
         entry_profile: "draft",
         amount_input_mode: "draft_amount",
         effective_amount_source: "amount_field",
         cash_impact_profile: "draft_funding",
-        primary_account_policy: "draft_account_only",
+        primary_account_policy: "always",
         requires_counterparty_account: false,
-        cash_account_policy: "draft_cash_only",
+        cash_account_policy: "always",
         requires_settlement_account: false
       },
       "vault_transfer" => {
