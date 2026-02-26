@@ -1,0 +1,12 @@
+<%= render "teller/shared/page_header",
+  title: "Advisories",
+  description: "Advisories for this #{@scope_record.is_a?(Party) ? 'party' : 'account'}.",
+  secondary_button_path: @scope_record.is_a?(Party) ? teller_party_path(@scope_record) : teller_account_path(@scope_record),
+  secondary_button_label: "Back to #{@scope_record.is_a?(Party) ? 'Party' : 'Account'}" %>
+
+<%= render "teller/shared/advisories_tab",
+  advisories: @advisories,
+  scope_record: @scope_record,
+  advisories_path: @scope_record.is_a?(Party) ? teller_party_advisories_path(@scope_record) : teller_account_advisories_path(@scope_record),
+  new_advisory_path: @scope_record.is_a?(Party) ? new_teller_party_advisory_path(@scope_record) : new_teller_account_advisory_path(@scope_record),
+  can_create: policy([ :teller, Advisory ]).create? %>

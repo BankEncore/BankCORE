@@ -16,6 +16,12 @@ module Teller
 
     def show
       @account_transactions = load_filtered_transactions
+      @advisories = Advisory
+        .for_scope("account", @account.id)
+        .for_workspace("teller")
+        .active
+        .ordered_for_display
+        .includes(:created_by)
       @parties_for_owner = Party
         .where(is_active: true, relationship_kind: "customer")
         .where.not(id: @account.account_owners.select(:party_id))

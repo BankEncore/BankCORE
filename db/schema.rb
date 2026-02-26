@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_26_192400) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_26_220656) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -53,6 +53,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_192400) do
     t.index ["account_number"], name: "index_accounts_on_account_number", unique: true
     t.index ["branch_id"], name: "index_accounts_on_branch_id"
     t.index ["status"], name: "index_accounts_on_status"
+  end
+
+  create_table "advisories", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.text "body"
+    t.string "category"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.datetime "effective_end_at"
+    t.datetime "effective_start_at"
+    t.boolean "pinned", default: false, null: false
+    t.string "restriction_code"
+    t.bigint "scope_id"
+    t.string "scope_type"
+    t.integer "severity"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.string "workspace_visibility"
+    t.index ["scope_type", "scope_id"], name: "index_advisories_on_scope_type_and_scope_id"
+  end
+
+  create_table "advisory_acknowledgments", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.datetime "acknowledged_at"
+    t.bigint "advisory_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "teller_session_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.bigint "workstation_id"
+    t.index ["advisory_id", "user_id"], name: "index_advisory_acknowledgments_on_advisory_id_and_user_id", unique: true
+    t.index ["advisory_id"], name: "index_advisory_acknowledgments_on_advisory_id"
+    t.index ["teller_session_id"], name: "index_advisory_acknowledgments_on_teller_session_id"
+    t.index ["user_id"], name: "index_advisory_acknowledgments_on_user_id"
+    t.index ["workstation_id"], name: "index_advisory_acknowledgments_on_workstation_id"
   end
 
   create_table "audit_events", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
@@ -325,6 +359,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_192400) do
   add_foreign_key "account_transactions", "posting_batches"
   add_foreign_key "account_transactions", "teller_transactions"
   add_foreign_key "accounts", "branches"
+  add_foreign_key "advisory_acknowledgments", "advisories"
+  add_foreign_key "advisory_acknowledgments", "teller_sessions"
+  add_foreign_key "advisory_acknowledgments", "users"
+  add_foreign_key "advisory_acknowledgments", "workstations"
   add_foreign_key "audit_events", "branches"
   add_foreign_key "audit_events", "teller_sessions"
   add_foreign_key "audit_events", "users", column: "actor_user_id"

@@ -40,6 +40,12 @@ module Teller
     end
 
     def show
+      @advisories = Advisory
+        .for_scope("party", @party.id)
+        .for_workspace("teller")
+        .active
+        .ordered_for_display
+        .includes(:created_by)
     end
 
     def new

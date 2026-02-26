@@ -6,6 +6,19 @@
   primary_button_path: edit_teller_party_path(@party),
   primary_button_label: "Edit" %>
 
+<div role="tablist" class="tabs tabs-boxed mb-4">
+  <%= link_to "Details", teller_party_path(@party), role: "tab", class: "tab #{params[:tab] != 'advisories' ? 'tab-active' : ''}" %>
+  <%= link_to "Advisories", teller_party_path(@party, tab: "advisories"), role: "tab", class: "tab #{params[:tab] == 'advisories' ? 'tab-active' : ''}" %>
+</div>
+
+<% if params[:tab] == "advisories" %>
+  <%= render "teller/shared/advisories_tab",
+    advisories: @advisories,
+    scope_record: @party,
+    advisories_path: teller_party_advisories_path(@party),
+    new_advisory_path: new_teller_party_advisory_path(@party),
+    can_create: policy([ :teller, Advisory ]).create? %>
+<% else %>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
   <section class="card bg-base-100 border border-base-300">
     <div class="card-body">
@@ -137,4 +150,5 @@
       </ul>
     </div>
   </section>
+<% end %>
 <% end %>

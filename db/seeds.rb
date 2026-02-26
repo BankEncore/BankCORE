@@ -33,7 +33,10 @@ permissions = {
   "transactions.reversal.create" => "Initiate transaction reversals",
   "approvals.override.execute" => "Execute supervisor override",
   "accounts.branch.edit" => "Edit account branch (managers only)",
-  "administration.workspace.view" => "Access Administration workspace (manage branches, cash locations, users, roles)"
+  "administration.workspace.view" => "Access Administration workspace (manage branches, cash locations, users, roles)",
+  "advisories.view" => "View advisories",
+  "advisories.create" => "Create advisories",
+  "advisories.edit" => "Edit advisories"
 }
 
 permissions.each do |key, description|
@@ -56,7 +59,10 @@ roles = {
       "transactions.vault_transfer.create",
       "transactions.draft.create",
       "transactions.check_cashing.create",
-      "transactions.reversal.create"
+      "transactions.reversal.create",
+      "advisories.view",
+      "advisories.create",
+      "advisories.edit"
     ]
   },
   "supervisor" => {
@@ -73,6 +79,9 @@ roles = {
       "transactions.draft.create",
       "transactions.check_cashing.create",
       "transactions.reversal.create",
+      "advisories.view",
+      "advisories.create",
+      "advisories.edit",
       "approvals.override.execute",
       "accounts.branch.edit"
     ]

@@ -1,0 +1,11 @@
+<dialog aria-label="Advisory Acknowledgment Required" data-advisory-panel-target="panel" class="modal" data-action="close->advisory-panel#hide">
+  <div class="modal-box">
+    <h2 class="font-semibold text-lg" data-advisory-panel-target="title">Advisory</h2>
+    <p class="text-sm mt-2 whitespace-pre-wrap" data-advisory-panel-target="body"></p>
+    <p class="text-sm opacity-70 mt-2">You must acknowledge this advisory before continuing.</p>
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" data-action="advisory-panel#cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" data-action="advisory-panel#acknowledge">Acknowledge & Continue</button>
+    </div>
+  </div>
+</dialog>
