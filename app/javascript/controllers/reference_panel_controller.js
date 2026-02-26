@@ -288,6 +288,8 @@ export default class extends Controller {
 
   advisorySeverityClass(severity) {
     switch (severity) {
+      case "notice":
+        return "alert alert-success text-sm"
       case "alert":
       case "requires_acknowledgment":
         return "alert alert-warning text-sm"

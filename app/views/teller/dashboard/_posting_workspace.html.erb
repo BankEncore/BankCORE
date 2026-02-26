@@ -13,6 +13,12 @@
   <%= form_with url: local_assigns.fetch(:form_url, teller_posting_path), method: :post, html: { id: "posting-form", data: { action: "submit->posting-form#submit" } } do |form| %>
     <p class="alert alert-info hidden" data-posting-form-target="message" aria-live="polite" hidden></p>
 
+    <div class="mb-4" data-posting-form-target="advisoriesSection" data-reference-panel-target="advisoriesContainer">
+      <p class="text-xs opacity-70" data-posting-form-target="advisoriesPlaceholder">Select an account to view advisories.</p>
+      <div data-posting-form-target="advisoriesList" class="space-y-2 mt-2" hidden></div>
+      <a data-posting-form-target="advisoriesViewAllLink" href="#" class="text-xs link link-hover mt-2 block" hidden>View all advisories</a>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
       <div class="lg:col-span-8 space-y-4">
       <section aria-label="Entry Panel" class="card bg-base-100 border border-base-300">
