@@ -137,7 +137,7 @@ module Csr
         scope = scope.where(branch_id: params[:branch_id]) if params[:branch_id].present?
         scope = scope.joins(:account_owners).where(account_owners: { party_id: params[:party_id] }) if params[:party_id].present?
         if params[:q].present?
-          q = "%#{sanitize_sql_like(params[:q].to_s)}%"
+          q = "%#{ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)}%"
           scope = scope.left_joins(account_owners: :party).where(
             "accounts.account_number LIKE ? OR parties.display_name LIKE ?",
             q, q

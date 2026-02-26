@@ -1,0 +1,26 @@
+,Party Kind,Relationship Kind,Legal Name,DBA Name,Email,Phone,Street,City,State,ZIP,Phone,Tax ID,Branch,Date Opened,Checking Account
+11,Organization,Customer,Northbridge Logistics Group LLC,BridgeLine Freight,accounting@northbridgelogisticsgroupllc.com,248-555-7276,6500 Granger Ct,Troy,MI,48098-1805,248-555-9830,456275422,001,2016-09-03,10001000
+12,Organization,Customer,Silver Harbor Technologies Inc,,accounting@silver.com,248-555-1410,2050 South Blvd Unit 576,Bloomfield Hills,MI,48303-7024,734-555-1728,495413343,001,2014-03-04,10001011
+13,Organization,Customer,Maple & Finch Hospitality Partners LP,Finch Street Café,accounting@maplefinchhospitalitypartnerslp.com,248-555-3933,44201 Van Dyke Ave,Utica,MI,48317-54ND,586-555-2339,346767742,001,2014-04-13,10001012
+14,Organization,Customer,Blue Meridian Holdings LLC,,accounting@blue.com,248-555-4096,1910 Blue Grass Dr,Rochester Hills,MI,48306-3227,586-555-8144,868263635,001,2006-09-18,10001013
+15,Organization,Customer,Ironcrest Fabrication Services Inc,CrestFab Industrial,accounting@ironcrestfabricationservicesinc.com,248-555-8688,3900 Griffith Ave,Berkley,MI,48072-1491,248-555-8319,602999943,001,2008-05-10,10001014
+16,Organization,Customer,Prairie Lantern Wellness Collective PLLC,,accounting@prairie.net,248-555-2861,8800 Lincoln Dr,Huntington Woods,MI,48070-12ND,947-555-7299,473323490,002,2005-08-12,10001015
+17,Organization,Customer,Redstone Property Management LLC,Redstone Rentals,accounting@redstonepropertymanagementllc.net,248-555-3482,2101 Russet Dr,Troy,MI,48098-5220,947-555-9400,516235999,002,2021-10-29,10001016
+18,Organization,Customer,Atlas Ridge Consulting Group Inc,,finance@atlas.com,248-555-9809,2050 South Blvd Unit 101,Bloomfield Hills,MI,48303-7005,248-555-9260,463243116,002,2020-04-23,10001017
+19,Organization,Customer,Golden Vale Agricultural Cooperative,,john.smith@golden.com,248-555-8596,42308 Fountain Park Dr S,Novi,MI,48375-2550,248-555-9245,543620726,002,2012-04-04,10001018
+20,Organization,Customer,Summit Peak Outdoor Supply LLC,PeakTrail Outfitters,finance@summitpeakoutdoorsupplyllc.com,248-555-4341,25401 Rd,Novi,MI,48375-1643,586-555-1076,796688976,002,2011-01-13,10001019
+21,Organization,Customer,Harborlight Insurance Agency Inc,,accounting@harborlight.com,248-555-9031,5745 W Maple Rd Ste 202,West Bloomfield,MI,48322-4489,248-555-6977,991312111,003,2007-06-29,10001020
+22,Organization,Customer,Cobalt River Enterprises LLC,Riverbend Brewing Co.,accounting@cobaltriverenterprisesllc.com,248-555-6350,4301 Franklin Rd,Bloomfield Hills,MI,48302-1841,586-555-9221,762576066,003,2010-12-14,10001021
+23,Organization,Customer,Evergreen Horizon Development Corp.,,admin@evergreen@.org,248-555-2101,4201 Springdale St,Rochester,MI,48306-1639,248-555-7093,204859068,003,2013-04-14,10001022
+24,Organization,Customer,Oakfield Community Services Inc,,accounting@oakfield.com,248-555-2199,1975 Technology Dr Ste A,Troy,MI,48083-4247,586-555-6858,935223236,003,2011-04-26,10001023
+25,Organization,Customer,Brightpath Learning Solutions LLC,Pathwise Academy,accounting@brightpathlearningsolutionsllc.com,248-555-9060,3601 Anvil Dr,Troy,MI,48083-56ND,586-555-3563,821689352,003,2020-12-10,10001024
+26,Organization,Customer,Falcon Crest Aviation Services LLC,,accounting@falcon.com,248-555-8102,1677 Bloomfield Place Dr Apt 522,Bloomfield Hills,MI,48302-0885,586-555-1408,808036637,004,2018-01-24,10001025
+27,Organization,Customer,Stonebridge Retail Ventures Inc,MarketSquare Grocers,accounting@stonebridgeretailventuresinc.com,248-555-4522,25131 E Roycourt,Huntington Woods,MI,48070-1714,248-555-1199,293926317,004,2025-10-01,10001026
+28,Organization,Customer,Crescent Willow Design Studio LLC,,accounting@crescent.net,248-555-7367,1441 E Maple Rd Ste 310,Troy,MI,48083-4027,248-555-4641,881732399,004,2014-10-20,10001027
+29,Organization,Customer,Hawthorne & Pike Financial Group LLP,,accounting@hawthorne.com,248-555-1941,1395 Wheaton Dr Ste 300,Troy,MI,48083-1926,248-555-7743,814044664,004,2009-10-03,10001028
+30,Organization,Customer,Clearwater Environmental Systems Inc,,finance@clearwater.com,248-555-2091,4731 Orchard Ridge Dr,Troy,MI,48098-4120,947-555-8639,921897654,004,2008-07-28,10001029
+31,Organization,Customer,Northstar Precision Manufacturing LLC,Northstar Metals,accounting@northstarprecisionmanufacturingllc.com,248-555-8384,1701 Larchwood Dr,Troy,MI,48083-2224,248-555-4306,296659811,005,2005-11-21,10001030
+32,Organization,Customer,Beacon Ridge Healthcare Partners PC,,accounting@beacon.com,248-555-5293,633 South Blvd E,Rochester Hills,MI,48307-5364,586-555-9550,667636665,005,2022-12-02,10001031
+33,Organization,Customer,Copperleaf Digital Media LLC,,finance@copperleaf.com,248-555-3130,2301 Blockton Rd,Rochester Hills,MI,48306-3901,248-555-8950,327023107,005,2009-02-28,10001032
+34,Organization,Customer,Westbrook Infrastructure Solutions Inc,Westbrook Utilities,finance@westbrookinfrastructuresolutionsinc.com,248-555-5858,1200 Tiverton Trail Dr,Rochester Hills,MI,48306-4072,248-555-5003,867045194,005,2007-11-03,10001033
+35,Organization,Customer,Liberty Point Food Services LLC,Liberty Bistro,finance@libertypointfoodservicesllc.com,248-555-3389,2027 N Lovington Dr Apt 106,Troy,MI,48083-4374,313-555-2203,862787912,005,2014-10-14,10001034

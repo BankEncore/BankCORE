@@ -105,7 +105,7 @@ module Csr
 
       def apply_parties_search(scope)
         if params[:q].present?
-          q = "%#{sanitize_sql_like(params[:q].to_s)}%"
+          q = "%#{ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)}%"
           scope = scope.where(
             "parties.display_name LIKE ? OR accounts.account_number LIKE ?",
             q, q

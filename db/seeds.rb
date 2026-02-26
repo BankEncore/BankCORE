@@ -1,12 +1,23 @@
+# frozen_string_literal: true
+
 # This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
+# development, test). The code here should be idempotent so it can be executed at any point in every environment.
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+
+require "csv"
+
+SEED_DATA_DIR = Rails.root.join("docs", "seed_data")
+
+def branch_by_code(code)
+  Branch.find_or_create_by!(code: code.to_s.strip) do |b|
+    b.name = case code.to_s.strip
+    when "005" then "Fifth Branch"
+    else "Branch #{code}"
+    end
+  end
+end
+
+# --- Permissions and Roles ---
 
 permissions = {
   "sessions.open" => "Open teller session",
@@ -87,89 +98,225 @@ roles.each do |key, definition|
   end
 end
 
-main_branch = Branch.find_or_create_by!(code: "001") do |branch|
-  branch.name = "Main Branch"
+# --- Branches from CSV ---
+
+branches_path = SEED_DATA_DIR.join("UI - Branches.csv")
+if File.exist?(branches_path)
+  CSV.foreach(branches_path, headers: true) do |row|
+    code = row["code"]&.strip
+    name = row["name"]&.strip
+    next if code.blank?
+    Branch.find_or_create_by!(code: code) { |b| b.name = name.presence || "Branch #{code}" }
+  end
 end
 
-main_workstation = Workstation.find_or_create_by!(branch: main_branch, code: "T01") do |workstation|
-  workstation.name = "Teller 01"
+# --- Cash Locations from CSV ---
+
+cash_locations_path = SEED_DATA_DIR.join("UI - Cash Locations.csv")
+if File.exist?(cash_locations_path)
+  CSV.foreach(cash_locations_path, headers: true) do |row|
+    branch_code = row["branch_code"]&.strip
+    code = row["code"]&.strip
+    name = row["name"]&.strip
+    next if branch_code.blank? || code.blank?
+    branch = branch_by_code(branch_code)
+    location_type = name.to_s.include?("Vault") ? "vault" : "drawer"
+    CashLocation.find_or_create_by!(branch: branch, code: code) do |cl|
+      cl.name = name.presence || code
+      cl.location_type = location_type
+    end
+  end
 end
 
-CashLocation.find_or_create_by!(branch: main_branch, code: "D01") do |cash_location|
-  cash_location.name = "Drawer 01"
-  cash_location.location_type = "drawer"
+# --- Workstations from CSV ---
+
+workstations_path = SEED_DATA_DIR.join("UI - Workstations.csv")
+if File.exist?(workstations_path)
+  CSV.foreach(workstations_path, headers: true) do |row|
+    branch_code = row["branch_code"]&.strip
+    code = row["code"]&.strip
+    name = row["name"]&.strip
+    next if branch_code.blank? || code.blank?
+    branch = branch_by_code(branch_code)
+    Workstation.find_or_create_by!(branch: branch, code: code) { |w| w.name = name.presence || code }
+  end
 end
 
-CashLocation.find_or_create_by!(branch: main_branch, code: "V01") do |cash_location|
-  cash_location.name = "Main Vault"
-  cash_location.location_type = "vault"
-end
+# --- Users (Tellers) from CSV ---
 
+main_branch = Branch.find_by(code: "001")
+main_workstation = main_branch&.workstations&.find_by(code: "T01")
 seed_password = ENV.fetch("SEED_USER_PASSWORD", "ChangeMe123!")
 
-seed_users = [
-  { email_address: "teller@bankcore.local", first_name: "Tina", last_name: "Teller", teller_number: "T001", role_key: "teller", branch: main_branch, workstation: main_workstation },
-  { email_address: "supervisor@bankcore.local", first_name: "Sam", last_name: "Supervisor", teller_number: "S001", role_key: "supervisor", branch: main_branch, workstation: main_workstation },
-  { email_address: "admin@bankcore.local", first_name: "Admin", last_name: "User", teller_number: "A001", role_key: "admin", branch: nil, workstation: nil },
-  { email_address: "csr@bankcore.local", first_name: "Chris", last_name: "CSR", teller_number: "C001", role_key: "csr", branch: main_branch, workstation: nil }
-]
+tellers_path = SEED_DATA_DIR.join("UI - Tellers.csv")
+if File.exist?(tellers_path)
+  CSV.foreach(tellers_path, headers: true) do |row|
+    email = row["email_address"]&.strip&.downcase
+    next if email.blank?
 
-seed_users.each do |definition|
-  user = User.find_or_initialize_by(email_address: definition[:email_address])
-  user.first_name = definition[:first_name] if definition[:first_name]
-  user.last_name = definition[:last_name] if definition[:last_name]
-  user.teller_number = definition[:teller_number] if definition[:teller_number]
+    user = User.find_or_initialize_by(email_address: email)
+    user.first_name = row["first_name"]&.strip
+    user.last_name = row["last_name"]&.strip
+    user.teller_number = row["teller_number"]&.strip&.slice(0, 4)
+    user.default_workspace = case row["default_workspace"]&.strip&.downcase
+    when "operations" then "ops"
+    when "teller", "csr", "admin" then row["default_workspace"]&.strip&.downcase
+    else nil
+    end
 
-  if user.new_record?
-    user.password = seed_password
-    user.password_confirmation = seed_password
-    user.save!
-  else
+    if user.new_record?
+      user.password = row["password"]&.strip.presence || seed_password
+      user.password_confirmation = user.password
+      user.save!
+    else
+      user.save! if user.changed?
+    end
+
+    user.pin = row["pin"]&.strip if row["pin"]&.strip.present?
     user.save! if user.changed?
-  end
 
-  role = Role.find_by!(key: definition[:role_key])
-  UserRole.find_or_create_by!(
-    user: user,
-    role: role,
-    branch: definition[:branch],
-    workstation: definition[:workstation]
-  )
-end
+    role_key = row["role"]&.strip&.downcase
+    role = Role.find_by(key: role_key)
+    next unless role
 
-# CIF: Sample parties and accounts for teller tests
-party_jane = Party.joins(:party_individual).find_by(party_individuals: { first_name: "Jane", last_name: "Doe" })
-unless party_jane
-  party_jane = Party.create!(party_kind: "individual", relationship_kind: "customer", is_active: true)
-  party_jane.create_party_individual!(first_name: "Jane", last_name: "Doe")
-end
+    branch = nil
+    workstation = nil
+    case role_key
+    when "admin"
+      branch = nil
+      workstation = nil
+    when "supervisor", "teller"
+      branch = main_branch
+      workstation = main_workstation
+    when "csr"
+      branch = main_branch
+      workstation = nil
+    end
 
-party_acme = Party.joins(:party_organization).find_by(party_organizations: { legal_name: "Acme Corp" })
-unless party_acme
-  party_acme = Party.create!(party_kind: "organization", relationship_kind: "customer", is_active: true)
-  party_acme.create_party_organization!(legal_name: "Acme Corp", dba_name: "Acme")
-end
-
-Account.find_or_create_by!(account_number: "1000000000001001") do |a|
-  a.account_type = "checking"
-  a.branch = main_branch
-  a.status = "open"
-  a.opened_on = Date.current
-  a.last_activity_at = Time.current
-end.tap do |account|
-  unless account.account_owners.exists?(party: party_jane)
-    AccountOwner.create!(account: account, party: party_jane, is_primary: true)
+    UserRole.find_or_create_by!(user: user, role: role, branch: branch, workstation: workstation)
   end
 end
 
-Account.find_or_create_by!(account_number: "1000000000001002") do |a|
-  a.account_type = "savings"
-  a.branch = main_branch
-  a.status = "open"
-  a.opened_on = Date.current
-  a.last_activity_at = Time.current
-end.tap do |account|
-  unless account.account_owners.exists?(party: party_acme)
-    AccountOwner.create!(account: account, party: party_acme, is_primary: true)
+# --- Organizations + Accounts from CSV ---
+
+orgs_path = SEED_DATA_DIR.join("UI - Organization Profiles_Accounts.csv")
+if File.exist?(orgs_path)
+  CSV.foreach(orgs_path, headers: true) do |row|
+    legal_name = row["Legal Name"]&.strip
+    next if legal_name.blank?
+
+    party = Party.joins(:party_organization).find_by(party_organizations: { legal_name: legal_name })
+    unless party
+      party = Party.create!(
+        party_kind: "organization",
+        relationship_kind: "customer",
+        is_active: true,
+        email: row["Email"]&.strip.presence,
+        phone: row["Phone"]&.strip.presence,
+        street_address: row["Street"]&.strip.presence,
+        city: row["City"]&.strip.presence,
+        state: row["State"]&.strip.presence,
+        zip_code: row["ZIP"]&.strip.presence,
+        tax_id: row["Tax ID"]&.strip.presence
+      )
+      party.create_party_organization!(
+        legal_name: legal_name,
+        dba_name: row["DBA Name"]&.strip.presence
+      )
+    end
+
+    account_number = row["Checking Account"]&.strip
+    branch_code = row["Branch"]&.strip
+    next if account_number.blank? || branch_code.blank?
+
+    branch = branch_by_code(branch_code)
+    opened_on = begin
+      Date.parse(row["Date Opened"].to_s)
+    rescue ArgumentError
+      Date.current
+    end
+
+    account = Account.find_or_create_by!(account_number: account_number) do |a|
+      a.account_type = "checking"
+      a.branch = branch
+      a.status = "open"
+      a.opened_on = opened_on
+      a.last_activity_at = Time.current
+    end
+
+    AccountOwner.find_or_create_by!(account: account, party: party) { |ao| ao.is_primary = true }
+  end
+end
+
+# --- Individuals + Accounts from CSV ---
+
+indiv_path = SEED_DATA_DIR.join("UI - Invidividual Parties_Accounts.csv")
+if File.exist?(indiv_path)
+  CSV.foreach(indiv_path, headers: true) do |row|
+    first_name = row["First Name"]&.strip
+    last_name = row["Last Name"]&.strip
+    next if first_name.blank? || last_name.blank?
+
+    party = Party.joins(:party_individual).find_by(
+      party_individuals: { first_name: first_name, last_name: last_name }
+    )
+    unless party
+      party = Party.create!(
+        party_kind: "individual",
+        relationship_kind: "customer",
+        is_active: true,
+        email: row["Email Address"]&.strip.presence,
+        phone: row["Phone"]&.strip.presence,
+        street_address: row["Street"]&.strip.presence,
+        city: row["City"]&.strip.presence,
+        state: row["State"]&.strip.presence,
+        zip_code: row["ZIP"]&.strip.presence,
+        tax_id: row["Tax ID"]&.strip.presence
+      )
+      dob = begin
+        Date.parse(row["Birth Date"].to_s)
+      rescue ArgumentError
+        nil
+      end
+      govt_id_type_raw = row["Govt ID Type"]&.strip&.downcase
+      govt_id_type = case govt_id_type_raw
+      when "driver_license", "driver license" then "driver_license"
+      when "state_id", "state id" then "state_id"
+      when "passport" then "passport"
+      else "other"
+      end
+      party.create_party_individual!(
+        first_name: first_name,
+        last_name: last_name,
+        dob: dob,
+        govt_id: row["Govt ID"]&.strip.presence,
+        govt_id_type: govt_id_type
+      )
+    end
+
+    branch_code = row["Branch"]&.strip
+    opened_on = begin
+      Date.parse(row["Date Opened"].to_s)
+    rescue ArgumentError
+      Date.current
+    end
+    next if branch_code.blank?
+
+    branch = branch_by_code(branch_code)
+
+    [ row["Checking Account"], row["Savings Account"] ].each_with_index do |acct_num, idx|
+      next if acct_num.blank?
+      account_type = idx == 0 ? "checking" : "savings"
+
+      account = Account.find_or_create_by!(account_number: acct_num.to_s.strip) do |a|
+        a.account_type = account_type
+        a.branch = branch
+        a.status = "open"
+        a.opened_on = opened_on
+        a.last_activity_at = Time.current
+      end
+
+      AccountOwner.find_or_create_by!(account: account, party: party) { |ao| ao.is_primary = true }
+    end
   end
 end

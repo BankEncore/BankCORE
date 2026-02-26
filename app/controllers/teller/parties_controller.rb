@@ -17,7 +17,7 @@ module Teller
 
     def search
       scope = Party.where(is_active: true, party_kind: "individual").order(display_name: :asc).limit(20)
-      scope = scope.where("display_name LIKE ?", "%#{sanitize_sql_like(params[:q].to_s)}%") if params[:q].present?
+      scope = scope.where("display_name LIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)}%") if params[:q].present?
       parties = scope.pluck(:id, :display_name, :party_kind).map { |id, display_name, party_kind| { id: id, display_name: display_name.presence || "Party ##{id}", party_kind: party_kind } }
       render json: parties
     end
@@ -132,7 +132,7 @@ module Teller
 
       def apply_parties_search(scope)
         if params[:q].present?
-          q = "%#{sanitize_sql_like(params[:q].to_s)}%"
+          q = "%#{ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)}%"
           scope = scope.where(
             "parties.display_name LIKE ? OR accounts.account_number LIKE ?",
             q, q

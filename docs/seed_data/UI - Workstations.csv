@@ -1,0 +1,19 @@
+branch_code,code,name
+001,T01,Teller 01
+001,T02,Teller 02
+001,T03,Teller 03
+001,T04,Teller 04
+001,C01,CSR 01
+001,C02,CSR 02
+002,T01,Teller 01
+002,T02,Teller 02
+002,C01,CSR 01
+003,T01,Teller 01
+003,T02,Teller 02
+003,C01,CSR 01
+004,T01,Teller 01
+004,T02,Teller 02
+004,C01,CSR 01
+005,T01,Teller 01
+005,T02,Teller 02
+005,C01,CSR 01

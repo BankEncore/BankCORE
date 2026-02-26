@@ -1,0 +1,6 @@
+email_address,teller_number,first_name,last_name,role,default_workspace,pin,password
+admin@bankcore.local,001,Andrew,Admin,admin,admin,123001,ChangeMe123!
+supervisor@bankcore.local,002,Sally,Supervisor,supervisor,teller,123002,ChangeMe123!
+operations@bankcore.local,003,Owen,Operations,admin,operations,123003,ChangeMe123!
+csr@bankcore.local,004,Claire,CSR,csr,csr,123004,ChangeMe123!
+teller@bankcore.local,005,Tina,Teller,teller,teller,123005,ChangeMe123!
