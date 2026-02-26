@@ -31,7 +31,7 @@
 | Vault transfers summary | L7-WF-03 |
 | Reversals paired with originals | reversals.md |
 
-**Route:** `GET /ops/sessions/:id` (not implemented)
+**Route:** `GET /ops/sessions/:id` (implemented)
 
 ---
 
@@ -57,9 +57,9 @@
 | Checks cashed | TellerTransaction (type=check_cashing) + metadata | ✅ Available |
 | Fees collected | PostingLeg / AccountTransaction (income:*) | ⚠️ Requires aggregation |
 | Transfers count | TellerTransaction (type=transfer) | ✅ Available |
-| Reversals | reversal_of_* link | ❌ Not implemented |
+| Reversals | reversal_of_* link | ✅ Available |
 | Session open/close/variance | TellerSession | ✅ Available |
-| Approval events | ApprovalEvent or similar | ⚠️ Verify existence |
+| Approval events | AuditEvent (approval.override.granted) | ✅ Available |
 | Vault transfers | TellerTransaction (type=vault_transfer) + metadata | ✅ Available |
 | Full posting detail | PostingLeg, PostingBatch | ✅ Available |
 | Cash impact per transaction | CashMovement | ✅ Available |
@@ -78,6 +78,7 @@
 | Recent activity | Dashboard partial | Last 10 transactions for session |
 | Receipt / audit view | Teller::ReceiptsController | Posting legs, metadata, cash movements |
 | Account balance / history | AccountReferenceSnapshot, _balance_and_history | Per-account ledger view |
+| Session detail (OPS-030) | Ops::SessionsController#show | Session summary, transactions, approval events, vault transfers, reversals paired |
 
 ## 3.2 Not Implemented
 
@@ -85,8 +86,6 @@
 |------------|-----|
 | Teller Activity Report | No route; no aggregation by branch/date/teller |
 | Session search | No GET /ops/sessions with filters |
-| Session detail | No GET /ops/sessions/:id |
-| Reversal pairing | No reversal model; cannot show original↔reversal |
 | Financial audit log | No financial_audit_events table |
 | Fee aggregation | No report-level aggregation of income:* legs |
 | Operational monitoring/alerts | No monitoring for duplicates, failed validations, variance thresholds |
@@ -99,7 +98,6 @@
 
 | Gap | Impact |
 |-----|--------|
-| No reversal model | Cannot report reversals or pair originals with reversals |
 | No financial audit log | Cannot report posting events, reversals, failures for audit |
 | Fees in legs only | Fee totals require summing income:* legs across batches |
 
@@ -115,9 +113,7 @@
 
 | Gap | Effort |
 |-----|--------|
-| Ops report pages | New controllers, views, filters |
-| Session detail page | New controller, view |
-| Reversal display | Depends on reversal model |
+| Ops report pages | New controllers, views, filters for teller activity |
 
 ---
 
@@ -127,8 +123,8 @@
 |-----------|--------|-------|
 | Data model for reporting | Strong | TellerTransaction, CashMovement, PostingLeg support most needs |
 | Fee reporting | Moderate | Possible via legs; no dedicated fee aggregation |
-| Reversal reporting | Blocked | Reversal model not implemented |
-| Ops report UI | Missing | Teller activity, session search, session detail not built |
+| Reversal reporting | Available | Reversal model implemented; session detail shows pairing |
+| Ops report UI | Partial | Session detail built; teller activity, session search not built |
 | Audit log | Missing | No financial audit events table |
 | Regulatory traceability | Partial | Immutable legs and metadata exist; no formal audit log |
 
@@ -136,16 +132,15 @@
 
 # 6. Implementation Priorities
 
-1. **Reversal model** — Required before reversal reporting.
-2. **Financial audit log** — Required for audit and regulatory reporting.
-3. **Fee aggregation** — Decide whether to aggregate income:* legs or add fee-specific structure.
-4. **Ops report UI** — Teller activity report, session search, session detail.
-5. **Operational monitoring** — Align with 13_minimum_controls (duplicates, failed validations, variance, reversal frequency).
+1. **Financial audit log** — Required for audit and regulatory reporting.
+2. **Fee aggregation** — Decide whether to aggregate income:* legs or add fee-specific structure.
+3. **Ops report UI** — Teller activity report, session search.
+4. **Operational monitoring** — Align with 13_minimum_controls (duplicates, failed validations, variance, reversal frequency).
 
 ---
 
 # 7. Bottom Line
 
 - **Data model:** Sufficient for teller activity, session detail, and cash reporting.
-- **Blockers:** Reversal model and financial audit log.
-- **Effort:** Mostly new controllers/views and queries; reversal model and audit log are the main schema changes.
+- **Blockers:** Financial audit log.
+- **Effort:** Mostly new controllers/views and queries; audit log is the main schema change.

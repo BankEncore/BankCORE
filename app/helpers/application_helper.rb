@@ -43,6 +43,15 @@ module ApplicationHelper
     end
   end
 
+  def cash_location_display_name(reference, branch)
+    return "—" if reference.blank? || branch.blank?
+    code = reference.to_s.sub(/\Acash:/i, "").strip
+    return reference if code.blank?
+    loc = CashLocation.find_by(branch_id: branch.id, code: code)
+    return "#{code} (unresolved)" if loc.blank?
+    "#{loc.location_type.titleize} #{loc.name}"
+  end
+
   def mask_last_four(value, placeholder: "•")
     return "—" if value.blank?
     str = value.to_s.strip.gsub(/\D/, "")

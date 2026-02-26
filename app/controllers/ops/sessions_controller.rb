@@ -20,10 +20,17 @@ module Ops
       @session = TellerSession.find(params[:id])
       @transactions = @session.teller_transactions
         .where(status: "posted")
-        .includes(:posting_batch, :cash_movements)
+        .includes(:posting_batch, :cash_movements, :approved_by_user, :reversal_of_teller_transaction, :reversed_by_teller_transaction)
         .order(posted_at: :desc)
       @cash_in_cents = @session.cash_movements.where(direction: "in").sum(:amount_cents)
       @cash_out_cents = @session.cash_movements.where(direction: "out").sum(:amount_cents)
+      @approval_events = AuditEvent.where(teller_session_id: @session.id, event_type: "approval.override.granted")
+        .includes(:actor_user)
+        .order(occurred_at: :desc)
+      @vault_transfers = @session.teller_transactions
+        .where(transaction_type: "vault_transfer", status: "posted")
+        .includes(:posting_batch)
+        .order(posted_at: :desc)
     end
 
     private
