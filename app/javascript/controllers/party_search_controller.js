@@ -109,6 +109,17 @@ export default class extends Controller {
     }
     this.searchInputTarget.value = p.display_name || `Party #${p.id}`
     this.hideResults()
+
+    document.dispatchEvent(
+      new CustomEvent("party-search:govt-id-populate", {
+        bubbles: true,
+        detail: {
+          govt_id_type: p.govt_id_type || "",
+          govt_id: p.govt_id || ""
+        }
+      })
+    )
+
     this.dispatchRecalculate()
   }
 
@@ -116,6 +127,12 @@ export default class extends Controller {
     if (this.hasHiddenInputTarget) {
       this.hiddenInputTarget.value = ""
     }
+    document.dispatchEvent(
+      new CustomEvent("party-search:govt-id-populate", {
+        bubbles: true,
+        detail: { govt_id_type: "", govt_id: "" }
+      })
+    )
     this.dispatchRecalculate()
   }
 

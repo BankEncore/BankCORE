@@ -82,7 +82,7 @@ module Teller
       assert_select "h2", /Show Me/
     end
 
-    test "search returns parties with display_name relationship address phone" do
+    test "search returns parties with display_name relationship address phone govt_id" do
       party = Party.create!(
         party_kind: "individual",
         relationship_kind: "customer",
@@ -92,7 +92,12 @@ module Teller
         zip_code: "62701",
         phone: "555-123-4567"
       )
-      party.create_party_individual!(first_name: "Search", last_name: "Test")
+      party.create_party_individual!(
+        first_name: "Search",
+        last_name: "Test",
+        govt_id_type: "driver_license",
+        govt_id: "D1234567"
+      )
 
       get search_teller_parties_path, params: { q: "Search" }
 
@@ -103,6 +108,8 @@ module Teller
       assert_equal "customer", body[0]["relationship_kind"]
       assert_includes body[0]["address"], "123 Main St"
       assert_equal "555-123-4567", body[0]["phone"]
+      assert_equal "drivers_license", body[0]["govt_id_type"]
+      assert_equal "D1234567", body[0]["govt_id"]
     end
 
     test "accounts returns party accounts as json" do

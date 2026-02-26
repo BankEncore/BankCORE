@@ -243,14 +243,14 @@
                 <span class="text-xs text-slate-600 mt-1 block">Individual presenting the check(s).</span>
                 <%= link_to "Add new party", new_teller_party_path(party_kind: "individual", return_to: request.original_url), class: "link link-hover text-xs mt-1 inline-block" %>
               </div>
-              <p class="form-control">
-                <%= form.label :fee_cents, "Fee", class: "text-xs font-medium text-slate-700" %><br>
+              <div class="form-control">
+                <%= form.label :fee_cents, "Fee", class: "text-xs font-medium text-slate-700 block" %>
                 <div data-controller="currency-input" data-action="input->posting-form#recalculate">
                   <%= form.hidden_field :fee_cents, value: 0, data: { posting_form_target: "feeCents", currency_input_target: "hiddenInput" } %>
-                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:fee_cents) %>" />
+                  <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:fee_cents) %>" />
                 </div>
                 <span class="text-xs text-slate-600 mt-1 block">Optional fee withheld from payout.</span>
-              </p>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3" data-posting-form-target="checkCashingIdRow">

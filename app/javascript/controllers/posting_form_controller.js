@@ -1335,6 +1335,15 @@ export default class extends Controller {
     })
   }
 
+  populateGovtIdFromParty(event) {
+    const { govt_id_type, govt_id } = event.detail || {}
+    const idTypeEl = this.hasIdTypeTarget ? this.idTypeTarget : this.element.querySelector("[data-posting-form-target='idType']")
+    const idNumberEl = this.hasIdNumberTarget ? this.idNumberTarget : this.element.querySelector("[data-posting-form-target='idNumber']")
+    if (idTypeEl) idTypeEl.value = govt_id_type || ""
+    if (idNumberEl) idNumberEl.value = govt_id || ""
+    this.recalculate()
+  }
+
   setAmountCents(target, cents) {
     const value = String(Math.max(0, parseInt(cents, 10) || 0))
     const wrapper = target.closest?.("[data-controller~=\"currency-input\"]")
