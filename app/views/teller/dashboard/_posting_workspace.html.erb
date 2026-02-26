@@ -17,14 +17,6 @@
       <div class="lg:col-span-8 space-y-4">
       <section aria-label="Entry Panel" class="card bg-base-100 border border-base-300">
         <div class="card-body">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <!--
-              <h2 class="card-title text-base">Transaction Entry</h2>
-              <p class="text-xs text-slate-600 mt-1">Account reference, cash amount, checks, and totals.</p>
-              -->
-            </div>
-          </div>
           <% if local_assigns.fetch(:show_transaction_type, true) %>
             <p class="form-control">
               <%= form.label :transaction_type, "Transaction Type", class: "text-xs font-medium text-slate-700" %><br>
@@ -37,7 +29,7 @@
             <%= hidden_field_tag :transaction_type,
               flow_type,
               data: { posting_form_target: "transactionType" } %>
-            <p><strong>Transaction Type:</strong> <%= flow_type.titleize %></p>
+            <!-- <p class="text-xs font-medium text-slate-700">Transaction Type: <%= flow_type.titleize %></p> -->
           <% end %>
           <div class="divider my-3"></div>
          
