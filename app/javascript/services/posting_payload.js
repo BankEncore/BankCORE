@@ -29,6 +29,9 @@ export function appendEntriesAndTypePayload(formData, transactionType, state, sc
   if (transactionType === "check_cashing") {
     appendCheckCashingPayload(formData, state)
   }
+  if (transactionType === "transfer") {
+    appendTransferPayload(formData, state)
+  }
 }
 
 function appendCheckItems(formData, state) {
@@ -48,10 +51,11 @@ function appendCheckItems(formData, state) {
 }
 
 function appendDraftPayload(formData, state) {
-  const { draftAmountCents = 0, draftFeeCents = 0 } = state.draftAmounts ?? {}
-  formData.set("draft_funding_source", (state.draftFundingSource ?? "account").trim())
+  const { draftAmountCents = 0, draftFeeCents = 0, draftCashCents = 0, draftAccountCents = 0 } = state.draftAmounts ?? {}
   formData.set("draft_amount_cents", String(draftAmountCents))
   formData.set("draft_fee_cents", String(draftFeeCents))
+  formData.set("draft_cash_cents", String(draftCashCents))
+  formData.set("draft_account_cents", String(draftAccountCents))
   formData.set("draft_payee_name", (state.draftPayeeName ?? "").trim())
   formData.set("draft_instrument_number", (state.draftInstrumentNumber ?? "").trim())
   formData.set("draft_liability_account_reference", (state.draftLiabilityAccountReference ?? "official_check:outstanding").trim())
@@ -74,4 +78,10 @@ function appendCheckCashingPayload(formData, state) {
   formData.set("party_id", (state.partyId ?? "").trim())
   formData.set("id_type", (state.idType ?? "").trim())
   formData.set("id_number", (state.idNumber ?? "").trim())
+}
+
+function appendTransferPayload(formData, state) {
+  const amounts = state.transferAmounts ?? {}
+  formData.set("fee_cents", String(amounts.feeCents ?? 0))
+  formData.set("fee_income_account_reference", (state.transferFeeIncomeAccountReference ?? "income:transfer_fee").trim())
 }

@@ -36,6 +36,7 @@ const FALLBACK_CASH_ACCOUNT_POLICY = {
 const FALLBACK_SECTIONS = {
   deposit: ["checks"],
   draft: ["draft", "checks"],
+  transfer: ["transfer"],
   vault_transfer: ["vault_transfer"],
   check_cashing: ["check_cashing"]
 }
@@ -74,8 +75,8 @@ export function getRequiresPrimaryAccount(transactionType, schema, context = {})
   const policy = getPrimaryAccountPolicy(transactionType, schema)
   if (policy === "never") return false
   if (policy === "draft_account_only") {
-    const draftFundingSource = (context.draftFundingSource ?? "account").trim()
-    return transactionType === "draft" && draftFundingSource !== "cash"
+    const draftAccountCents = context.draftAccountCents ?? 0
+    return transactionType === "draft" && draftAccountCents > 0
   }
   return true
 }
@@ -95,8 +96,8 @@ export function getRequiresCashAccount(transactionType, schema, context = {}) {
   const policy = getCashAccountPolicy(transactionType, schema)
   if (policy === "never") return false
   if (policy === "draft_cash_only") {
-    const draftFundingSource = (context.draftFundingSource ?? "account").trim()
-    return transactionType === "draft" && draftFundingSource === "cash"
+    const draftCashCents = context.draftCashCents ?? 0
+    return transactionType === "draft" && draftCashCents > 0
   }
   return true
 }
@@ -178,6 +179,7 @@ export function blockedReason({
   hasInvalidCheckRows,
   hasInvalidCheckCashingFields,
   hasInvalidDraftFields,
+  hasInvalidTransferFields,
   hasInvalidVaultTransferFields,
   balanced
 }) {
@@ -192,6 +194,7 @@ export function blockedReason({
   if (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) return "Complete draft payee and instrument details."
   if (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) return "Complete vault transfer direction, locations, and reason details."
   if (hasInvalidDraftFields) return "Draft amount and fee values are invalid."
+  if (hasInvalidTransferFields) return "Transfer fee cannot exceed transfer amount."
   if (hasInvalidVaultTransferFields) return "Vault transfer details are invalid."
   if (!balanced) return "Entries are out of balance."
   return ""

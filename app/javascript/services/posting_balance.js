@@ -9,8 +9,8 @@
  * - checks: Array<{ account_reference, amount_cents, ... }>
  * - checkCashingAmounts: { checkAmountCents, feeCents, netCashPayoutCents }
  * - settlementAccountReference, feeIncomeAccountReference
- * - draftAmounts: { draftAmountCents, draftFeeCents }
- * - draftLiabilityAccountReference, draftFundingSource, draftFeeIncomeAccountReference
+ * - draftAmounts: { draftAmountCents, draftFeeCents, draftCashCents, draftAccountCents, draftCheckCents }
+ * - draftLiabilityAccountReference, draftFeeIncomeAccountReference
  * - vaultTransferDetails: { valid, sourceReference, destinationReference }
  */
 
@@ -25,7 +25,6 @@ export function buildEntries(transactionType, state) {
   const cashAccountReference = (state.cashAccountReference ?? "").trim()
   const settlementAccountReference = (state.settlementAccountReference ?? "").trim()
   const feeIncomeAccountReference = (state.feeIncomeAccountReference ?? "income:check_cashing_fee").trim()
-  const draftFundingSource = (state.draftFundingSource ?? "account").trim()
   const draftLiabilityAccountReference = (state.draftLiabilityAccountReference ?? "official_check:outstanding").trim()
   const draftFeeIncomeAccountReference = (state.draftFeeIncomeAccountReference ?? "income:draft_fee").trim()
   const draftAmountCents = state.draftAmounts?.draftAmountCents ?? 0
@@ -72,10 +71,17 @@ export function buildEntries(transactionType, state) {
   }
 
   if (entryProfile === "transfer") {
-    return [
+    const feeCents = state.transferAmounts?.feeCents ?? 0
+    const transferFeeIncomeAccountReference = (state.transferFeeIncomeAccountReference ?? "income:transfer_fee").trim()
+    const netToCounterparty = Math.max(amountCents - feeCents, 0)
+    const entries = [
       { side: "debit", account_reference: primaryAccountReference, amount_cents: amountCents },
-      { side: "credit", account_reference: counterpartyAccountReference, amount_cents: amountCents }
+      { side: "credit", account_reference: counterpartyAccountReference, amount_cents: netToCounterparty }
     ]
+    if (feeCents > 0 && transferFeeIncomeAccountReference) {
+      entries.push({ side: "credit", account_reference: transferFeeIncomeAccountReference, amount_cents: feeCents })
+    }
+    return entries
   }
 
   if (entryProfile === "vault_transfer") {
@@ -94,18 +100,37 @@ export function buildEntries(transactionType, state) {
       return []
     }
 
-    const fundingReference = draftFundingSource === "cash" ? cashAccountReference : primaryAccountReference
-    if (!fundingReference) {
+    const draftCashCents = state.draftAmounts?.draftCashCents ?? 0
+    const draftAccountCents = state.draftAmounts?.draftAccountCents ?? 0
+    const draftCheckCents = (state.checks ?? []).reduce((sum, c) => sum + (c.amount_cents ?? 0), 0)
+    const totalPaymentCents = draftCashCents + draftAccountCents + draftCheckCents
+    const totalDueCents = draftAmountCents + draftFeeCents
+    if (totalPaymentCents !== totalDueCents) {
       return []
     }
 
-    const entries = [
-      { side: "debit", account_reference: fundingReference, amount_cents: draftAmountCents },
-      { side: "credit", account_reference: draftLiabilityAccountReference, amount_cents: draftAmountCents }
-    ]
+    const entries = []
+
+    if (draftCashCents > 0 && cashAccountReference) {
+      entries.push({ side: "debit", account_reference: cashAccountReference, amount_cents: draftCashCents })
+    }
+
+    checks
+      .filter((c) => (c.amount_cents ?? 0) > 0)
+      .forEach((check) => {
+        entries.push({ side: "debit", account_reference: check.account_reference ?? "", amount_cents: check.amount_cents })
+      })
+
+    const primaryUsed = primaryAccountReference &&
+      primaryAccountReference !== "0" &&
+      primaryAccountReference !== "acct:0"
+    if (draftAccountCents > 0 && primaryUsed) {
+      entries.push({ side: "debit", account_reference: primaryAccountReference, amount_cents: draftAccountCents })
+    }
+
+    entries.push({ side: "credit", account_reference: draftLiabilityAccountReference, amount_cents: draftAmountCents })
 
     if (draftFeeCents > 0) {
-      entries.push({ side: "debit", account_reference: fundingReference, amount_cents: draftFeeCents })
       entries.push({ side: "credit", account_reference: draftFeeIncomeAccountReference, amount_cents: draftFeeCents })
     }
 

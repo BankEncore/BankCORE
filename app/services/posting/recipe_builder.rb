@@ -11,6 +11,7 @@ module Posting
       return check_cashing_metadata if transaction_type == "check_cashing"
       return vault_transfer_metadata if transaction_type == "vault_transfer"
       return draft_metadata if transaction_type == "draft"
+      return transfer_metadata if transaction_type == "transfer"
       return {} unless transaction_type == "deposit"
 
       check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
@@ -77,6 +78,16 @@ module Posting
         }
       end
 
+      def transfer_metadata
+        fee_cents = posting_params[:fee_cents].to_i
+        return {} if fee_cents <= 0
+
+        {
+          fee_cents: fee_cents,
+          fee_income_account_reference: transfer_fee_income_account_reference
+        }
+      end
+
       def vault_transfer_metadata
         {
           vault_transfer: {
@@ -90,17 +101,33 @@ module Posting
       end
 
       def draft_metadata
-        {
+        check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
+        check_items = check_items.select { |item| item[:amount_cents].to_i.positive? }
+        metadata = {
           draft: {
-            funding_source: draft_funding_source,
             draft_amount_cents: posting_params[:draft_amount_cents].to_i,
             fee_cents: posting_params[:draft_fee_cents].to_i,
+            draft_cash_cents: posting_params[:draft_cash_cents].to_i,
+            draft_account_cents: posting_params[:draft_account_cents].to_i,
             payee_name: posting_params[:draft_payee_name].to_s,
             instrument_number: posting_params[:draft_instrument_number].to_s,
             liability_account_reference: draft_liability_account_reference,
             fee_income_account_reference: draft_fee_income_account_reference
           }
         }
+        metadata[:check_items] = check_items.map do |item|
+          {
+            routing: item[:routing].to_s,
+            account: item[:account].to_s,
+            number: item[:number].to_s,
+            account_reference: item[:account_reference].to_s,
+            amount_cents: item[:amount_cents].to_i,
+            check_type: item[:check_type].to_s.presence || "transit",
+            hold_reason: item[:hold_reason].to_s,
+            hold_until: item[:hold_until].to_s
+          }
+        end if check_items.any?
+        metadata
       end
 
       def sanitized_explicit_entries(explicit_entries)
@@ -149,10 +176,14 @@ module Posting
             { side: "credit", account_reference: cash_account_reference, amount_cents: amount_cents }
           ]
         when "transfer"
-          [
+          fee_cents = posting_params[:fee_cents].to_i
+          net_to_counterparty = [ amount_cents - fee_cents, 0 ].max
+          entries = [
             { side: "debit", account_reference: primary_account_reference, amount_cents: amount_cents },
-            { side: "credit", account_reference: counterparty_account_reference, amount_cents: amount_cents }
+            { side: "credit", account_reference: counterparty_account_reference, amount_cents: net_to_counterparty }
           ]
+          entries << { side: "credit", account_reference: transfer_fee_income_account_reference, amount_cents: fee_cents } if fee_cents.positive?
+          entries
         when "vault_transfer"
           source_reference = vault_transfer_source_reference
           destination_reference = vault_transfer_destination_reference
@@ -185,29 +216,40 @@ module Posting
         when "draft"
           draft_amount_cents = posting_params[:draft_amount_cents].to_i
           draft_fee_cents = posting_params[:draft_fee_cents].to_i
-          funding_source = draft_funding_source
+          draft_cash_cents = posting_params[:draft_cash_cents].to_i
+          draft_account_cents = posting_params[:draft_account_cents].to_i
+          check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
+          draft_check_cents = check_items.sum { |item| item[:amount_cents].to_i }
           liability_account_reference = draft_liability_account_reference
 
           return [] unless draft_amount_cents.positive?
           return [] if liability_account_reference.blank?
 
-          funding_reference = if funding_source == "cash"
-            default_cash_account_reference
-          else
-            primary_account_reference
+          total_due_cents = draft_amount_cents + draft_fee_cents
+          total_payment_cents = draft_cash_cents + draft_account_cents + draft_check_cents
+          return [] unless total_payment_cents == total_due_cents
+
+          entries = []
+
+          if draft_cash_cents.positive? && default_cash_account_reference.present?
+            entries << { side: "debit", account_reference: default_cash_account_reference, amount_cents: draft_cash_cents }
           end
 
-          return [] if funding_reference.blank?
+          check_items.select { |item| item[:amount_cents].to_i.positive? }.each do |item|
+            entries << { side: "debit", account_reference: item[:account_reference].to_s, amount_cents: item[:amount_cents].to_i }
+          end
 
-          entries = [
-            { side: "debit", account_reference: funding_reference, amount_cents: draft_amount_cents },
-            { side: "credit", account_reference: liability_account_reference, amount_cents: draft_amount_cents }
-          ]
+          primary_used = primary_account_reference.present? &&
+            primary_account_reference != "0" &&
+            primary_account_reference != "acct:0"
+          if draft_account_cents.positive? && primary_used
+            entries << { side: "debit", account_reference: primary_account_reference, amount_cents: draft_account_cents }
+          end
+
+          entries << { side: "credit", account_reference: liability_account_reference, amount_cents: draft_amount_cents }
 
           if draft_fee_cents.positive?
-            fee_income_reference = draft_fee_income_account_reference
-            entries << { side: "debit", account_reference: funding_reference, amount_cents: draft_fee_cents }
-            entries << { side: "credit", account_reference: fee_income_reference, amount_cents: draft_fee_cents }
+            entries << { side: "credit", account_reference: draft_fee_income_account_reference, amount_cents: draft_fee_cents }
           end
 
           entries
@@ -220,11 +262,8 @@ module Posting
         posting_params[:fee_income_account_reference].presence || "income:check_cashing_fee"
       end
 
-      def draft_funding_source
-        source = posting_params[:draft_funding_source].to_s
-        return "cash" if source == "cash"
-
-        "account"
+      def transfer_fee_income_account_reference
+        posting_params[:fee_income_account_reference].presence || "income:transfer_fee"
       end
 
       def draft_liability_account_reference

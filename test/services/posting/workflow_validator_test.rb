@@ -18,8 +18,10 @@ module Posting
       errors = WorkflowValidator.errors({
         transaction_type: "draft",
         amount_cents: 12_000,
-        draft_funding_source: "account",
         draft_amount_cents: 0,
+        draft_fee_cents: 0,
+        draft_cash_cents: 0,
+        draft_account_cents: 0,
         draft_payee_name: "",
         draft_instrument_number: "",
         draft_liability_account_reference: ""
@@ -29,7 +31,23 @@ module Posting
       assert_includes errors, "Payee name is required"
       assert_includes errors, "Instrument number is required"
       assert_includes errors, "Liability account reference is required"
-      assert_includes errors, "Primary account reference is required"
+    end
+
+    test "returns draft payment balance error when payment does not equal total due" do
+      errors = WorkflowValidator.errors({
+        transaction_type: "draft",
+        amount_cents: 10_000,
+        draft_amount_cents: 10_000,
+        draft_fee_cents: 0,
+        draft_cash_cents: 5_000,
+        draft_account_cents: 0,
+        draft_payee_name: "Payee",
+        draft_instrument_number: "D-1",
+        draft_liability_account_reference: "official_check:outstanding",
+        primary_account_reference: "acct:customer"
+      })
+
+      assert_includes errors, "Payment (cash + checks + account) must equal total due"
     end
 
     test "returns vault transfer directional errors" do

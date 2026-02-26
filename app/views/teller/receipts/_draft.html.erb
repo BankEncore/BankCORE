@@ -6,7 +6,9 @@
 <% draft_amt = (draft["draft_amount_cents"] || draft[:draft_amount_cents] || 0).to_i %>
 <% fee = (draft["fee_cents"] || draft[:fee_cents] || 0).to_i %>
 <% total = draft_amt + fee %>
-<% funding = (draft["funding_source"] || draft[:funding_source]).to_s %>
+<% draft_cash = (draft["draft_cash_cents"] || draft[:draft_cash_cents] || 0).to_i %>
+<% draft_account = (draft["draft_account_cents"] || draft[:draft_account_cents] || 0).to_i %>
+<% draft_checks = check_items_from_metadata(posting_batch).sum { |i| (i["amount_cents"] || i[:amount_cents] || 0).to_i } %>
 <% user = teller_transaction.user %>
 <% payee = (draft["payee_name"] || draft[:payee_name]).to_s %>
 
@@ -33,16 +35,16 @@
       <td class="tabular-nums text-right font-semibold"><%= receipt_money(total) %></td>
     </tr>
     <tr>
-      <td>Cash In:</td>
-      <td class="tabular-nums text-right"><%= receipt_money(teller_transaction.amount_cents) %></td>
+      <td>Cash:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(draft_cash) %></td>
     </tr>
     <tr>
-      <td>Checks In:</td>
-      <td class="tabular-nums text-right">$           0.00</td>
+      <td>Checks:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(draft_checks) %></td>
     </tr>
     <tr>
-      <td>Transfer:</td>
-      <td class="tabular-nums text-right">$           0.00</td>
+      <td>Account Transfer:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(draft_account) %></td>
     </tr>
   </table>
 </div> 

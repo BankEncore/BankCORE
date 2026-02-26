@@ -60,13 +60,15 @@ module Teller
           :party_id,
           :id_type,
           :id_number,
-          :draft_funding_source,
           :draft_amount_cents,
           :draft_fee_cents,
+          :draft_cash_cents,
+          :draft_account_cents,
           :draft_payee_name,
           :draft_instrument_number,
           :draft_liability_account_reference,
           :draft_fee_income_account_reference,
+          :cash_back_cents,
           check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :check_type, :hold_reason, :hold_until ],
           entries: [ :side, :account_reference, :amount_cents ]
         )

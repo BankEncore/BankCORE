@@ -1,20 +1,22 @@
 <section aria-label="Page Header" class="card bg-base-100 border border-base-300">
-  <div class="card-body py-3">
-    <h2 class="card-title text-lg"><%= title %></h2>
-    <% if local_assigns[:description].present? %>
-      <p class="text-sm opacity-80"><%= description %></p>
-    <% end %>
+  <div class="card-body py-3 flex flex-row flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h2 class="card-title text-lg"><%= title %></h2>
+      <% if local_assigns[:description].present? %>
+        <p class="text-sm opacity-80"><%= description %></p>
+      <% end %>
 
-    <% if local_assigns[:show_state_badge] %>
-      <p>
-        State:
-        <strong
-          data-posting-form-target="headerStateBadge"
-          class="badge"><%= local_assigns.fetch(:initial_state, "Editing") %></strong>
-      </p>
-    <% end %>
+      <% if local_assigns[:show_state_badge] %>
+        <p>
+          State:
+          <strong
+            data-posting-form-target="headerStateBadge"
+            class="badge"><%= local_assigns.fetch(:initial_state, "Editing") %></strong>
+        </p>
+      <% end %>
+    </div>
 
-    <p class="flex gap-2">
+    <div class="flex gap-2 shrink-0">
       <% if local_assigns[:secondary_button_path].present? %>
         <%= link_to local_assigns.fetch(:secondary_button_label, "Back"), local_assigns[:secondary_button_path], class: "btn btn-ghost btn-sm" %>
       <% elsif local_assigns[:secondary_button_action].present? %>
@@ -26,6 +28,6 @@
       <% elsif local_assigns[:primary_button_path].present? %>
         <%= link_to local_assigns.fetch(:primary_button_label, "Continue"), local_assigns[:primary_button_path], class: "btn btn-primary btn-sm" %>
       <% end %>
-    </p>
+    </div>
   </div>
 </section>

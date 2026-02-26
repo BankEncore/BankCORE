@@ -33,7 +33,7 @@ module Teller
         label: "Transfer",
         required_fields: [],
         funding_modes: %w[account],
-        ui_sections: [],
+        ui_sections: %w[transfer],
         entry_profile: "transfer",
         amount_input_mode: "manual",
         effective_amount_source: "amount_field",
@@ -60,7 +60,7 @@ module Teller
       "draft" => {
         label: "Bank Draft",
         required_fields: %i[draft_amount_cents draft_payee_name draft_instrument_number draft_liability_account_reference],
-        funding_modes: %w[account cash],
+        funding_modes: %w[account cash check],
         ui_sections: %w[draft checks],
         entry_profile: "draft",
         amount_input_mode: "draft_amount",
