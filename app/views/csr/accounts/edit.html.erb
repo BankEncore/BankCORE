@@ -23,8 +23,13 @@
           <%= f.text_field :account_number, class: "input input-bordered w-full font-mono", maxlength: 16, required: true %>
         </div>
         <div class="form-control">
-          <span class="label">Branch</span>
-          <p class="text-sm py-2"><%= @account.branch.name %></p>
+          <% if Current.user&.has_permission?("accounts.branch.edit") && @branches %>
+            <%= f.label :branch_id, "Branch", class: "label" %>
+            <%= f.collection_select :branch_id, @branches, :id, :name, {}, class: "select select-bordered w-full" %>
+          <% else %>
+            <span class="label">Branch</span>
+            <p class="text-sm py-2"><%= @account.branch.name %></p>
+          <% end %>
         </div>
       </div>
 

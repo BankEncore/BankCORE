@@ -8,60 +8,65 @@
     <%= link_to "Edit", edit_csr_party_path(@party), class: "btn btn-sm btn-primary" %>
   <% end %>
 
-  <%= render "csr/shared/panel", title: "Details" do %>
-    <dl class="divide-y divide-base-300/60 text-sm">
-      <div class="flex justify-between py-2">
-        <dt class="text-base-content/70">Display name</dt>
-        <dd><%= @party.display_name.presence || "—" %></dd>
-      </div>
-      <div class="flex justify-between py-2">
-        <dt class="text-base-content/70">Kind</dt>
-        <dd><%= @party.party_kind.titleize %></dd>
-      </div>
-      <div class="flex justify-between py-2">
-        <dt class="text-base-content/70">Relationship</dt>
-        <dd><%= @party.relationship_kind.titleize %></dd>
-      </div>
-      <div class="flex justify-between py-2">
-        <dt class="text-base-content/70">Status</dt>
-        <dd><%= @party.is_active? ? "Active" : "Inactive" %></dd>
-      </div>
-      <% if @party.individual? && @party.party_individual.present? %>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <%= render "csr/shared/panel", title: "Contact" do %>
+      <dl class="divide-y divide-base-300/60 text-sm">
         <div class="flex justify-between py-2">
-          <dt class="text-base-content/70">First name</dt>
-          <dd><%= @party.party_individual.first_name %></dd>
+          <dt class="text-base-content/70">Display name</dt>
+          <dd><%= @party.display_name.presence || "—" %></dd>
         </div>
         <div class="flex justify-between py-2">
-          <dt class="text-base-content/70">Last name</dt>
-          <dd><%= @party.party_individual.last_name %></dd>
+          <dt class="text-base-content/70"><%= @party.organization? ? "DBA name" : "DOB" %></dt>
+          <dd>
+            <% if @party.organization? %>
+              <%= @party.party_organization&.dba_name.presence || "—" %>
+            <% else %>
+              <%= @party.party_individual&.dob&.strftime("%Y-%m-%d") || "—" %>
+            <% end %>
+          </dd>
         </div>
         <div class="flex justify-between py-2">
-          <dt class="text-base-content/70">DOB</dt>
-          <dd class="tabular-nums"><%= @party.party_individual.dob&.strftime("%Y-%m-%d") || "—" %></dd>
-        </div>
-      <% elsif @party.organization? && @party.party_organization.present? %>
-        <div class="flex justify-between py-2">
-          <dt class="text-base-content/70">Legal name</dt>
-          <dd><%= @party.party_organization.legal_name %></dd>
+          <dt class="text-base-content/70">Phone</dt>
+          <dd><%= format_phone(@party.phone) %></dd>
         </div>
         <div class="flex justify-between py-2">
-          <dt class="text-base-content/70">DBA</dt>
-          <dd><%= @party.party_organization.dba_name.presence || "—" %></dd>
+          <dt class="text-base-content/70">Email</dt>
+          <dd><%= @party.email.presence || "—" %></dd>
         </div>
-      <% end %>
-      <div class="flex justify-between py-2">
-        <dt class="text-base-content/70">Email</dt>
-        <dd><%= @party.email.presence || "—" %></dd>
-      </div>
-      <div class="flex justify-between py-2">
-        <dt class="text-base-content/70">Phone</dt>
-        <dd><%= @party.phone.presence || "—" %></dd>
-      </div>
-    </dl>
-  <% end %>
+        <div class="flex justify-between py-2">
+          <dt class="text-base-content/70">Address</dt>
+          <dd>
+            <% addr = [ @party.street_address, [ @party.city, @party.state ].compact_blank.join(", "), @party.zip_code ].compact_blank %>
+            <%= addr.any? ? addr.join(", ") : "—" %>
+          </dd>
+        </div>
+      </dl>
+    <% end %>
+
+    <%= render "csr/shared/panel", title: "Record" do %>
+      <dl class="divide-y divide-base-300/60 text-sm">
+        <div class="flex justify-between py-2">
+          <dt class="text-base-content/70">Relationship</dt>
+          <dd><%= @party.relationship_kind.titleize %></dd>
+        </div>
+        <div class="flex justify-between py-2">
+          <dt class="text-base-content/70">Status</dt>
+          <dd><%= @party.is_active? ? "Active" : "Inactive" %></dd>
+        </div>
+        <div class="flex justify-between py-2">
+          <dt class="text-base-content/70">Tax ID</dt>
+          <dd class="font-mono tabular-nums"><%= mask_last_four(@party.tax_id) %></dd>
+        </div>
+        <div class="flex justify-between py-2">
+          <dt class="text-base-content/70">Government ID</dt>
+          <dd class="font-mono tabular-nums"><%= mask_last_four(@party.party_individual&.govt_id) %></dd>
+        </div>
+      </dl>
+    <% end %>
+  </div>
 
   <% accounts = @party.accounts %>
-  <%= render "csr/shared/panel", title: "Accounts", right: "#{accounts.size} total" do %>
+  <%= render "csr/shared/panel", title: "Accounts", right: link_to("Add", new_csr_account_path(party_id: @party.id), class: "btn btn-primary btn-xs") do %>
     <% if accounts.any? %>
       <div class="overflow-x-auto">
         <table class="table table-sm">
@@ -95,7 +100,18 @@
       </div>
     <% else %>
       <p class="text-sm text-base-content/70">No accounts yet.</p>
-      <%= link_to "Add account", new_csr_account_path(party_id: @party.id), class: "btn btn-ghost btn-sm mt-2" %>
+    <% end %>
+  <% end %>
+
+  <% related = @party.related_parties %>
+  <% if related.any? %>
+    <%= render "csr/shared/panel", title: "Related parties" do %>
+      <p class="text-sm text-base-content/70 mb-2">Parties with jointly owned accounts.</p>
+      <ul class="space-y-1">
+        <% related.each do |rp| %>
+          <li><%= link_to rp.display_name.presence || "Party ##{rp.id}", csr_party_path(rp), class: "link" %></li>
+        <% end %>
+      </ul>
     <% end %>
   <% end %>
 

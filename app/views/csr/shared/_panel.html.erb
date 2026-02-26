@@ -1,6 +1,6 @@
-<%# locals: title:, right: nil %>
+<%# locals: title:, right: nil, class: nil %>
 
-<section class="card receipt-section bg-base-100 border border-base-300">
+<section class="card receipt-section bg-base-100 border border-base-300 <%= local_assigns[:class] %>">
   <div class="card-body">
     <div class="flex items-center justify-between gap-3">
       <h2 class="card-title text-base"><%= title %></h2>

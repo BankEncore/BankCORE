@@ -8,19 +8,23 @@ module Teller
 
     def index
       scope = Account.includes(:branch, :account_owners, :parties)
-      scope = scope.where(branch_id: params[:branch_id]) if params[:branch_id].present?
-      scope = scope.joins(:account_owners).where(account_owners: { party_id: params[:party_id] }) if params[:party_id].present?
-      @accounts = scope.order(account_number: :asc).limit(100)
+      scope = apply_accounts_index_filters(scope)
+      scope = scope.reorder(account_number: :asc)
+      per_page = [ 10, 25, 50, 100 ].include?(params[:per_page].to_i) ? params[:per_page].to_i : 10
+      @pagy, @accounts = pagy(:offset, scope, limit: per_page)
     end
 
     def show
-      @account_transactions = @account.account_transactions
-        .includes(teller_transaction: :posting_batch)
-        .order(created_at: :desc)
+      @account_transactions = load_filtered_transactions
+      @parties_for_owner = Party
+        .where(is_active: true, relationship_kind: "customer")
+        .where.not(id: @account.account_owners.select(:party_id))
+        .order(:display_name)
         .limit(50)
     end
 
     def edit
+      @branches = Branch.order(:code) if Current.user&.has_permission?("accounts.branch.edit")
     end
 
     def update
@@ -76,7 +80,9 @@ module Teller
       end
 
       def account_update_params
-        params.require(:account).permit(:account_number, :account_type, :status, :opened_on, :closed_on)
+        permitted = [ :account_number, :account_type, :status, :opened_on, :closed_on ]
+        permitted << :branch_id if Current.user&.has_permission?("accounts.branch.edit")
+        params.require(:account).permit(permitted)
       end
 
       def owner_params_present?
@@ -96,6 +102,50 @@ module Teller
             is_primary: (primary_party_id.present? && party_id.to_s == primary_party_id.to_s) || (idx == 0 && primary_party_id.blank?)
           )
         end
+      end
+
+      def load_filtered_transactions
+        scope = @account.account_transactions
+          .includes(teller_transaction: :posting_batch)
+          .joins(:teller_transaction)
+
+        date_from = params[:date_from].presence || 30.days.ago.to_date
+        date_to = params[:date_to].presence || Date.current
+        scope = scope.where("DATE(teller_transactions.posted_at) >= ?", date_from) if date_from.present?
+        scope = scope.where("DATE(teller_transactions.posted_at) <= ?", date_to) if date_to.present?
+
+        scope = scope.where("account_transactions.amount_cents >= ?", (params[:amount_min].to_f * 100).round) if params[:amount_min].present?
+        scope = scope.where("account_transactions.amount_cents <= ?", (params[:amount_max].to_f * 100).round) if params[:amount_max].present?
+
+        if params[:transaction_types].present?
+          types = Array(params[:transaction_types]).compact_blank
+          scope = scope.where(teller_transactions: { transaction_type: types }) if types.any?
+        end
+
+        sort_col = params[:sort].presence || "date"
+        sort_dir = params[:sort_dir] == "asc" ? :asc : :desc
+        if sort_col == "amount"
+          scope = scope.order("account_transactions.amount_cents #{sort_dir}")
+        else
+          scope = scope.order("teller_transactions.posted_at #{sort_dir}")
+        end
+
+        scope.limit(500)
+      end
+
+      def apply_accounts_index_filters(scope)
+        scope = scope.where(branch_id: params[:branch_id]) if params[:branch_id].present?
+        scope = scope.joins(:account_owners).where(account_owners: { party_id: params[:party_id] }) if params[:party_id].present?
+        if params[:q].present?
+          q = "%#{sanitize_sql_like(params[:q].to_s)}%"
+          scope = scope.left_joins(account_owners: :party).where(
+            "accounts.account_number LIKE ? OR parties.display_name LIKE ?",
+            q, q
+          ).distinct
+        end
+        scope = scope.where(account_type: params[:account_type]) if params[:account_type].present?
+        scope = scope.where(status: params[:status]) if params[:status].present?
+        scope
       end
   end
 end

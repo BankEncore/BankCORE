@@ -22,6 +22,12 @@ class Account < ApplicationRecord
     account_owners.find_by(is_primary: true)&.party
   end
 
+  def owners_ordered
+    account_owners
+      .joins(:party)
+      .order("account_owners.is_primary DESC", "parties.display_name ASC")
+  end
+
   def balance_cents
     credits = account_transactions.where(direction: "credit").sum(:amount_cents)
     debits = account_transactions.where(direction: "debit").sum(:amount_cents)

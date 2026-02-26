@@ -6,78 +6,70 @@
   primary_button_path: edit_teller_party_path(@party),
   primary_button_label: "Edit" %>
 
-<section class="card bg-base-100 border border-base-300">
-  <div class="card-body">
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <h2 class="card-title text-base">Details</h2>
-        <p class="text-xs text-slate-600 mt-1"><%= @party.party_kind.titleize %> • <%= @party.relationship_kind.titleize %></p>
-      </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <h2 class="card-title text-base">Contact</h2>
+      <div class="divider my-3"></div>
+      <dl class="space-y-1">
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Display name</dt>
+          <dd class="ui-kv-value text-sm"><%= @party.display_name.presence || "—" %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs"><%= @party.organization? ? "DBA name" : "DOB" %></dt>
+          <dd class="ui-kv-value text-sm">
+            <% if @party.organization? %>
+              <%= @party.party_organization&.dba_name.presence || "—" %>
+            <% else %>
+              <%= @party.party_individual&.dob&.strftime("%Y-%m-%d") || "—" %>
+            <% end %>
+          </dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Phone</dt>
+          <dd class="ui-kv-value text-sm"><%= format_phone(@party.phone) %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Email</dt>
+          <dd class="ui-kv-value text-sm"><%= @party.email.presence || "—" %></dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Address</dt>
+          <dd class="ui-kv-value text-sm">
+            <% addr = [ @party.street_address, [ @party.city, @party.state ].compact_blank.join(", "), @party.zip_code ].compact_blank %>
+            <%= addr.any? ? addr.join("\n") : "—" %>
+          </dd>
+        </div>
+      </dl>
     </div>
-    <div class="divider my-3"></div>
-    <dl class="space-y-1">
-      <div class="ui-kv-row">
-        <dt class="ui-kv-key text-xs">Display name</dt>
-        <dd class="ui-kv-value text-sm"><%= @party.display_name.presence || "—" %></dd>
-      </div>
-      <div class="ui-kv-row">
-        <dt class="ui-kv-key text-xs">Kind</dt>
-        <dd class="ui-kv-value text-sm"><%= @party.party_kind %></dd>
-      </div>
-      <div class="ui-kv-row">
-        <dt class="ui-kv-key text-xs">Relationship</dt>
-        <dd class="ui-kv-value text-sm"><%= @party.relationship_kind %></dd>
-      </div>
-      <div class="ui-kv-row">
-        <dt class="ui-kv-key text-xs">Status</dt>
-        <dd class="ui-kv-value text-sm"><%= @party.is_active? ? "Active" : "Inactive" %></dd>
-      </div>
-      <div class="ui-kv-row">
-        <dt class="ui-kv-key text-xs">Tax ID</dt>
-        <dd class="ui-kv-value text-sm font-mono"><%= mask_last_four(@party.tax_id) %></dd>
-      </div>
-      <% if @party.individual? && @party.party_individual.present? %>
+  </section>
+
+  <section class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <h2 class="card-title text-base">Record</h2>
+      <div class="divider my-3"></div>
+      <dl class="space-y-1">
         <div class="ui-kv-row">
-          <dt class="ui-kv-key text-xs">First name</dt>
-          <dd class="ui-kv-value text-sm"><%= @party.party_individual.first_name %></dd>
+          <dt class="ui-kv-key text-xs">Relationship</dt>
+          <dd class="ui-kv-value text-sm"><%= @party.relationship_kind.titleize %></dd>
         </div>
         <div class="ui-kv-row">
-          <dt class="ui-kv-key text-xs">Last name</dt>
-          <dd class="ui-kv-value text-sm"><%= @party.party_individual.last_name %></dd>
+          <dt class="ui-kv-key text-xs">Status</dt>
+          <dd class="ui-kv-value text-sm"><%= @party.is_active? ? "Active" : "Inactive" %></dd>
         </div>
         <div class="ui-kv-row">
-          <dt class="ui-kv-key text-xs">DOB</dt>
-          <dd class="ui-kv-value text-sm mono"><%= @party.party_individual.dob&.strftime("%Y-%m-%d") || "—" %></dd>
+          <dt class="ui-kv-key text-xs">Tax ID</dt>
+          <dd class="ui-kv-value text-sm font-mono"><%= mask_last_four(@party.tax_id) %></dd>
         </div>
         <div class="ui-kv-row">
-          <dt class="ui-kv-key text-xs">Govt ID type</dt>
-          <dd class="ui-kv-value text-sm"><%= @party.party_individual.govt_id_type.present? ? @party.party_individual.govt_id_type.titleize : "—" %></dd>
+          <dt class="ui-kv-key text-xs">Government ID</dt>
+          <dd class="ui-kv-value text-sm font-mono"><%= mask_last_four(@party.party_individual&.govt_id) %></dd>
         </div>
-        <div class="ui-kv-row">
-          <dt class="ui-kv-key text-xs">Govt ID</dt>
-          <dd class="ui-kv-value text-sm font-mono"><%= mask_last_four(@party.party_individual.govt_id) %></dd>
-        </div>
-      <% elsif @party.organization? && @party.party_organization.present? %>
-        <div class="ui-kv-row">
-          <dt class="ui-kv-key text-xs">Legal name</dt>
-          <dd class="ui-kv-value text-sm"><%= @party.party_organization.legal_name %></dd>
-        </div>
-        <div class="ui-kv-row">
-          <dt class="ui-kv-key text-xs">DBA</dt>
-          <dd class="ui-kv-value text-sm"><%= @party.party_organization.dba_name.presence || "—" %></dd>
-        </div>
-      <% end %>
-      <div class="ui-kv-row">
-        <dt class="ui-kv-key text-xs">Email</dt>
-        <dd class="ui-kv-value text-sm"><%= @party.email.presence || "—" %></dd>
-      </div>
-      <div class="ui-kv-row">
-        <dt class="ui-kv-key text-xs">Phone</dt>
-        <dd class="ui-kv-value text-sm"><%= @party.phone.presence || "—" %></dd>
-      </div>
-    </dl>
-  </div>
-</section>
+      </dl>
+    </div>
+  </section>
+</div>
 
 <section class="card bg-base-100 border border-base-300 mt-4">
   <div class="card-body">
@@ -86,6 +78,7 @@
         <h2 class="card-title text-base">Accounts</h2>
         <p class="text-xs text-slate-600 mt-1">Accounts owned by this party.</p>
       </div>
+      <%= link_to "Add", new_teller_account_path(party_id: @party.id), class: "btn btn-primary btn-sm" %>
     </div>
     <div class="divider my-3"></div>
     <% accounts = @party.accounts %>
@@ -122,7 +115,26 @@
       </div>
     <% else %>
       <p class="text-sm text-slate-600">No accounts yet.</p>
-      <%= link_to "Add account", new_teller_account_path(party_id: @party.id), class: "btn btn-ghost btn-sm mt-2" %>
     <% end %>
   </div>
 </section>
+
+<% related = @party.related_parties %>
+<% if related.any? %>
+  <section class="card bg-base-100 border border-base-300 mt-4">
+    <div class="card-body">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="card-title text-base">Related parties</h2>
+          <p class="text-xs text-slate-600 mt-1">Parties with jointly owned accounts.</p>
+        </div>
+      </div>
+      <div class="divider my-3"></div>
+      <ul class="space-y-1">
+        <% related.each do |rp| %>
+          <li><%= link_to rp.display_name.presence || "Party ##{rp.id}", teller_party_path(rp), class: "link link-hover" %></li>
+        <% end %>
+      </ul>
+    </div>
+  </section>
+<% end %>

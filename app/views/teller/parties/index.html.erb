@@ -6,6 +6,8 @@
   primary_button_path: new_teller_party_path,
   primary_button_label: "New Party" %>
 
+<% search_params = params.permit(:q, :tin, :govt_id, :party_kind, :relationship_kind, :per_page).to_h %>
+
 <section class="card bg-base-100 border border-base-300">
   <div class="card-body">
     <div class="flex items-start justify-between gap-3">
@@ -16,15 +18,48 @@
     </div>
     <div class="divider my-3"></div>
 
+    <%= form_with url: teller_parties_path, method: :get, local: true, class: "mb-4 space-y-3" do |f| %>
+      <%= hidden_field_tag :party_kind, params[:party_kind] %>
+      <%= hidden_field_tag :relationship_kind, params[:relationship_kind] %>
+      <%= hidden_field_tag :per_page, params[:per_page] %>
+      <div class="flex flex-wrap gap-3 items-end">
+        <div class="form-control">
+          <%= label_tag :q, "Name or account #", class: "text-xs font-medium text-slate-700" %>
+          <%= text_field_tag :q, params[:q], class: "input input-bordered input-sm w-48", placeholder: "Search…" %>
+        </div>
+        <div class="form-control">
+          <%= label_tag :tin, "TIN", class: "text-xs font-medium text-slate-700" %>
+          <%= text_field_tag :tin, params[:tin], class: "input input-bordered input-sm w-32 font-mono", placeholder: "Exact match" %>
+        </div>
+        <div class="form-control">
+          <%= label_tag :govt_id, "Government ID", class: "text-xs font-medium text-slate-700" %>
+          <%= text_field_tag :govt_id, params[:govt_id], class: "input input-bordered input-sm w-32 font-mono", placeholder: "Exact match" %>
+        </div>
+        <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+        <%= link_to "Clear", teller_parties_path(search_params.except(:q, :tin, :govt_id)), class: "btn btn-ghost btn-sm" %>
+      </div>
+    <% end %>
+
     <div class="flex gap-2 flex-wrap mb-4">
-      <%= link_to "All", teller_parties_path, class: "btn btn-sm #{params[:party_kind].blank? ? 'btn-primary' : 'btn-ghost'}" %>
+      <%= link_to "All", teller_parties_path(search_params.except(:party_kind)), class: "btn btn-sm #{params[:party_kind].blank? ? 'btn-primary' : 'btn-ghost'}" %>
       <% Party::PARTY_KINDS.each do |kind| %>
-        <%= link_to kind.titleize, teller_parties_path(party_kind: kind), class: "btn btn-sm #{params[:party_kind] == kind ? 'btn-primary' : 'btn-ghost'}" %>
+        <%= link_to kind.titleize, teller_parties_path(search_params.merge(party_kind: kind)), class: "btn btn-sm #{params[:party_kind] == kind ? 'btn-primary' : 'btn-ghost'}" %>
       <% end %>
       <span class="divider divider-horizontal"></span>
       <% Party::RELATIONSHIP_KINDS.each do |rel| %>
-        <%= link_to rel.titleize, teller_parties_path(relationship_kind: rel), class: "btn btn-sm #{params[:relationship_kind] == rel ? 'btn-primary' : 'btn-ghost'}" %>
+        <%= link_to rel.titleize, teller_parties_path(search_params.merge(relationship_kind: rel)), class: "btn btn-sm #{params[:relationship_kind] == rel ? 'btn-primary' : 'btn-ghost'}" %>
       <% end %>
+    </div>
+
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-sm text-slate-600"><%= @pagy.count %> parties</span>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-600">Per page:</span>
+        <% current_per = [ 10, 25, 50, 100 ].include?(params[:per_page].to_i) ? params[:per_page].to_i : 10 %>
+        <% [ 10, 25, 50, 100 ].each do |n| %>
+          <%= link_to n, teller_parties_path(search_params.merge(per_page: n, page: 1)), class: "btn btn-ghost btn-xs #{current_per == n ? 'btn-active' : ''}" %>
+        <% end %>
+      </div>
     </div>
 
     <div class="overflow-x-auto">
@@ -34,6 +69,9 @@
             <th class="py-2 text-left">Name</th>
             <th class="py-2 text-left">Kind</th>
             <th class="py-2 text-left">Relationship</th>
+            <th class="py-2 text-left">Phone</th>
+            <th class="py-2 text-left">Email</th>
+            <th class="py-2 text-left">City, State</th>
             <th class="py-2 text-right">Actions</th>
           </tr>
         </thead>
@@ -44,6 +82,9 @@
                 <td class="py-2"><%= party.display_name.presence || "—" %></td>
                 <td class="py-2"><span class="badge badge-outline"><%= party.party_kind %></span></td>
                 <td class="py-2"><span class="badge badge-outline"><%= party.relationship_kind %></span></td>
+                <td class="py-2"><%= format_phone(party.phone) %></td>
+                <td class="py-2"><%= party.email.presence || "—" %></td>
+                <td class="py-2"><%= [ party.city, party.state ].compact_blank.join(", ").presence || "—" %></td>
                 <td class="py-2 text-right">
                   <%= link_to "View", teller_party_path(party), class: "btn btn-ghost btn-sm" %>
                   <%= link_to "Edit", edit_teller_party_path(party), class: "btn btn-ghost btn-sm" %>
@@ -52,11 +93,17 @@
             <% end %>
           <% else %>
             <tr class="row-border">
-              <td colspan="4" class="py-4 text-center text-slate-600">No parties found.</td>
+              <td colspan="7" class="py-4 text-center text-slate-600">No parties found.</td>
             </tr>
           <% end %>
         </tbody>
       </table>
     </div>
+
+    <% if @pagy.pages > 1 %>
+      <div class="mt-4 flex justify-center">
+        <%== @pagy.series_nav %>
+      </div>
+    <% end %>
   </div>
 </section>

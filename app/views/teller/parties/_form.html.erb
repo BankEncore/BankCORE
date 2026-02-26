@@ -43,7 +43,11 @@
       </div>
       <div class="form-control">
         <%= label_tag :govt_id, "Govt ID number", class: "text-xs font-medium text-slate-700" %>
-        <%= text_field_tag "party[govt_id]", @party.party_individual&.govt_id, class: "input input-bordered w-full font-mono", placeholder: "Optional", autocomplete: "off" %>
+        <% if @party.persisted? && @party.party_individual&.govt_id.present? %>
+          <%= text_field_tag "party[govt_id]", "", class: "input input-bordered w-full font-mono", placeholder: "Leave blank to keep current", autocomplete: "off" %>
+        <% else %>
+          <%= text_field_tag "party[govt_id]", @party.party_individual&.govt_id, class: "input input-bordered w-full font-mono", placeholder: "Optional", autocomplete: "off" %>
+        <% end %>
       </div>
     </div>
   </div>
@@ -68,7 +72,11 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="form-control">
       <%= f.label :tax_id, "Tax ID (SSN/EIN)", class: "text-xs font-medium text-slate-700" %>
-      <%= f.text_field :tax_id, class: "input input-bordered w-full font-mono", placeholder: "Optional", autocomplete: "off" %>
+      <% if @party.persisted? && @party.tax_id.present? %>
+        <%= f.text_field :tax_id, value: "", class: "input input-bordered w-full font-mono", placeholder: "Leave blank to keep current", autocomplete: "off" %>
+      <% else %>
+        <%= f.text_field :tax_id, class: "input input-bordered w-full font-mono", placeholder: "Optional", autocomplete: "off" %>
+      <% end %>
     </div>
   </div>
 
@@ -82,7 +90,7 @@
     </div>
     <div class="form-control">
       <%= f.label :phone, class: "text-xs font-medium text-slate-700" %>
-      <%= f.text_field :phone, class: "input input-bordered w-full", placeholder: "Optional" %>
+      <%= f.text_field :phone, class: "input input-bordered w-full", placeholder: "000-000-0000 x0000", data: { controller: "phone-format" }, autocomplete: "tel" %>
     </div>
   </div>
 
@@ -100,7 +108,7 @@
     </div>
     <div class="form-control">
       <%= f.label :state, class: "text-xs font-medium text-slate-700" %>
-      <%= f.text_field :state, class: "input input-bordered w-full", placeholder: "Optional", maxlength: 2 %>
+      <%= f.text_field :state, class: "input input-bordered w-full", placeholder: "Optional", maxlength: 2, data: { controller: "uppercase" } %>
     </div>
     <div class="form-control">
       <%= f.label :zip_code, class: "text-xs font-medium text-slate-700" %>
