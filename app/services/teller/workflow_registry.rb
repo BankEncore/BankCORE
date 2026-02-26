@@ -33,7 +33,7 @@ module Teller
         label: "Transfer",
         required_fields: [],
         funding_modes: %w[account],
-        ui_sections: [],
+        ui_sections: %w[transfer],
         entry_profile: "transfer",
         amount_input_mode: "manual",
         effective_amount_source: "amount_field",

@@ -30,6 +30,9 @@ module Posting
             errors << "From account reference is required" if params[:primary_account_reference].blank?
             errors << "To account reference is required" if params[:counterparty_account_reference].blank?
           end
+          fee_cents = params[:fee_cents].to_i
+          amount_cents = params[:amount_cents].to_i
+          errors << "Transfer fee cannot exceed transfer amount" if fee_cents.positive? && fee_cents > amount_cents
         when "check_cashing"
           errors << "Party is required" if params[:party_id].blank?
           raw_items = Array(params[:check_items])

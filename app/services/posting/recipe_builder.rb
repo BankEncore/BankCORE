@@ -11,6 +11,7 @@ module Posting
       return check_cashing_metadata if transaction_type == "check_cashing"
       return vault_transfer_metadata if transaction_type == "vault_transfer"
       return draft_metadata if transaction_type == "draft"
+      return transfer_metadata if transaction_type == "transfer"
       return {} unless transaction_type == "deposit"
 
       check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
@@ -74,6 +75,16 @@ module Posting
             id_type: posting_params[:id_type].to_s,
             id_number: posting_params[:id_number].to_s
           }
+        }
+      end
+
+      def transfer_metadata
+        fee_cents = posting_params[:fee_cents].to_i
+        return {} if fee_cents <= 0
+
+        {
+          fee_cents: fee_cents,
+          fee_income_account_reference: transfer_fee_income_account_reference
         }
       end
 
@@ -149,10 +160,14 @@ module Posting
             { side: "credit", account_reference: cash_account_reference, amount_cents: amount_cents }
           ]
         when "transfer"
-          [
+          fee_cents = posting_params[:fee_cents].to_i
+          net_to_counterparty = [ amount_cents - fee_cents, 0 ].max
+          entries = [
             { side: "debit", account_reference: primary_account_reference, amount_cents: amount_cents },
-            { side: "credit", account_reference: counterparty_account_reference, amount_cents: amount_cents }
+            { side: "credit", account_reference: counterparty_account_reference, amount_cents: net_to_counterparty }
           ]
+          entries << { side: "credit", account_reference: transfer_fee_income_account_reference, amount_cents: fee_cents } if fee_cents.positive?
+          entries
         when "vault_transfer"
           source_reference = vault_transfer_source_reference
           destination_reference = vault_transfer_destination_reference
@@ -218,6 +233,10 @@ module Posting
 
       def fee_income_account_reference
         posting_params[:fee_income_account_reference].presence || "income:check_cashing_fee"
+      end
+
+      def transfer_fee_income_account_reference
+        posting_params[:fee_income_account_reference].presence || "income:transfer_fee"
       end
 
       def draft_funding_source

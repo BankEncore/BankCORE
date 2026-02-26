@@ -24,6 +24,9 @@ export default class extends Controller {
     "primaryAccountReference",
     "counterpartyAccountReference",
     "counterpartyRow",
+    "transferSection",
+    "transferFeeCents",
+    "transferFeeIncomeAccountReference",
     "cashAccountReference",
     "cashAccountRow",
     "checkSection",
@@ -202,6 +205,8 @@ export default class extends Controller {
       draftFeeIncomeAccountReference: this.hasDraftFeeIncomeAccountReferenceTarget ? this.draftFeeIncomeAccountReferenceTarget.value : "income:draft_fee",
       draftPayeeName: this.hasDraftPayeeNameTarget ? this.draftPayeeNameTarget.value : "",
       draftInstrumentNumber: this.hasDraftInstrumentNumberTarget ? this.draftInstrumentNumberTarget.value : "",
+      transferAmounts: this.transferAmounts(),
+      transferFeeIncomeAccountReference: this.hasTransferFeeIncomeAccountReferenceTarget ? this.transferFeeIncomeAccountReferenceTarget.value : "income:transfer_fee",
       vaultTransferDetails,
       drawerReference: (this.hasDrawerReferenceValue && this.drawerReferenceValue) ? this.drawerReferenceValue : this.cashAccountReferenceTarget.value,
       checkNumber: this.hasCheckNumberTarget ? this.checkNumberTarget.value : "",
@@ -225,9 +230,11 @@ export default class extends Controller {
     const showDraftSection = workflowHasSectionInConfig(transactionType, "draft", schemaSections)
     const showVaultTransferSection = workflowHasSectionInConfig(transactionType, "vault_transfer", schemaSections)
     const showCheckCashingSection = workflowHasSectionInConfig(transactionType, "check_cashing", schemaSections)
+    const showTransferSection = workflowHasSectionInConfig(transactionType, "transfer", schemaSections)
     const amountInputMode = getAmountInputMode(transactionType, this.workflowSchema)
     const checkCashingAmounts = state.checkCashingAmounts
     const draftAmounts = state.draftAmounts
+    const transferAmounts = state.transferAmounts
     const vaultTransferDetails = state.vaultTransferDetails
 
     if (amountInputMode === "check_cashing_net_payout") {
@@ -260,8 +267,9 @@ export default class extends Controller {
     const hasInvalidCheckRows = this.hasInvalidCheckRows()
     const hasInvalidCheckCashingFields = this.hasInvalidCheckCashingFields(checkCashingAmounts)
     const hasInvalidDraftFields = this.hasInvalidDraftFields(draftAmounts)
+    const hasInvalidTransferFields = this.hasInvalidTransferFields(transferAmounts, totalAmountCents, showTransferSection)
     const hasInvalidVaultTransferFields = this.hasInvalidVaultTransferFields(vaultTransferDetails)
-    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || (requiresSettlementAccount && !hasSettlementAccount) || (requiresParty && !hasParty) || (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) || (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) || hasInvalidCheckRows || hasInvalidCheckCashingFields || hasInvalidDraftFields || hasInvalidVaultTransferFields
+    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || (requiresSettlementAccount && !hasSettlementAccount) || (requiresParty && !hasParty) || (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) || (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) || hasInvalidCheckRows || hasInvalidCheckCashingFields || hasInvalidDraftFields || hasInvalidTransferFields || hasInvalidVaultTransferFields
 
     const entries = buildEntries(transactionType, state)
     const { debitTotal, creditTotal, imbalance, balanced } = computeTotals(entries)
@@ -291,6 +299,7 @@ export default class extends Controller {
       hasInvalidCheckRows,
       hasInvalidCheckCashingFields,
       hasInvalidDraftFields,
+      hasInvalidTransferFields,
       hasInvalidVaultTransferFields,
       balanced
     })
@@ -321,6 +330,9 @@ export default class extends Controller {
     }
     if (this.hasCheckCashingSectionTarget) {
       this.checkCashingSectionTarget.hidden = !showCheckCashingSection
+    }
+    if (this.hasTransferSectionTarget) {
+      this.transferSectionTarget.hidden = !showTransferSection
     }
     this.setDraftFieldState(showDraftSection)
     this.setVaultTransferFieldState(showVaultTransferSection)
@@ -356,7 +368,7 @@ export default class extends Controller {
       this.computedCashBackRowTarget.hidden = cashBackCentsForComputed <= 0
       if (this.hasComputedCashBackSubtotalTarget) this.computedCashBackSubtotalTarget.textContent = this.formatCents(cashBackCentsForComputed)
     }
-    const feeCentsForComputed = showCheckCashingSection ? checkCashingAmounts.feeCents : (showDraftSection ? draftAmounts.draftFeeCents : 0)
+    const feeCentsForComputed = showCheckCashingSection ? checkCashingAmounts.feeCents : (showDraftSection ? draftAmounts.draftFeeCents : (showTransferSection ? transferAmounts.feeCents : 0))
     if (this.hasComputedFeeSubtotalTarget) this.computedFeeSubtotalTarget.textContent = feeCentsForComputed > 0 ? `-${this.formatCents(feeCentsForComputed)}` : this.formatCents(0)
     if (this.hasComputedNetTotalTarget) this.computedNetTotalTarget.textContent = this.formatCents(totalAmountCents)
     if (this.hasDebitTotalTarget) this.debitTotalTarget.textContent = this.formatCents(debitTotal)
@@ -899,6 +911,11 @@ export default class extends Controller {
     }
   }
 
+  transferAmounts() {
+    const feeCents = this.hasTransferFeeCentsTarget ? Math.max(parseInt(this.transferFeeCentsTarget.value || "0", 10), 0) : 0
+    return { feeCents }
+  }
+
   draftAmounts() {
     const draftAmountCents = this.hasDraftAmountCentsTarget ? Math.max(parseInt(this.draftAmountCentsTarget.value || "0", 10), 0) : 0
     const draftFeeCents = this.hasDraftFeeCentsTarget ? Math.max(parseInt(this.draftFeeCentsTarget.value || "0", 10), 0) : 0
@@ -1061,6 +1078,15 @@ export default class extends Controller {
 
         field.disabled = !enabled
       })
+  }
+
+  hasInvalidTransferFields(transferAmounts, totalAmountCents, showTransferSection) {
+    if (!showTransferSection) {
+      return false
+    }
+
+    const feeCents = transferAmounts?.feeCents ?? 0
+    return feeCents < 0 || feeCents > totalAmountCents
   }
 
   hasInvalidCheckCashingFields({ checkAmountCents, feeCents, netCashPayoutCents }) {

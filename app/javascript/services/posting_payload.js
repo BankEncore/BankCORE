@@ -29,6 +29,9 @@ export function appendEntriesAndTypePayload(formData, transactionType, state, sc
   if (transactionType === "check_cashing") {
     appendCheckCashingPayload(formData, state)
   }
+  if (transactionType === "transfer") {
+    appendTransferPayload(formData, state)
+  }
 }
 
 function appendCheckItems(formData, state) {
@@ -74,4 +77,10 @@ function appendCheckCashingPayload(formData, state) {
   formData.set("party_id", (state.partyId ?? "").trim())
   formData.set("id_type", (state.idType ?? "").trim())
   formData.set("id_number", (state.idNumber ?? "").trim())
+}
+
+function appendTransferPayload(formData, state) {
+  const amounts = state.transferAmounts ?? {}
+  formData.set("fee_cents", String(amounts.feeCents ?? 0))
+  formData.set("fee_income_account_reference", (state.transferFeeIncomeAccountReference ?? "income:transfer_fee").trim())
 }

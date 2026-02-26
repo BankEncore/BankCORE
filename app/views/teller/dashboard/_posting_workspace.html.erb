@@ -101,6 +101,23 @@
               data: { posting_form_target: "cashAccountReference" } %>
           <% end %>
 
+          <section data-posting-form-target="transferSection">
+            <div class="divider my-3"></div>
+            <div class="font-medium">Transfer Details</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+              <p class="form-control">
+                <%= form.label :transfer_fee_cents, "Fee", class: "text-xs font-medium text-slate-700" %><br>
+                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                  <%= form.hidden_field :transfer_fee_cents, value: 0, data: { posting_form_target: "transferFeeCents", currency_input_target: "hiddenInput" } %>
+                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Transfer Fee" id="<%= form.field_id(:transfer_fee_cents) %>" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" />
+                </div>
+              </p>
+            </div>
+            <%= form.hidden_field :transfer_fee_income_account_reference,
+              value: "income:transfer_fee",
+              data: { posting_form_target: "transferFeeIncomeAccountReference" } %>
+          </section>
+
           <section data-posting-form-target="checkSection" <%= "hidden" unless show_checks %>>
             <div class="divider my-3"></div>
             <div class="flex items-center justify-between">
@@ -152,7 +169,8 @@
             </template>
           </section>
 
-          <p class="form-control" data-posting-form-target="cashBackRow" hidden>
+          <% if flow_type == "deposit" || local_assigns.fetch(:show_transaction_type, true) %>
+          <p class="form-control" data-posting-form-target="cashBackRow" <%= "hidden" unless flow_type == "deposit" %>>
             <%= form.label :cash_back_cents, "Cash Back", class: "text-xs font-medium text-slate-700" %><br>
             <div data-controller="currency-input" data-action="input->posting-form#recalculate">
               <%= form.hidden_field :cash_back_cents, value: 0, data: { posting_form_target: "cashBackCents", currency_input_target: "hiddenInput" } %>
@@ -160,6 +178,7 @@
             </div>
             <span class="text-xs text-slate-600 mt-1 block">Credit drawer, deduct from deposit. Max: total deposit (cash + checks).</span>
           </p>
+          <% end %>
 
           <div class="mt-4 rounded-lg border border-base-300 bg-base-200 p-3">
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -194,7 +213,8 @@
             </div>
           </div>
 
-          <section data-posting-form-target="checkCashingSection" <%= "hidden" unless show_check_cashing %>>
+          <% if show_check_cashing %>
+          <section data-posting-form-target="checkCashingSection">
             <div class="divider my-3"></div>
             <div class="font-medium">Check Cashing Details</div>
 
@@ -237,6 +257,7 @@
               value: "income:check_cashing_fee",
               data: { posting_form_target: "feeIncomeAccountReference" } %>
           </section>
+          <% end %>
 
           <section data-posting-form-target="draftSection" <%= "hidden" unless show_draft %>>
             <div class="divider my-3"></div>

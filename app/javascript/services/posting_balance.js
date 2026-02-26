@@ -72,10 +72,17 @@ export function buildEntries(transactionType, state) {
   }
 
   if (entryProfile === "transfer") {
-    return [
+    const feeCents = state.transferAmounts?.feeCents ?? 0
+    const transferFeeIncomeAccountReference = (state.transferFeeIncomeAccountReference ?? "income:transfer_fee").trim()
+    const netToCounterparty = Math.max(amountCents - feeCents, 0)
+    const entries = [
       { side: "debit", account_reference: primaryAccountReference, amount_cents: amountCents },
-      { side: "credit", account_reference: counterpartyAccountReference, amount_cents: amountCents }
+      { side: "credit", account_reference: counterpartyAccountReference, amount_cents: netToCounterparty }
     ]
+    if (feeCents > 0 && transferFeeIncomeAccountReference) {
+      entries.push({ side: "credit", account_reference: transferFeeIncomeAccountReference, amount_cents: feeCents })
+    }
+    return entries
   }
 
   if (entryProfile === "vault_transfer") {
