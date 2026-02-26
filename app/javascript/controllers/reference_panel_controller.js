@@ -2,11 +2,14 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = {
-    accountReferenceUrl: String
+    accountReferenceUrl: String,
+    advisoriesUrl: String
   }
 
   connect() {
     this.referenceSnapshots = {}
+    this.advisoriesFetchTimeout = null
+    this.lastAdvisoriesReference = ""
   }
 
   refresh(event) {
@@ -16,7 +19,8 @@ export default class extends Controller {
     }
 
     const transactionType = detail.transactionType
-    const primaryReference = detail.primaryReference
+    const primaryReference = (detail.primaryReference ?? "").trim()
+    const partyId = detail.partyId ?? detail.party_id
     const counterpartyReference = detail.counterpartyReference
     const cashReference = detail.cashReference
     const requestId = detail.requestId
@@ -26,7 +30,7 @@ export default class extends Controller {
     const readyToPost = detail.readyToPost
     const blockedReason = detail.blockedReason
 
-    this.setText("summaryTransactionType", this.titleize(transactionType || "N/A"))
+    this.setText("summaryTransactionType", this.titleize(detail.transactionType || "N/A"))
     this.setText("primaryReferenceValue", primaryReference || "N/A")
     this.setText("counterpartyReferenceValue", counterpartyReference || "N/A")
     this.setText("cashReferenceValue", cashReference || "N/A")
@@ -35,6 +39,8 @@ export default class extends Controller {
     this.setHidden("counterpartyReferencePanel", transactionType !== "transfer")
     this.renderCashFlowSummary(transactionType, cashAmountCents || 0, cashImpactCents || 0, projectedDrawerCents || 0)
     this.renderReadiness(readyToPost, blockedReason)
+
+    this.fetchAdvisoriesIfNeeded(primaryReference, partyId)
   }
 
   async populateReference(kind, reference) {
@@ -133,6 +139,84 @@ export default class extends Controller {
     this.setText("projectedDrawer", this.formatCents(projectedDrawerCents))
   }
 
+  fetchAdvisoriesIfNeeded(primaryReference, partyId) {
+    if (!this.hasAdvisoriesUrlValue) return
+    if (!primaryReference && !partyId) {
+      this.lastAdvisoriesReference = ""
+      this.renderAdvisories([], null, "empty")
+      return
+    }
+
+    const key = primaryReference || `party:${partyId}`
+    if (key === this.lastAdvisoriesReference) return
+    this.lastAdvisoriesReference = key
+
+    if (this.advisoriesFetchTimeout) clearTimeout(this.advisoriesFetchTimeout)
+    this.advisoriesFetchTimeout = setTimeout(() => {
+      this.advisoriesFetchTimeout = null
+      this.fetchAdvisories(primaryReference, partyId)
+    }, 200)
+  }
+
+  async fetchAdvisories(primaryReference, partyId) {
+    const url = new URL(this.advisoriesUrlValue, window.location.origin)
+    if (partyId) {
+      url.searchParams.set("party_id", partyId)
+    } else if (primaryReference && !primaryReference.includes(":")) {
+      url.searchParams.set("account_reference", primaryReference)
+    } else {
+      this.renderAdvisories([], null, "fetched")
+      return
+    }
+
+    try {
+      const response = await fetch(url.toString(), { headers: { Accept: "application/json" } })
+      const body = await response.json()
+      if (response.ok && body.ok) {
+        const displayed = (body.advisories || []).filter((a) =>
+          ["notice", "alert", "requires_acknowledgment", "restriction"].includes(a.severity)
+        )
+        this.renderAdvisories(displayed.slice(0, 5), body.record_path, "fetched")
+      } else {
+        this.renderAdvisories([], null, "fetched")
+      }
+    } catch {
+      this.renderAdvisories([], null, "fetched")
+    }
+  }
+
+  renderAdvisories(advisories, recordPath, state) {
+    const placeholder = this.findPostingTarget("advisoriesPlaceholder")
+    const list = this.findPostingTarget("advisoriesList")
+    const viewAllLink = this.findPostingTarget("advisoriesViewAllLink")
+
+    if (!placeholder || !list) return
+
+    if (advisories.length === 0) {
+      placeholder.hidden = false
+      placeholder.textContent = state === "empty" ? "Select an account to view advisories." : "No advisories."
+      list.hidden = true
+      if (viewAllLink) viewAllLink.hidden = true
+      return
+    }
+
+    placeholder.hidden = true
+    list.hidden = false
+    list.innerHTML = advisories
+      .map((a) => {
+        const cls = this.advisorySeverityClass(a.severity)
+        return `<div class="${cls}"><span>${this.escapeHtml(a.title)}${a.body ? ": " + this.escapeHtml(a.body) : ""}</span></div>`
+      })
+      .join("")
+
+    if (viewAllLink && recordPath) {
+      viewAllLink.href = recordPath
+      viewAllLink.hidden = false
+    } else if (viewAllLink) {
+      viewAllLink.hidden = true
+    }
+  }
+
   renderReadiness(readyToPost, blockedReason) {
     const badge = this.findPostingTarget("summaryReadinessBadge")
     this.setText("summaryReadinessBadge", readyToPost ? "Ready to Post" : "Blocked")
@@ -200,5 +284,17 @@ export default class extends Controller {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#39;")
+  }
+
+  advisorySeverityClass(severity) {
+    switch (severity) {
+      case "alert":
+      case "requires_acknowledgment":
+        return "alert alert-warning text-sm"
+      case "restriction":
+        return "alert alert-error text-sm"
+      default:
+        return "text-sm opacity-75"
+    }
   }
 }

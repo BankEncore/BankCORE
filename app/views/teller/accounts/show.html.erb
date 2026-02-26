@@ -18,6 +18,19 @@
   <p class="text-xs text-slate-600"><%= @account.account_type.titleize %> • <%= @account.branch.name %> • <%= @account.status %></p>
 </div>
 
+<div role="tablist" class="tabs tabs-boxed mb-4 no-print">
+  <%= link_to "Details", teller_account_path(@account), role: "tab", class: "tab #{params[:tab] != 'advisories' ? 'tab-active' : ''}" %>
+  <%= link_to "Advisories", teller_account_path(@account, tab: "advisories"), role: "tab", class: "tab #{params[:tab] == 'advisories' ? 'tab-active' : ''}" %>
+</div>
+
+<% if params[:tab] == "advisories" %>
+  <%= render "teller/shared/advisories_tab",
+    advisories: @advisories,
+    scope_record: @account,
+    advisories_path: teller_account_advisories_path(@account),
+    new_advisory_path: new_teller_account_advisory_path(@account),
+    can_create: policy([ :teller, Advisory ]).create? %>
+<% else %>
 <% primary = @account.primary_owner %>
 <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
   <section class="card receipt-section bg-base-100 border border-base-300 md:col-span-5">
@@ -157,3 +170,4 @@
   sections: [:history],
   history_form_url: teller_account_path(@account),
   history_filter_params: params.permit(:date_from, :date_to, :amount_min, :amount_max, :sort, :sort_dir, transaction_types: []).to_h %>
+<% end %>

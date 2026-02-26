@@ -42,6 +42,10 @@ export default class extends Controller {
     this.applyState("editing")
   }
 
+  handleAdvisoryCancelled() {
+    this.applyState("editing")
+  }
+
   handlePostingStarted() {
     this.applyState("posting")
   }

@@ -139,6 +139,7 @@ export default class extends Controller {
     validateUrl: String,
     accountReferenceUrl: String,
     accountHistoryUrl: String,
+    advisoriesUrl: String,
     workflowSchemaUrl: String,
     receiptUrlTemplate: String,
     drawerReference: String
@@ -440,6 +441,7 @@ export default class extends Controller {
         primaryReference: this.primaryAccountReferenceTarget.value.trim(),
         counterpartyReference: this.counterpartyAccountReferenceTarget.value.trim(),
         cashReference: this.cashAccountReferenceTarget.value.trim(),
+        partyId: this.hasPartyIdTarget ? this.partyIdTarget.value.trim() : "",
         requestId: this.requestIdTarget.value,
         cashAmountCents: displayedCashAmount,
         checkAmountCents: checkCashingAmounts.checkAmountCents,
@@ -513,12 +515,12 @@ export default class extends Controller {
     }
 
     this.ensureRequestId()
-    const form = event.target
+    const form = event?.target || this.element.querySelector("#posting-form")
     const formData = new FormData(form)
     const submittedRequestId = this.requestIdTarget.value || this.generateRequestId()
+    const state = this.getState()
     formData.set("request_id", submittedRequestId)
     formData.set("amount_cents", this.effectiveAmountCents().toString())
-    const state = this.getState()
     if (state.transactionType === "draft") {
       const draftAccountCents = state.draftAmounts?.draftAccountCents ?? 0
       let primaryRef = state.primaryAccountReference?.trim() ?? ""
@@ -526,6 +528,27 @@ export default class extends Controller {
       formData.set("primary_account_reference", primaryRef)
     }
     this.appendEntries(formData)
+
+    const advisoryCheck = await this.checkAdvisories(state)
+    if (!advisoryCheck.ok) {
+      this.setHeaderState("Blocked")
+      this.renderMessage(advisoryCheck.error || "Posting blocked.", "error")
+      return
+    }
+    if (advisoryCheck.requiresAcknowledgment) {
+      this.element.dispatchEvent(new CustomEvent("tx:advisory-required", {
+        bubbles: true,
+        detail: {
+          advisory: advisoryCheck.advisory,
+          formData,
+          url: form.action,
+          requestId: submittedRequestId
+        }
+      }))
+      this.setHeaderState("Advisory Required")
+      this.renderMessage("Acknowledge the advisory to continue.", "warning")
+      return
+    }
 
     try {
       this.setHeaderState("Posting")
@@ -616,6 +639,83 @@ export default class extends Controller {
         }
       }))
     })
+  }
+
+  async checkAdvisories(state) {
+    if (!this.hasAdvisoriesUrlValue) {
+      return { ok: true }
+    }
+
+    const primaryRef = (state.primaryAccountReference ?? "").trim()
+    const partyId = (state.partyId ?? "").trim()
+    if (!primaryRef && !partyId) {
+      return { ok: true }
+    }
+
+    const url = new URL(this.advisoriesUrlValue, window.location.origin)
+    if (partyId) {
+      url.searchParams.set("party_id", partyId)
+    } else if (primaryRef && !primaryRef.includes(":")) {
+      url.searchParams.set("account_reference", primaryRef)
+    } else {
+      return { ok: true }
+    }
+
+    try {
+      const response = await fetch(url.toString(), { headers: { Accept: "application/json" } })
+      const body = await response.json()
+      if (!response.ok || !body.ok) {
+        return { ok: false, error: "Unable to verify advisories." }
+      }
+
+      const advisories = body.advisories || []
+      const restriction = advisories.find((a) => a.severity === "restriction")
+      if (restriction) {
+        return { ok: false, error: "Transaction restricted: " + (restriction.title || "An advisory restricts this transaction.") }
+      }
+
+      const unacked = advisories.find((a) => a.severity === "requires_acknowledgment" && !a.acknowledged)
+      if (unacked) {
+        return { ok: true, requiresAcknowledgment: true, advisory: unacked }
+      }
+
+      return { ok: true }
+    } catch {
+      return { ok: false, error: "Unable to verify advisories." }
+    }
+  }
+
+  async handlePostAfterAdvisory(event) {
+    const { formData, url, requestId } = event.detail || {}
+    if (!formData || !url) return
+
+    this.setHeaderState("Posting")
+    this.element.dispatchEvent(new CustomEvent("tx:posting-started", {
+      bubbles: true,
+      detail: { requestId, transactionType: this.transactionTypeTarget.value }
+    }))
+
+    const result = await this.requestPosting({ url, formData, requestId })
+    if (result.ok) {
+      this.clearTransactionFormAfterPost()
+      this.renderMessage(`${this.transactionTypeLabel()} posted.`, "success")
+      this.showPostSuccessModal({
+        requestId: result.requestId,
+        postingBatchId: result.postingBatchId,
+        tellerTransactionId: result.tellerTransactionId
+      })
+      this.postedLocked = true
+      this.setSubmitButtonsDisabled(true)
+      this.setHeaderState("Posted")
+    } else {
+      this.setHeaderState("Blocked")
+      this.renderMessage(result.error || "Posting failed.", "error")
+    }
+  }
+
+  handleAdvisoryError(event) {
+    this.setHeaderState("Editing")
+    this.renderMessage(event.detail?.message || "Advisory acknowledgment failed.", "error")
   }
 
   requestPosting({ url, formData, requestId }) {

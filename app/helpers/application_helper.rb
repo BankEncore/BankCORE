@@ -65,6 +65,28 @@ module ApplicationHelper
     mask_last_four(account_number)
   end
 
+  def advisory_severity_label_for_enum(enum_key)
+    { "info" => "Info", "notice" => "Notice", "alert" => "Alert",
+      "requires_acknowledgment" => "Requires acknowledgment", "restriction" => "Restriction" }[enum_key.to_s] || enum_key.to_s.titleize
+  end
+
+  def advisory_severity_label(advisory)
+    return "—" unless advisory.respond_to?(:severity)
+    advisory_severity_label_for_enum(advisory.severity)
+  end
+
+  def advisory_severity_badge(advisory)
+    return "ghost" unless advisory.respond_to?(:severity)
+    case advisory.severity.to_s
+    when "info", "0" then "info"
+    when "notice", "1" then "info"
+    when "alert", "2" then "warning"
+    when "requires_acknowledgment", "3" then "warning"
+    when "restriction", "4" then "error"
+    else "ghost"
+    end
+  end
+
   # Format phone as 000-000-0000 x0000 (extension optional)
   def format_phone(phone)
     return "—" if phone.blank?

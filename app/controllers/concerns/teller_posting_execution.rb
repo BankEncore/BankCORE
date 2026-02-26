@@ -15,6 +15,19 @@ module TellerPostingExecution
         return
       end
 
+      advisory_check = AdvisoryService.check_posting_allowed(
+        primary_account_reference: request_params[:primary_account_reference],
+        party_id: request_params[:party_id],
+        acknowledged_advisory_ids: params[:acknowledged_advisory_ids]
+      )
+      unless advisory_check[:allowed]
+        status = advisory_check[:status] || :unprocessable_entity
+        error = advisory_check[:error] || "Posting not allowed"
+        error += ": #{advisory_check[:advisory]&.title}" if advisory_check[:advisory]&.title.present?
+        render json: { ok: false, error: error }, status: status
+        return
+      end
+
       approved_by_user_id = nil
       if approval_required?(request_params)
         token = request_params[:approval_token].to_s
@@ -91,6 +104,7 @@ module TellerPostingExecution
         :draft_instrument_number,
         :draft_liability_account_reference,
         :draft_fee_income_account_reference,
+        acknowledged_advisory_ids: [],
         check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :check_type, :hold_reason, :hold_until ],
         entries: [ :side, :account_reference, :amount_cents ]
       )

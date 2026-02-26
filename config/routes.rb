@@ -10,9 +10,11 @@ Rails.application.routes.draw do
       member do
         get :accounts
       end
+      resources :advisories, only: [ :index, :new, :create, :edit, :update ], controller: "advisories", path: "advisories"
     end
     resources :accounts, only: [ :index, :show, :new, :create, :edit, :update ] do
       resources :account_owners, only: [ :create, :destroy, :update ], path: "owners"
+      resources :advisories, only: [ :index, :new, :create, :edit, :update ], controller: "advisories", path: "advisories"
     end
     resources :deposits, only: [ :new, :create ]
     resources :withdrawals, only: [ :new, :create ]
@@ -29,6 +31,8 @@ Rails.application.routes.draw do
     get "transactions/check_cashing", to: "transaction_pages#check_cashing", as: :check_cashing_transaction
     get "transactions/search", to: "transaction_searches#index", as: :transaction_search
     get "account_reference", to: "account_references#show", as: :account_reference
+    get "advisories/for_entity", to: "advisories#for_entity", as: :advisories_for_entity
+    post "advisories/:id/acknowledge", to: "advisories#acknowledge", as: :acknowledge_advisory
     get "account_history", to: "account_references#history", as: :account_history
     get "workflow_schema", to: "workflow_schemas#show", as: :workflow_schema
     post "transactions/validate", to: "transactions#validate", as: :validate_transaction
