@@ -67,7 +67,7 @@
 
             <% unless flow_type == "check_cashing" %>
               <div class="form-control flex-1 min-w-[8rem] md:max-w-[12rem]" data-posting-form-target="cashAmountRow">
-                <%= form.label :amount_cents, "Cash In", class: "text-xs font-medium text-slate-700 block" %>
+                <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700 block" %>
                 <div data-controller="currency-input" data-action="input->posting-form#recalculate">
                   <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
                   <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />

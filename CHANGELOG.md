@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-02-26 (61156)
+### Teller transaction workflow enhancements
+
+- **All Transactions:** Move primary account field to top of form
+- **All Transactions:** Align Primary Account and Cash In Amount to single row.
+- **All Transactions:** Relabeled "Cash Amount" to "Cash In"
+- **All Transactions:** Align 'Post' and 'Cancel' buttons to top, right corner
+- **All Transactions:** Removed redundant "Transaction Entry" title
+- **Transfers:** Add fee field and calculation
+- **Vault Transfers:** Hide primary account field
+- **Check Cashing:** Party selection as search field
+- **Check Cashing:** Prefill ID Type and ID Number when available in Party record
+- **Bank Draft:** Allow payment by account transfer, cash, and/or check
+- **Bank Draft:** Primary Account only required if paid by account trasfer
+
 ## 2026-02-22
 
 ### Commit 27532c2
