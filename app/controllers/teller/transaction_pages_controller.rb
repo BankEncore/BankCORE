@@ -64,7 +64,10 @@ module Teller
         else
           teller_posting_path
         end
-        @parties = Party.where(is_active: true, party_kind: "individual").order(display_name: :asc).limit(50) if transaction_type == "check_cashing"
+        if transaction_type == "check_cashing"
+          @parties = Party.where(is_active: true, party_kind: "individual").order(display_name: :asc).limit(50)
+          @selected_party = Party.find_by(id: params[:party_id]) if params[:party_id].present?
+        end
         render :show
       end
   end

@@ -82,6 +82,29 @@ module Teller
       assert_select "h2", /Show Me/
     end
 
+    test "search returns parties with display_name relationship address phone" do
+      party = Party.create!(
+        party_kind: "individual",
+        relationship_kind: "customer",
+        street_address: "123 Main St",
+        city: "Springfield",
+        state: "IL",
+        zip_code: "62701",
+        phone: "555-123-4567"
+      )
+      party.create_party_individual!(first_name: "Search", last_name: "Test")
+
+      get search_teller_parties_path, params: { q: "Search" }
+
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal 1, body.size
+      assert_equal "Search Test", body[0]["display_name"]
+      assert_equal "customer", body[0]["relationship_kind"]
+      assert_includes body[0]["address"], "123 Main St"
+      assert_equal "555-123-4567", body[0]["phone"]
+    end
+
     test "accounts returns party accounts as json" do
       party = Party.create!(party_kind: "individual", relationship_kind: "customer")
       party.create_party_individual!(first_name: "Acct", last_name: "Owner")

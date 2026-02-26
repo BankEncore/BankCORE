@@ -1,21 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [
-    "searchInput",
-    "resultsList",
-    "partyIdInput",
-    "clearButton"
-  ]
+  static targets = ["searchInput", "resultsList", "hiddenInput"]
 
   static values = {
-    searchUrl: String,
-    idDetailsUrlTemplate: String
+    searchUrl: String
   }
 
   connect() {
     this.searchTimeout = null
-    this.selectedParty = null
     this.element.addEventListener("tx:form-reset", this.handleFormReset.bind(this))
   }
 
@@ -25,9 +18,13 @@ export default class extends Controller {
   }
 
   handleFormReset() {
-    this.selectedParty = null
     this.hideResults()
-    this.clearSelection()
+    if (this.hasHiddenInputTarget) {
+      this.hiddenInputTarget.value = ""
+    }
+    if (this.hasSearchInputTarget) {
+      this.searchInputTarget.value = ""
+    }
   }
 
   search(event) {
@@ -35,11 +32,10 @@ export default class extends Controller {
     if (this.searchTimeout) clearTimeout(this.searchTimeout)
     if (q.length < 1) {
       this.hideResults()
-      if (!this.selectedParty) {
-        this.searchInputTarget.placeholder = "Search by name, phone, or city/state"
-      }
+      this.clearSelection()
       return
     }
+    if (this.hasHiddenInputTarget) this.hiddenInputTarget.value = ""
     this.searchTimeout = setTimeout(() => this.fetchSearch(q), 200)
   }
 
@@ -54,7 +50,7 @@ export default class extends Controller {
       })
       if (!response.ok) return
       const parties = await response.json()
-      this.renderResults(Array.isArray(parties) ? parties : parties.parties || [])
+      this.renderResults(parties)
     } catch {
       this.hideResults()
     }
@@ -64,72 +60,61 @@ export default class extends Controller {
     if (!this.hasResultsListTarget) return
     const list = this.resultsListTarget
     list.innerHTML = ""
-    list.hidden = false
     if (parties.length === 0) {
       const empty = document.createElement("div")
       empty.className = "px-3 py-2 text-sm text-slate-500"
       empty.textContent = "No parties found"
       list.appendChild(empty)
-      return
+    } else {
+      parties.forEach((p) => {
+        const item = document.createElement("button")
+        item.type = "button"
+        item.className = "block w-full text-left px-3 py-2 text-sm hover:bg-base-200 rounded border-b border-base-200 last:border-b-0"
+        item.dataset.partyId = p.id
+        item.innerHTML = this.formatPartyResult(p)
+        item.addEventListener("click", () => this.selectParty(p))
+        list.appendChild(item)
+      })
     }
-    parties.forEach((p) => {
-      const item = document.createElement("button")
-      item.type = "button"
-      item.className = "block w-full text-left px-3 py-2 text-sm hover:bg-base-200 rounded"
-      const parts = [ p.display_name || `Party #${p.id}` ]
-      if (p.phone) parts.push(p.phone)
-      if (p.city || p.state) parts.push([ p.city, p.state ].filter(Boolean).join(", "))
-      item.textContent = parts.join(" · ")
-      item.dataset.partyId = p.id
-      item.dataset.partyName = p.display_name || `Party #${p.id}`
-      item.addEventListener("click", () => this.selectParty(p))
-      list.appendChild(item)
-    })
+    list.hidden = false
   }
 
-  async selectParty(party) {
-    this.selectedParty = party
-    const name = party.display_name || `Party #${party.id}`
-    this.searchInputTarget.value = name
-    this.searchInputTarget.readOnly = true
+  formatPartyResult(p) {
+    const relationship = (p.relationship_kind || "").replace("_", " ")
+    const parts = []
+
+    parts.push(`<div class="font-medium">${this.escapeHtml(p.display_name)}</div>`)
+    if (relationship) {
+      parts.push(`<div class="text-xs text-slate-600">${this.escapeHtml(relationship)}</div>`)
+    }
+    if (p.address) {
+      parts.push(`<div class="text-xs text-slate-600">${this.escapeHtml(p.address)}</div>`)
+    }
+    if (p.phone) {
+      parts.push(`<div class="text-xs text-slate-600">${this.escapeHtml(p.phone)}</div>`)
+    }
+
+    return parts.join("")
+  }
+
+  escapeHtml(str) {
+    const div = document.createElement("div")
+    div.textContent = str
+    return div.innerHTML
+  }
+
+  selectParty(p) {
+    if (this.hasHiddenInputTarget) {
+      this.hiddenInputTarget.value = String(p.id)
+    }
+    this.searchInputTarget.value = p.display_name || `Party #${p.id}`
     this.hideResults()
-    if (this.hasPartyIdInputTarget) {
-      this.partyIdInputTarget.value = String(party.id)
-    }
-    if (this.hasClearButtonTarget) {
-      this.clearButtonTarget.hidden = false
-    }
-    if (this.hasIdDetailsUrlTemplateValue && this.idDetailsUrlTemplateValue) {
-      try {
-        const url = this.idDetailsUrlTemplateValue.replace("__ID__", String(party.id))
-        const response = await fetch(url, { headers: { Accept: "application/json" }, credentials: "same-origin" })
-        if (response.ok) {
-          const details = await response.json()
-          this.element.dispatchEvent(new CustomEvent("party:id-details", { bubbles: true, detail: details }))
-        } else {
-          this.element.dispatchEvent(new CustomEvent("party:id-details", { bubbles: true, detail: {} }))
-        }
-      } catch {
-        this.element.dispatchEvent(new CustomEvent("party:id-details", { bubbles: true, detail: {} }))
-      }
-    }
     this.dispatchRecalculate()
   }
 
   clearSelection() {
-    this.selectedParty = null
-    this.searchInputTarget.value = ""
-    this.searchInputTarget.readOnly = false
-    this.searchInputTarget.placeholder = "Search by name, phone, or city/state"
-    if (this.hasPartyIdInputTarget) this.partyIdInputTarget.value = ""
-    if (this.hasClearButtonTarget) this.clearButtonTarget.hidden = true
-    this.element.dispatchEvent(new CustomEvent("party:id-details", { bubbles: true, detail: {} }))
-    this.dispatchRecalculate()
-  }
-
-  onInput() {
-    if (this.selectedParty) {
-      this.clearSelection()
+    if (this.hasHiddenInputTarget) {
+      this.hiddenInputTarget.value = ""
     }
     this.dispatchRecalculate()
   }
