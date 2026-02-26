@@ -38,14 +38,32 @@
 }
 
 .ui-kv-value {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-sans, 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif);
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
   color: var(--tw-text-opacity, #111827);
 }
 
-.ui-money {
-  font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+.ui-kv-value-mono {
+  font-family: var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace);
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--tw-text-opacity, #16a34a);
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
+
+.ui-kv-item {
+  display: grid;
+  grid-template-columns: 10rem 1fr;
+  column-gap: 0.75rem;
+  align-items: baseline;
+}
+
+.ui-money {
+  font-family: var(--font-sans, 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-weight: 600;
+  color: var(--tw-text-opacity, #111827); /* neutral */
+}
+
+.ui-delta-pos { color: var(--tw-text-opacity, #16a34a); } /* green */
+.ui-delta-neg { color: var(--tw-text-opacity, #dc2626); } /* red */
