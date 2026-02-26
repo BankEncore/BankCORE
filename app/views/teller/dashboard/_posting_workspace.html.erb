@@ -19,11 +19,12 @@
         <div class="card-body">
           <div class="flex items-start justify-between gap-3">
             <div>
+              <!--
               <h2 class="card-title text-base">Transaction Entry</h2>
               <p class="text-xs text-slate-600 mt-1">Account reference, cash amount, checks, and totals.</p>
+              -->
             </div>
           </div>
-          <div class="divider my-3"></div>
           <% if local_assigns.fetch(:show_transaction_type, true) %>
             <p class="form-control">
               <%= form.label :transaction_type, "Transaction Type", class: "text-xs font-medium text-slate-700" %><br>
@@ -38,46 +39,50 @@
               data: { posting_form_target: "transactionType" } %>
             <p><strong>Transaction Type:</strong> <%= flow_type.titleize %></p>
           <% end %>
+          <div class="divider my-3"></div>
+         
 
-          <div class="form-control overflow-visible" data-posting-form-target="primaryAccountRow" <%= "hidden" if flow_type == "check_cashing" || flow_type == "vault_transfer" %>>
-            <%= form.label :primary_account_reference, "Primary Account", class: "text-xs font-medium text-slate-700" %><br>
-            <div class="relative overflow-visible" data-controller="primary-account-search"
-                 data-primary-account-search-search-url-value="<%= teller_transaction_search_path %>"
-                 data-primary-account-search-party-accounts-url-template-value="<%= accounts_teller_party_path('__ID__') %>">
-              <%= form.text_field :primary_account_reference,
-                data: {
-                  posting_form_target: "primaryAccountReference",
-                  primary_account_search_target: "searchInput",
-                  action: "input->posting-form#recalculate input->primary-account-search#search input->primary-account-search#onInputFreeTyping"
-                },
-                required: true,
-                class: "input input-bordered w-full",
-                placeholder: "Search party or account #, or type account number",
-                autocomplete: "off" %>
-              <div data-primary-account-search-target="resultsList"
-                   class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
-                   hidden>
+          <div class="flex flex-col md:flex-row gap-3">
+            <div class="form-control overflow-visible flex-1 min-w-0" data-posting-form-target="primaryAccountRow" <%= "hidden" if flow_type == "check_cashing" || flow_type == "vault_transfer" %>>
+              <%= form.label :primary_account_reference, "Primary Account", class: "text-xs font-medium text-slate-700 block" %>
+              <div class="relative overflow-visible" data-controller="primary-account-search"
+                   data-primary-account-search-search-url-value="<%= teller_transaction_search_path %>"
+                   data-primary-account-search-party-accounts-url-template-value="<%= accounts_teller_party_path('__ID__') %>">
+                <%= form.text_field :primary_account_reference,
+                  data: {
+                    posting_form_target: "primaryAccountReference",
+                    primary_account_search_target: "searchInput",
+                    action: "input->posting-form#recalculate input->primary-account-search#search input->primary-account-search#onInputFreeTyping"
+                  },
+                  required: true,
+                  class: "input input-bordered w-full",
+                  placeholder: "Search party or account #, or type account number",
+                  autocomplete: "off" %>
+                <div data-primary-account-search-target="resultsList"
+                     class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
+                     hidden>
+                </div>
+                <div data-primary-account-search-target="partyAccountsRow" class="mt-2" hidden>
+                  <label class="text-xs font-medium text-slate-700">Select account for <span data-primary-account-search-target="partyName"></span></label>
+                  <select data-primary-account-search-target="accountSelect"
+                          data-action="change->primary-account-search#selectAccountFromDropdown"
+                          class="select select-bordered w-full mt-1">
+                  </select>
+                </div>
               </div>
-              <div data-primary-account-search-target="partyAccountsRow" class="mt-2" hidden>
-                <label class="text-xs font-medium text-slate-700">Select account for <span data-primary-account-search-target="partyName"></span></label>
-                <select data-primary-account-search-target="accountSelect"
-                        data-action="change->primary-account-search#selectAccountFromDropdown"
-                        class="select select-bordered w-full mt-1">
-                </select>
-              </div>
+              <!-- <span class="text-xs text-slate-600 mt-1 block">Search by name or account #, or enter account number directly.</span><-->
             </div>
-            <span class="text-xs text-slate-600 mt-1 block">Search by name or account #, or enter account number directly.</span>
-          </div>
 
-          <% unless flow_type == "check_cashing" %>
-            <p class="form-control" data-posting-form-target="cashAmountRow">
-              <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700" %><br>
-              <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
-                <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
+            <% unless flow_type == "check_cashing" %>
+              <div class="form-control flex-1 min-w-[8rem] md:max-w-[12rem]" data-posting-form-target="cashAmountRow">
+                <%= form.label :amount_cents, "Cash In", class: "text-xs font-medium text-slate-700 block" %>
+                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                  <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
+                  <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
+                </div>
               </div>
-            </p>
-          <% end %>
+            <% end %>
+          </div>
           <% if flow_type == "check_cashing" %>
             <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents" } %>
           <% end %>
@@ -121,7 +126,7 @@
           <section data-posting-form-target="checkSection" <%= "hidden" unless show_checks %>>
             <div class="divider my-3"></div>
             <div class="flex items-center justify-between">
-              <div class="font-medium">Checks</div>
+              <div class="font-medium">Checks In</div>
               <button type="button" class="btn btn-sm btn-outline" data-action="line-items#addCheckRow">+ Add Check</button>
             </div>
             <div class="mt-3 overflow-x-auto">
