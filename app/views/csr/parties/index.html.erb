@@ -6,17 +6,52 @@
   primary_button_path: new_csr_party_path,
   primary_button_label: "New Party" %>
 
+<% search_params = params.permit(:q, :tin, :govt_id, :party_kind, :relationship_kind, :per_page).to_h %>
+
 <section class="card bg-base-100 border border-base-300">
   <div class="card-body">
+    <%= form_with url: csr_parties_path, method: :get, local: true, class: "mb-4 space-y-3" do |f| %>
+      <%= hidden_field_tag :party_kind, params[:party_kind] %>
+      <%= hidden_field_tag :relationship_kind, params[:relationship_kind] %>
+      <%= hidden_field_tag :per_page, params[:per_page] %>
+      <div class="flex flex-wrap gap-3 items-end">
+        <div class="form-control">
+          <%= label_tag :q, "Name or account #", class: "label label-text text-xs" %>
+          <%= text_field_tag :q, params[:q], class: "input input-bordered input-sm w-48", placeholder: "Search…" %>
+        </div>
+        <div class="form-control">
+          <%= label_tag :tin, "TIN", class: "label label-text text-xs" %>
+          <%= text_field_tag :tin, params[:tin], class: "input input-bordered input-sm w-32 font-mono", placeholder: "Exact match" %>
+        </div>
+        <div class="form-control">
+          <%= label_tag :govt_id, "Government ID", class: "label label-text text-xs" %>
+          <%= text_field_tag :govt_id, params[:govt_id], class: "input input-bordered input-sm w-32 font-mono", placeholder: "Exact match" %>
+        </div>
+        <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+        <%= link_to "Clear", csr_parties_path(search_params.except(:q, :tin, :govt_id)), class: "btn btn-ghost btn-sm" %>
+      </div>
+    <% end %>
+
     <div class="flex gap-2 flex-wrap mb-4">
-      <%= link_to "All", csr_parties_path, class: "btn btn-sm #{params[:party_kind].blank? ? 'btn-primary' : 'btn-ghost'}" %>
+      <%= link_to "All", csr_parties_path(search_params.except(:party_kind)), class: "btn btn-sm #{params[:party_kind].blank? ? 'btn-primary' : 'btn-ghost'}" %>
       <% Party::PARTY_KINDS.each do |kind| %>
-        <%= link_to kind.titleize, csr_parties_path(party_kind: kind), class: "btn btn-sm #{params[:party_kind] == kind ? 'btn-primary' : 'btn-ghost'}" %>
+        <%= link_to kind.titleize, csr_parties_path(search_params.merge(party_kind: kind)), class: "btn btn-sm #{params[:party_kind] == kind ? 'btn-primary' : 'btn-ghost'}" %>
       <% end %>
       <span class="divider divider-horizontal"></span>
       <% Party::RELATIONSHIP_KINDS.each do |rel| %>
-        <%= link_to rel.titleize, csr_parties_path(relationship_kind: rel), class: "btn btn-sm #{params[:relationship_kind] == rel ? 'btn-primary' : 'btn-ghost'}" %>
+        <%= link_to rel.titleize, csr_parties_path(search_params.merge(relationship_kind: rel)), class: "btn btn-sm #{params[:relationship_kind] == rel ? 'btn-primary' : 'btn-ghost'}" %>
       <% end %>
+    </div>
+
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-sm text-base-content/70"><%= @pagy.count %> parties</span>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-base-content/70">Per page:</span>
+        <% current_per = [ 10, 25, 50, 100 ].include?(params[:per_page].to_i) ? params[:per_page].to_i : 10 %>
+        <% [ 10, 25, 50, 100 ].each do |n| %>
+          <%= link_to n, csr_parties_path(search_params.merge(per_page: n, page: 1)), class: "btn btn-ghost btn-xs #{current_per == n ? 'btn-active' : ''}" %>
+        <% end %>
+      </div>
     </div>
 
     <div class="overflow-x-auto">
@@ -26,6 +61,9 @@
             <th>Name</th>
             <th>Kind</th>
             <th>Relationship</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>City, State</th>
             <th class="text-right">Actions</th>
           </tr>
         </thead>
@@ -36,6 +74,9 @@
                 <td><%= party.display_name.presence || "—" %></td>
                 <td><span class="badge badge-outline"><%= party.party_kind %></span></td>
                 <td><span class="badge badge-outline"><%= party.relationship_kind %></span></td>
+                <td><%= format_phone(party.phone) %></td>
+                <td><%= party.email.presence || "—" %></td>
+                <td><%= [ party.city, party.state ].compact_blank.join(", ").presence || "—" %></td>
                 <td class="text-right">
                   <%= link_to "View", csr_party_path(party), class: "btn btn-ghost btn-xs" %>
                   <%= link_to "Edit", edit_csr_party_path(party), class: "btn btn-ghost btn-xs" %>
@@ -44,11 +85,17 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="4" class="text-center opacity-70 py-4">No parties found.</td>
+              <td colspan="7" class="text-center opacity-70 py-4">No parties found.</td>
             </tr>
           <% end %>
         </tbody>
       </table>
     </div>
+
+    <% if @pagy.pages > 1 %>
+      <div class="mt-4 flex justify-center">
+        <%== @pagy.series_nav %>
+      </div>
+    <% end %>
   </div>
 </section>

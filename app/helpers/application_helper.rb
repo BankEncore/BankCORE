@@ -60,4 +60,19 @@ module ApplicationHelper
     prefix_len = [ str.length - 4, 0 ].max
     "#{placeholder * prefix_len}#{last_four}"
   end
+
+  def mask_account_number(account_number)
+    mask_last_four(account_number)
+  end
+
+  # Format phone as 000-000-0000 x0000 (extension optional)
+  def format_phone(phone)
+    return "—" if phone.blank?
+    digits = phone.to_s.gsub(/\D/, "")
+    return "—" if digits.blank?
+    main = digits[0, 10]
+    ext = digits[10..]
+    formatted = main.length == 10 ? main.gsub(/(\d{3})(\d{3})(\d{4})/, '\1-\2-\3') : main
+    ext.present? ? "#{formatted} x#{ext}" : formatted
+  end
 end

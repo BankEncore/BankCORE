@@ -6,9 +6,13 @@ module Teller
     before_action :ensure_authorized
 
     def index
-      @parties = Party.where(is_active: true).order(display_name: :asc).limit(100)
-      @parties = @parties.where(party_kind: params[:party_kind]) if params[:party_kind].present?
-      @parties = @parties.where(relationship_kind: params[:relationship_kind]) if params[:relationship_kind].present?
+      scope = Party.where(is_active: true).left_joins(:party_individual, :account_owners, :accounts).distinct
+      scope = apply_parties_search(scope)
+      scope = scope.where(party_kind: params[:party_kind]) if params[:party_kind].present?
+      scope = scope.where(relationship_kind: params[:relationship_kind]) if params[:relationship_kind].present?
+      scope = scope.reorder("parties.display_name ASC")
+      per_page = [ 10, 25, 50, 100 ].include?(params[:per_page].to_i) ? params[:per_page].to_i : 10
+      @pagy, @parties = pagy(:offset, scope, limit: per_page)
     end
 
     def search
@@ -83,7 +87,21 @@ module Teller
       end
 
       def party_params
-        params.require(:party).permit(:party_kind, :relationship_kind, :display_name, :is_active, :tax_id, :street_address, :city, :state, :zip_code, :phone, :email)
+        p = params.require(:party).permit(:party_kind, :relationship_kind, :display_name, :is_active, :tax_id, :street_address, :city, :state, :zip_code, :phone, :email)
+        p[:state] = p[:state].to_s.upcase.presence
+        p[:phone] = normalize_phone(p[:phone])
+        p.delete(:tax_id) if @party&.persisted? && p[:tax_id].blank?
+        p
+      end
+
+      def normalize_phone(phone)
+        return nil if phone.blank?
+        digits = phone.to_s.gsub(/\D/, "")
+        return nil if digits.blank?
+        main = digits[0, 10]
+        ext = digits[10..]
+        formatted = main.length == 10 ? main.gsub(/(\d{3})(\d{3})(\d{4})/, '\1-\2-\3') : main
+        ext.present? ? "#{formatted} x#{ext}" : formatted
       end
 
       def create_party_detail
@@ -103,11 +121,28 @@ module Teller
       end
 
       def individual_params
-        params.require(:party).permit(:first_name, :last_name, :dob, :govt_id_type, :govt_id).slice(:first_name, :last_name, :dob, :govt_id_type, :govt_id).to_h.compact
+        p = params.require(:party).permit(:first_name, :last_name, :dob, :govt_id_type, :govt_id).slice(:first_name, :last_name, :dob, :govt_id_type, :govt_id).to_h.compact
+        p.delete(:govt_id) if @party&.persisted? && p[:govt_id].blank?
+        p
       end
 
       def organization_params
         params.require(:party).permit(:legal_name, :dba_name).slice(:legal_name, :dba_name).to_h.compact
+      end
+
+      def apply_parties_search(scope)
+        if params[:q].present?
+          q = "%#{sanitize_sql_like(params[:q].to_s)}%"
+          scope = scope.where(
+            "parties.display_name LIKE ? OR accounts.account_number LIKE ?",
+            q, q
+          )
+        end
+        scope = scope.where(tax_id: params[:tin].to_s.strip) if params[:tin].present?
+        if params[:govt_id].present?
+          scope = scope.where(party_individuals: { govt_id: params[:govt_id].to_s.strip })
+        end
+        scope
       end
   end
 end

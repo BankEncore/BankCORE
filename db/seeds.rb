@@ -21,6 +21,7 @@ permissions = {
   "transactions.check_cashing.create" => "Create check cashing transactions",
   "transactions.reversal.create" => "Initiate transaction reversals",
   "approvals.override.execute" => "Execute supervisor override",
+  "accounts.branch.edit" => "Edit account branch (managers only)",
   "administration.workspace.view" => "Access Administration workspace (manage branches, cash locations, users, roles)"
 }
 
@@ -61,7 +62,8 @@ roles = {
       "transactions.draft.create",
       "transactions.check_cashing.create",
       "transactions.reversal.create",
-      "approvals.override.execute"
+      "approvals.override.execute",
+      "accounts.branch.edit"
     ]
   },
   "admin" => {

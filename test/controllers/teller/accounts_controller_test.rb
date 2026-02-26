@@ -75,7 +75,7 @@ module Teller
       get teller_account_path(account)
 
       assert_response :success
-      assert_select "h2", /1111111111111111/
+      assert_select "h2", /1111/  # Account number is masked; last 4 digits visible
     end
 
     test "edit renders form" do

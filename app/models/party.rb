@@ -29,6 +29,25 @@ class Party < ApplicationRecord
     relationship_kind == "customer"
   end
 
+  # Parties that share jointly owned accounts with this party (accounts with >1 owner)
+  def related_parties
+    joint_account_ids = Account
+      .joins(:account_owners)
+      .where(account_owners: { party_id: id })
+      .group("accounts.id")
+      .having("COUNT(account_owners.id) > 1")
+      .pluck(:id)
+
+    return Party.none if joint_account_ids.empty?
+
+    Party
+      .joins(:account_owners)
+      .where(account_owners: { account_id: joint_account_ids })
+      .where.not(id: id)
+      .distinct
+      .order(:display_name)
+  end
+
   private
 
     def sync_display_name

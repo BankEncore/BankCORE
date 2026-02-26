@@ -5,16 +5,16 @@
 
 <% if sections.include?(:balance) %>
 <% compact = local_assigns.fetch(:compact, false) %>
-<section class="card receipt-section bg-base-100 border border-base-300 <%= 'mt-4' unless compact %>">
-  <div class="card-body">
+<section class="balance-panel card receipt-section bg-base-100 border border-base-300 min-w-0 <%= 'md:col-span-2 ' if compact %><%= 'mt-4' unless compact %>">
+  <div class="card-body min-w-0">
     <div class="flex items-start justify-between gap-3">
-      <div>
+      <div class="min-w-0">
         <h2 class="card-title text-base">Current Balance</h2>
         <p class="text-xs text-slate-600 mt-1">Ledger balance for this account.</p>
       </div>
     </div>
     <div class="divider my-3"></div>
-    <p class="text-2xl <%= balance_cents.negative? ? 'text-error font-medium' : 'ui-money' %> mono tabular-nums">
+    <p class="balance-amount min-w-0 overflow-hidden text-[clamp(0.75rem,2.5vw,1.5rem)] <%= balance_cents.negative? ? 'text-error font-medium' : 'ui-money' %> mono tabular-nums">
       <%= balance_formatted %>
     </p>
   </div>
@@ -22,6 +22,10 @@
 <% end %>
 
 <% if sections.include?(:history) %>
+<% history_form_url = local_assigns[:history_form_url] %>
+<% history_filter_params = local_assigns.fetch(:history_filter_params, {}) %>
+<% date_from = history_filter_params[:date_from].presence || 30.days.ago.to_date.to_s %>
+<% date_to = history_filter_params[:date_to].presence || Date.current.to_s %>
 <section class="card receipt-section bg-base-100 border border-base-300 mt-4">
   <div class="card-body">
     <div class="flex items-start justify-between gap-3">
@@ -30,6 +34,44 @@
         <p class="text-xs text-slate-600 mt-1">Posted transactions for this account.</p>
       </div>
     </div>
+    <% if history_form_url.present? %>
+      <% base_params = history_filter_params.to_h.slice("date_from", "date_to", "amount_min", "amount_max").compact %>
+      <% base_params["transaction_types"] = Array(history_filter_params[:transaction_types] || history_filter_params["transaction_types"]) if (history_filter_params[:transaction_types] || history_filter_params["transaction_types"]).present? %>
+      <%= form_with url: history_form_url, method: :get, local: true, class: "no-print mt-3 space-y-2" do |f| %>
+        <div class="flex flex-wrap gap-3 items-end">
+          <div class="form-control">
+            <%= label_tag :date_from, "From", class: "text-xs font-medium" %>
+            <%= date_field_tag :date_from, date_from, class: "input input-bordered input-sm" %>
+          </div>
+          <div class="form-control">
+            <%= label_tag :date_to, "To", class: "text-xs font-medium" %>
+            <%= date_field_tag :date_to, date_to, class: "input input-bordered input-sm" %>
+          </div>
+          <div class="form-control">
+            <%= label_tag :amount_min, "Amount min ($)", class: "text-xs font-medium" %>
+            <%= number_field_tag :amount_min, history_filter_params[:amount_min], step: 0.01, class: "input input-bordered input-sm w-24" %>
+          </div>
+          <div class="form-control">
+            <%= label_tag :amount_max, "Amount max ($)", class: "text-xs font-medium" %>
+            <%= number_field_tag :amount_max, history_filter_params[:amount_max], step: 0.01, class: "input input-bordered input-sm w-24" %>
+          </div>
+          <div class="form-control">
+            <%= label_tag :transaction_types, "Types", class: "text-xs font-medium" %>
+            <%= select_tag "transaction_types[]", options_for_select(TellerTransaction::TRANSACTION_TYPES.map { |t| [ t.titleize, t ] }, Array(history_filter_params[:transaction_types])), { multiple: true, class: "select select-bordered select-sm", size: 3 } %>
+          </div>
+          <%= hidden_field_tag :sort, history_filter_params[:sort] || "date" %>
+          <%= hidden_field_tag :sort_dir, history_filter_params[:sort_dir] || "desc" %>
+          <%= f.submit "Filter", class: "btn btn-primary btn-sm" %>
+        </div>
+        <div class="flex gap-2 items-center">
+          <span class="text-xs text-slate-600">Sort:</span>
+          <%= link_to "Date ↑", "#{history_form_url}?#{(base_params.merge("sort" => "date", "sort_dir" => "asc")).to_query}", class: "btn btn-ghost btn-xs" %>
+          <%= link_to "Date ↓", "#{history_form_url}?#{(base_params.merge("sort" => "date", "sort_dir" => "desc")).to_query}", class: "btn btn-ghost btn-xs" %>
+          <%= link_to "Amount ↑", "#{history_form_url}?#{(base_params.merge("sort" => "amount", "sort_dir" => "asc")).to_query}", class: "btn btn-ghost btn-xs" %>
+          <%= link_to "Amount ↓", "#{history_form_url}?#{(base_params.merge("sort" => "amount", "sort_dir" => "desc")).to_query}", class: "btn btn-ghost btn-xs" %>
+        </div>
+      <% end %>
+    <% end %>
     <div class="divider my-3"></div>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">

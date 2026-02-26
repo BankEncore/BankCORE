@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   include Authentication
   include RequestContext
   include Pundit::Authorization
+  include Pagy::Method
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
