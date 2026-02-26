@@ -81,5 +81,53 @@ module Posting
       assert_equal account.id, credit_tx.account_id
       assert_nil posting_batch.account_transactions.find_by(direction: "debit").account_id
     end
+
+    test "sets deposit description for account credit leg" do
+      request = {
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: "commit-req-3",
+        transaction_type: "deposit",
+        amount_cents: 10_000,
+        metadata: {},
+        currency: "USD"
+      }
+      legs = [
+        { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 10_000, position: 0 },
+        { side: "credit", account_reference: "acct:dep", amount_cents: 10_000, position: 1 }
+      ]
+
+      posting_batch = Committer.new(request: request, legs: legs).call
+
+      credit_tx = posting_batch.account_transactions.find_by(direction: "credit")
+      assert_equal "Deposit at 721 - Posting Committer Branch", credit_tx.description
+    end
+
+    test "sets transfer descriptions for primary and counterparty" do
+      request = {
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: "commit-req-4",
+        transaction_type: "transfer",
+        amount_cents: 5_000,
+        metadata: {},
+        currency: "USD"
+      }
+      legs = [
+        { side: "debit", account_reference: "1234567890123", amount_cents: 5_000, position: 0 },
+        { side: "credit", account_reference: "9876543210987", amount_cents: 5_000, position: 1 }
+      ]
+
+      posting_batch = Committer.new(request: request, legs: legs).call
+
+      debit_tx = posting_batch.account_transactions.find_by(direction: "debit")
+      credit_tx = posting_batch.account_transactions.find_by(direction: "credit")
+      assert_equal "Transfer to xxxx0987", debit_tx.description
+      assert_equal "Transfer from xxxx0123", credit_tx.description
+    end
   end
 end

@@ -79,6 +79,7 @@
           <tr class="row-border t-head">
             <th class="py-2 text-left">Posted</th>
             <th class="py-2 text-left">Type</th>
+            <th class="py-2 text-left">Description</th>
             <th class="py-2 text-left">Direction</th>
             <th class="py-2 text-right">Amount</th>
             <th class="no-print py-2 text-right">Receipt</th>
@@ -93,6 +94,7 @@
               <tr class="row-border">
                 <td class="py-2"><%= posted_display %></td>
                 <td class="py-2"><%= tt.transaction_type.titleize %></td>
+                <td class="py-2"><%= at.description.presence || "—" %></td>
                 <td class="py-2">
                   <% if at.direction == "credit" %>
                     <span class="badge badge-sm badge-success badge-outline">Credit</span>
@@ -117,7 +119,7 @@
             <% end %>
           <% else %>
             <tr class="row-border">
-              <td colspan="5" class="py-8 text-center text-slate-600">No transactions yet.</td>
+              <td colspan="6" class="py-8 text-center text-slate-600">No transactions yet.</td>
             </tr>
           <% end %>
         </tbody>

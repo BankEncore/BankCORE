@@ -65,13 +65,22 @@ module Posting
             position: leg.fetch(:position)
           )
 
+          description = Posting::AccountTransactionDescriptionBuilder.new(
+            leg: leg,
+            legs: legs,
+            transaction_type: request.fetch(:transaction_type),
+            metadata: request.fetch(:metadata),
+            branch: request.fetch(:branch)
+          ).call
+
           AccountTransaction.create!(
             teller_transaction: teller_transaction,
             posting_batch: posting_batch,
             account_reference: account_reference,
             account_id: account_id,
             direction: leg.fetch(:side),
-            amount_cents: leg.fetch(:amount_cents)
+            amount_cents: leg.fetch(:amount_cents),
+            description: description
           )
         end
       end
