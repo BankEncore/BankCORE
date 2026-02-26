@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-02-26 (61421)
+### Description on account transactions
+Added description to account transactions
+
+| Transaction Type | Template | Example |		
+| ---- | ---- | ---- |		
+| Deposit | Deposit at [branch code] - [Branch Name] | Deposit at 000 - Example Branch Name |		
+| Withdrawal | Withdrawal at [branch code] - [branch name] | Withdrawal at 000 - Example Branch Name |		
+| Transfer (counterparty) | Transfer from [primary account-masked] | Transfer from xxxx9999 |		
+| Transfer (primary) | Transfer to [counterparty account-masked] | Transfer to xxxx9999 |		
+| Transfer (bank draft) | Bank Draft #[draft number] - Payee Name | Bank draft 1010101 - John Doe |		
+
 ## 2026-02-26 (61156)
 ### Teller transaction workflow enhancements
 

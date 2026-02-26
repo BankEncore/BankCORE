@@ -126,6 +126,12 @@ module Posting
       end
 
       def persist_legs_and_account_transactions!(posting_batch, teller_transaction, legs)
+        original_batch = if posting_batch.reversal_of_posting_batch_id.present?
+          PostingBatch.includes(:account_transactions).find_by(id: posting_batch.reversal_of_posting_batch_id)
+        else
+          teller_transaction.reversal_of_teller_transaction&.posting_batch
+        end
+
         legs.each do |leg|
           account_reference = leg.fetch(:account_reference)
           account_id = Account.find_by(account_number: account_reference)&.id
@@ -138,13 +144,19 @@ module Posting
             position: leg.fetch(:position)
           )
 
+          description = if original_batch.present?
+            original_desc = Posting::AccountTransactionDescriptionBuilder.original_description_for_leg(leg, original_batch)
+            original_desc.present? ? "Reversal of #{original_desc}" : nil
+          end
+
           AccountTransaction.create!(
             teller_transaction: teller_transaction,
             posting_batch: posting_batch,
             account_reference: account_reference,
             account_id: account_id,
             direction: leg.fetch(:side),
-            amount_cents: leg.fetch(:amount_cents)
+            amount_cents: leg.fetch(:amount_cents),
+            description: description
           )
         end
       end

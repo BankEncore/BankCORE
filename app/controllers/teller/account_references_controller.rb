@@ -36,7 +36,8 @@ module Teller
             signed_amount_cents: transaction.direction == "credit" ? transaction.amount_cents : -transaction.amount_cents,
             transaction_type: transaction.teller_transaction.transaction_type,
             request_id: transaction.teller_transaction.request_id,
-            posted_at: transaction.teller_transaction.posted_at.iso8601
+            posted_at: transaction.teller_transaction.posted_at.iso8601,
+            description: transaction.description
           }
         end
 
