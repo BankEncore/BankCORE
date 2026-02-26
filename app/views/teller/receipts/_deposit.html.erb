@@ -29,7 +29,7 @@
   <%= render "teller/receipts/receipt_check_details", check_items: check_items, total_cents: checks_total %>
 <% end %>
 
-<% availability_rows = deposit_availability_rows(posting_batch, cash_in, check_items) %>
+<% availability_rows = deposit_availability_rows(posting_batch, cash_in_from_cash, check_items, cash_back_cents: cash_back) %>
 <% if availability_rows.any? %>
   <table class="table table-sm text-xs w-full mt-3">
     <thead>

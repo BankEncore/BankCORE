@@ -152,6 +152,15 @@
             </template>
           </section>
 
+          <p class="form-control" data-posting-form-target="cashBackRow" hidden>
+            <%= form.label :cash_back_cents, "Cash Back", class: "text-xs font-medium text-slate-700" %><br>
+            <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+              <%= form.hidden_field :cash_back_cents, value: 0, data: { posting_form_target: "cashBackCents", currency_input_target: "hiddenInput" } %>
+              <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Back" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" />
+            </div>
+            <span class="text-xs text-slate-600 mt-1 block">Credit drawer, deduct from deposit. Max: total deposit (cash + checks).</span>
+          </p>
+
           <div class="mt-4 rounded-lg border border-base-300 bg-base-200 p-3">
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>

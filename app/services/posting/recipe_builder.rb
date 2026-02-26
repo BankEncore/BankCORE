@@ -15,7 +15,8 @@ module Posting
 
       check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
       check_items = check_items.select { |item| item[:amount_cents].to_i.positive? }
-      cash_back_cents = posting_params[:cash_back_cents].to_i
+      total_deposit = posting_params[:amount_cents].to_i + posting_params[:cash_back_cents].to_i
+      cash_back_cents = [ posting_params[:cash_back_cents].to_i, total_deposit ].min
 
       metadata = {}
       metadata[:cash_back_cents] = cash_back_cents if cash_back_cents.positive?
@@ -117,7 +118,11 @@ module Posting
             entry.merge(account_reference: normalized_reference)
           end
 
-          normalized_debits + [ { side: "credit", account_reference: primary_account_reference, amount_cents: amount_cents } ]
+          cash_back_cents = [ posting_params[:cash_back_cents].to_i, posting_params[:amount_cents].to_i + posting_params[:cash_back_cents].to_i ].min
+          credits = []
+          credits << { side: "credit", account_reference: default_cash_account_reference, amount_cents: cash_back_cents } if cash_back_cents.positive?
+          credits << { side: "credit", account_reference: primary_account_reference, amount_cents: amount_cents }
+          normalized_debits + credits
         when "withdrawal"
           generated_entries
         else

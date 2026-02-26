@@ -306,6 +306,13 @@ export default class extends Controller {
     if (this.hasCashBackRowTarget) {
       this.cashBackRowTarget.hidden = !showCashBackRow
     }
+    if (showCashBackRow && this.hasCashBackCentsTarget) {
+      const totalDepositCents = Math.max(state.amountCents, 0) + checkSubtotalCents
+      const enteredCashBack = this.cashBackCents()
+      if (totalDepositCents > 0 && enteredCashBack > totalDepositCents) {
+        this.setAmountCents(this.cashBackCentsTarget, totalDepositCents)
+      }
+    }
     if (this.hasDraftSectionTarget) {
       this.draftSectionTarget.hidden = !showDraftSection
     }
@@ -868,8 +875,9 @@ export default class extends Controller {
 
     if (amountSource === "cash_plus_checks") {
       const cashAmount = Math.max(baseAmount, 0)
-      const cashBackCents = Math.min(this.cashBackCents(), cashAmount)
-      return Math.max(cashAmount + this.checkSubtotalCents() - cashBackCents, 0)
+      const totalDeposit = cashAmount + this.checkSubtotalCents()
+      const cashBackCents = Math.min(this.cashBackCents(), totalDeposit)
+      return Math.max(totalDeposit - cashBackCents, 0)
     }
 
     return Math.max(baseAmount, 0)
@@ -1168,12 +1176,19 @@ export default class extends Controller {
     return d
   }
 
-  computeDepositAvailabilityRows(cashInFromCashCents, checkItems) {
+  computeDepositAvailabilityRows(cashInFromCashCents, checkItems, cashBackCents = 0) {
     const rows = []
     const asOf = new Date()
+    let remainingCashBack = Math.max(0, cashBackCents)
 
-    if ((cashInFromCashCents || 0) > 0) {
-      rows.push({ label: "Immediate", date: asOf, amountCents: cashInFromCashCents })
+    const immediateCents = Math.max(0, cashInFromCashCents || 0)
+    if (immediateCents > 0) {
+      const deduct = Math.min(remainingCashBack, immediateCents)
+      remainingCashBack -= deduct
+      const netCents = immediateCents - deduct
+      if (netCents > 0) {
+        rows.push({ label: "Immediate", date: asOf, amountCents: netCents })
+      }
     }
 
     const held = checkItems.filter((i) => (i.hold_reason || "").toString().trim().length > 0)
@@ -1185,16 +1200,26 @@ export default class extends Controller {
       const restCents = nonHeldTotal - first250Cents
       const nextBiz = this.addBusinessDays(asOf, 1)
       const twoBiz = this.addBusinessDays(asOf, 2)
-      rows.push({
-        label: nextBiz.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
-        date: nextBiz,
-        amountCents: first250Cents
-      })
-      if (restCents > 0) {
+
+      const deductFirst250 = Math.min(remainingCashBack, first250Cents)
+      remainingCashBack -= deductFirst250
+      const netFirst250 = first250Cents - deductFirst250
+      if (netFirst250 > 0) {
+        rows.push({
+          label: nextBiz.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+          date: nextBiz,
+          amountCents: netFirst250
+        })
+      }
+
+      const deductRest = Math.min(remainingCashBack, restCents)
+      remainingCashBack -= deductRest
+      const netRest = restCents - deductRest
+      if (netRest > 0) {
         rows.push({
           label: twoBiz.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
           date: twoBiz,
-          amountCents: restCents
+          amountCents: netRest
         })
       }
     }
@@ -1209,12 +1234,21 @@ export default class extends Controller {
       if (!heldByDate[key]) heldByDate[key] = { date, amountCents: 0 }
       heldByDate[key].amountCents += i.amount_cents || 0
     })
-    Object.values(heldByDate).forEach(({ date, amountCents }) => {
-      rows.push({
+    const heldRows = Object.values(heldByDate)
+      .map(({ date, amountCents }) => ({
         label: date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
         date,
         amountCents
-      })
+      }))
+      .sort((a, b) => a.date - b.date)
+
+    heldRows.forEach((row) => {
+      const deduct = Math.min(remainingCashBack, row.amountCents)
+      remainingCashBack -= deduct
+      const netCents = row.amountCents - deduct
+      if (netCents > 0) {
+        rows.push({ ...row, amountCents: netCents })
+      }
     })
 
     rows.sort((a, b) => {
@@ -1231,7 +1265,8 @@ export default class extends Controller {
 
     const cashInFromCashCents = state.amountCents || 0
     const checkItems = this.collectCheckRows().filter((c) => (c.amount_cents || 0) > 0)
-    const rows = this.computeDepositAvailabilityRows(cashInFromCashCents, checkItems)
+    const cashBackCents = state.cashBackCents ?? this.cashBackCents()
+    const rows = this.computeDepositAvailabilityRows(cashInFromCashCents, checkItems, cashBackCents)
 
     this.availabilityBodyTarget.innerHTML = ""
     this.availabilityEmptyTarget.hidden = rows.length > 0
