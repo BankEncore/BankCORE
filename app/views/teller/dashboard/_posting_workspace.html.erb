@@ -39,19 +39,6 @@
             <p><strong>Transaction Type:</strong> <%= flow_type.titleize %></p>
           <% end %>
 
-          <% unless flow_type == "check_cashing" %>
-            <p class="form-control" data-posting-form-target="cashAmountRow">
-              <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700" %><br>
-              <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
-                <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
-              </div>
-            </p>
-          <% end %>
-          <% if flow_type == "check_cashing" %>
-            <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents" } %>
-          <% end %>
-
           <div class="form-control overflow-visible" data-posting-form-target="primaryAccountRow" <%= "hidden" if flow_type == "check_cashing" || flow_type == "vault_transfer" %>>
             <%= form.label :primary_account_reference, "Primary Account", class: "text-xs font-medium text-slate-700" %><br>
             <div class="relative overflow-visible" data-controller="primary-account-search"
@@ -81,6 +68,19 @@
             </div>
             <span class="text-xs text-slate-600 mt-1 block">Search by name or account #, or enter account number directly.</span>
           </div>
+
+          <% unless flow_type == "check_cashing" %>
+            <p class="form-control" data-posting-form-target="cashAmountRow">
+              <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700" %><br>
+              <div data-controller="currency-input" data-action="input->posting-form#recalculate">
+                <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
+                <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
+              </div>
+            </p>
+          <% end %>
+          <% if flow_type == "check_cashing" %>
+            <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents" } %>
+          <% end %>
 
           <p class="form-control" data-posting-form-target="counterpartyRow" <%= "hidden" unless show_counterparty %>>
             <%= form.label :counterparty_account_reference, "Counterparty Account Reference", class: "text-xs font-medium text-slate-700" %><br>
