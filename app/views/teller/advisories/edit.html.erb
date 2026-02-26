@@ -1,0 +1,13 @@
+<%= render "teller/shared/page_header",
+  title: "Edit Advisory",
+  description: "Update advisory: #{@advisory.title}",
+  secondary_button_path: @scope_advisories_path,
+  secondary_button_label: "Back" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h2 class="card-title text-base">Edit Advisory</h2>
+    <div class="divider my-3"></div>
+    <%= render "form" %>
+  </div>
+</section>
