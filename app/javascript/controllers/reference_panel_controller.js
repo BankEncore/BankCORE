@@ -3,7 +3,8 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static values = {
     accountReferenceUrl: String,
-    advisoriesUrl: String
+    advisoriesUrl: String,
+    lastAccountUrl: String
   }
 
   connect() {
@@ -298,5 +299,37 @@ export default class extends Controller {
       default:
         return "text-sm opacity-75"
     }
+  }
+
+  async copyLastAccount() {
+    if (!this.hasLastAccountUrlValue) return
+    try {
+      const response = await fetch(this.lastAccountUrlValue, { headers: { Accept: "application/json" } })
+      const body = await response.json()
+      const ref = body.primary_account_reference
+      if (!ref || typeof ref !== "string") {
+        this.showCopyMessage("No previous transaction.")
+        return
+      }
+      const input = this.findPostingTarget("primaryAccountReference")
+      if (!input) return
+      const value = ref.trim().replace(/^acct:/, "")
+      input.value = value
+      input.dispatchEvent(new Event("input", { bubbles: true }))
+      this.element.dispatchEvent(new CustomEvent("tx:changed", { bubbles: true }))
+      this.showCopyMessage("Last account applied.")
+    } catch {
+      this.showCopyMessage("Could not load last account.")
+    }
+  }
+
+  showCopyMessage(text) {
+    const msg = this.findPostingTarget("message")
+    if (!msg) return
+    msg.textContent = text
+    msg.hidden = false
+    msg.classList.remove("alert-success", "alert-warning", "alert-error", "alert-info")
+    msg.classList.add("alert-info")
+    setTimeout(() => { msg.hidden = true }, 2500)
   }
 }
