@@ -52,7 +52,7 @@
             <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents" } %>
           <% end %>
 
-          <div class="form-control overflow-visible" data-posting-form-target="primaryAccountRow" <%= "hidden" if flow_type == "check_cashing" %>>
+          <div class="form-control overflow-visible" data-posting-form-target="primaryAccountRow" <%= "hidden" if flow_type == "check_cashing" || flow_type == "vault_transfer" %>>
             <%= form.label :primary_account_reference, "Primary Account", class: "text-xs font-medium text-slate-700" %><br>
             <div class="relative overflow-visible" data-controller="primary-account-search"
                  data-primary-account-search-search-url-value="<%= teller_transaction_search_path %>"

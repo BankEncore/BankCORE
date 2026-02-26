@@ -353,7 +353,7 @@ export default class extends Controller {
       this.checkCashingIdRowTarget.hidden = !showCheckCashingSection
     }
     if (this.hasPrimaryAccountRowTarget) {
-      this.primaryAccountRowTarget.hidden = showCheckCashingSection
+      this.primaryAccountRowTarget.hidden = showCheckCashingSection || showVaultTransferSection
     }
     if (this.hasCashAmountRowTarget) {
       this.cashAmountRowTarget.hidden = showCheckCashingSection
