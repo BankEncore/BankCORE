@@ -248,6 +248,10 @@ export default class extends Controller {
 
     const totalAmountCents = state.effectiveAmountCents
     const workflowContext = {}
+    if (transactionType === "draft") {
+      workflowContext.draftAccountCents = draftAmounts?.draftAccountCents ?? 0
+      workflowContext.draftCashCents = draftAmounts?.draftCashCents ?? 0
+    }
     const hasPrimaryAccount = state.primaryAccountReference.trim().length > 0
     const requiresPrimaryAccount = getRequiresPrimaryAccount(transactionType, this.workflowSchema, workflowContext)
     const requiresCounterparty = getRequiresCounterpartyAccount(transactionType, this.workflowSchema)
@@ -514,6 +518,13 @@ export default class extends Controller {
     const submittedRequestId = this.requestIdTarget.value || this.generateRequestId()
     formData.set("request_id", submittedRequestId)
     formData.set("amount_cents", this.effectiveAmountCents().toString())
+    const state = this.getState()
+    if (state.transactionType === "draft") {
+      const draftAccountCents = state.draftAmounts?.draftAccountCents ?? 0
+      let primaryRef = state.primaryAccountReference?.trim() ?? ""
+      if (draftAccountCents === 0 || !primaryRef) primaryRef = "0"
+      formData.set("primary_account_reference", primaryRef)
+    }
     this.appendEntries(formData)
 
     try {
@@ -560,7 +571,12 @@ export default class extends Controller {
     formData.set("request_id", this.requestIdTarget.value || this.generateRequestId())
     formData.set("transaction_type", state.transactionType)
     formData.set("amount_cents", String(state.effectiveAmountCents))
-    formData.set("primary_account_reference", state.primaryAccountReference)
+    let primaryRef = state.primaryAccountReference?.trim() ?? ""
+    if (state.transactionType === "draft") {
+      const draftAccountCents = state.draftAmounts?.draftAccountCents ?? 0
+      if (draftAccountCents === 0 || !primaryRef) primaryRef = "0"
+    }
+    formData.set("primary_account_reference", primaryRef)
     formData.set("counterparty_account_reference", state.counterpartyAccountReference)
     formData.set("cash_account_reference", state.cashAccountReference)
     appendEntriesAndTypePayload(formData, state.transactionType, state, this.workflowSchema)

@@ -239,7 +239,10 @@ module Posting
             entries << { side: "debit", account_reference: item[:account_reference].to_s, amount_cents: item[:amount_cents].to_i }
           end
 
-          if draft_account_cents.positive? && primary_account_reference.present?
+          primary_used = primary_account_reference.present? &&
+            primary_account_reference != "0" &&
+            primary_account_reference != "acct:0"
+          if draft_account_cents.positive? && primary_used
             entries << { side: "debit", account_reference: primary_account_reference, amount_cents: draft_account_cents }
           end
 

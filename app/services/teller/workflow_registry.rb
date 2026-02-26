@@ -66,9 +66,9 @@ module Teller
         amount_input_mode: "draft_amount",
         effective_amount_source: "amount_field",
         cash_impact_profile: "draft_funding",
-        primary_account_policy: "always",
+        primary_account_policy: "draft_account_only",
         requires_counterparty_account: false,
-        cash_account_policy: "always",
+        cash_account_policy: "draft_cash_only",
         requires_settlement_account: false
       },
       "vault_transfer" => {

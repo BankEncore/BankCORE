@@ -121,7 +121,10 @@ export function buildEntries(transactionType, state) {
         entries.push({ side: "debit", account_reference: check.account_reference ?? "", amount_cents: check.amount_cents })
       })
 
-    if (draftAccountCents > 0 && primaryAccountReference) {
+    const primaryUsed = primaryAccountReference &&
+      primaryAccountReference !== "0" &&
+      primaryAccountReference !== "acct:0"
+    if (draftAccountCents > 0 && primaryUsed) {
       entries.push({ side: "debit", account_reference: primaryAccountReference, amount_cents: draftAccountCents })
     }
 

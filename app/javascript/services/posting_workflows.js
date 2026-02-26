@@ -75,8 +75,8 @@ export function getRequiresPrimaryAccount(transactionType, schema, context = {})
   const policy = getPrimaryAccountPolicy(transactionType, schema)
   if (policy === "never") return false
   if (policy === "draft_account_only") {
-    const draftFundingSource = (context.draftFundingSource ?? "account").trim()
-    return transactionType === "draft" && draftFundingSource !== "cash"
+    const draftAccountCents = context.draftAccountCents ?? 0
+    return transactionType === "draft" && draftAccountCents > 0
   }
   return true
 }
@@ -96,8 +96,8 @@ export function getRequiresCashAccount(transactionType, schema, context = {}) {
   const policy = getCashAccountPolicy(transactionType, schema)
   if (policy === "never") return false
   if (policy === "draft_cash_only") {
-    const draftFundingSource = (context.draftFundingSource ?? "account").trim()
-    return transactionType === "draft" && draftFundingSource === "cash"
+    const draftCashCents = context.draftCashCents ?? 0
+    return transactionType === "draft" && draftCashCents > 0
   }
   return true
 }
