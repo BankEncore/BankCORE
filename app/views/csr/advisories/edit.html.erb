@@ -1,0 +1,24 @@
+<%= render "csr/shared/record_screen" do %>
+
+  <%= render "csr/shared/record_header",
+    title: "Edit Advisory",
+    subtitle: "#{@advisory.title} — #{@scope_record.is_a?(Party) ? 'Party' : 'Account'}: #{@scope_record.is_a?(Party) ? (@scope_record.display_name.presence || "##{@scope_record.id}") : @scope_record.account_number}" do %>
+    <%= link_to "Back", @scope_advisories_path, class: "btn btn-sm btn-ghost" %>
+    <%= link_to "View #{@scope_record.is_a?(Party) ? 'Party' : 'Account'}", @scope_record.is_a?(Party) ? csr_party_path(@scope_record) : csr_account_path(@scope_record), class: "btn btn-sm btn-ghost" %>
+  <% end %>
+
+  <%= render "csr/shared/panel", title: "Linked to", right: link_to("View #{@scope_record.is_a?(Party) ? 'party' : 'account'} →", @scope_record.is_a?(Party) ? csr_party_path(@scope_record) : csr_account_path(@scope_record), class: "link link-hover text-sm") do %>
+    <% if @scope_record.is_a?(Party) %>
+      <p class="font-medium"><%= @scope_record.display_name.presence || "Party ##{@scope_record.id}" %></p>
+      <p class="text-sm text-base-content/70 mt-1"><%= @scope_record.party_kind.titleize %> • <%= @scope_record.relationship_kind.titleize %></p>
+    <% else %>
+      <p class="font-medium font-mono"><%= @scope_record.account_number %></p>
+      <p class="text-sm text-base-content/70 mt-1"><%= @scope_record.account_type.titleize %> • <%= @scope_record.branch.name %></p>
+    <% end %>
+  <% end %>
+
+  <%= render "csr/shared/panel", title: "Edit Advisory" do %>
+    <%= render "form" %>
+  <% end %>
+
+<% end %>
