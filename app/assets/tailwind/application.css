@@ -157,7 +157,11 @@
 			opacity: 0;
 			cursor: default;
 		}
-}
+
+		.checkbox { @apply h-4 w-4 rounded border border-slate-300; }
+		.checkbox-sm { @apply h-4 w-4; }
+
+		}
 
 @layer utilities {
 	/* Print-only: hidden on screen, visible when printing */

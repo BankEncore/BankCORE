@@ -1,130 +1,191 @@
+<%# app/views/.../_account_balance_and_history.html.erb (or your current partial file) %>
 <% account_transactions = local_assigns.fetch(:account_transactions, account.account_transactions) %>
 <% sections = local_assigns.fetch(:sections, [:balance, :history]) %>
 <% balance_cents = account.balance_cents %>
 <% balance_formatted = number_to_currency(balance_cents / 100.0) %>
 
 <% if sections.include?(:balance) %>
-<% compact = local_assigns.fetch(:compact, false) %>
-<section class="balance-panel card receipt-section bg-base-100 border border-base-300 min-w-0 <%= 'md:col-span-2 ' if compact %><%= 'mt-4' unless compact %>">
-  <div class="card-body min-w-0">
-    <div class="flex items-start justify-between gap-3">
-      <div class="min-w-0">
-        <h2 class="card-title text-base">Current Balance</h2>
-        <p class="text-xs text-slate-600 mt-1">Ledger balance for this account.</p>
+  <% compact = local_assigns.fetch(:compact, false) %>
+  <section class="card bg-base-100 border border-base-300 min-w-0 <%= 'md:col-span-2 ' if compact %><%= 'mt-4' unless compact %>">
+    <div class="card-body min-w-0">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h2 class="card-title text-base">Balance</h2>
+          <p class="text-xs text-slate-600 mt-1">Current ledger balance for this account.</p>
+        </div>
       </div>
+
+      <div class="divider my-3"></div>
+
+      <p class="tabular-nums text-sm font-semibold text-slate-900">
+        <%= balance_formatted %>
+      </p>
     </div>
-    <div class="divider my-3"></div>
-    <p class="balance-amount min-w-0 overflow-hidden text-[clamp(0.75rem,2.5vw,1.5rem)] <%= balance_cents.negative? ? 'text-error font-medium' : 'ui-money' %> mono tabular-nums">
-      <%= balance_formatted %>
-    </p>
-  </div>
-</section>
+  </section>
 <% end %>
 
 <% if sections.include?(:history) %>
-<% history_form_url = local_assigns[:history_form_url] %>
-<% history_filter_params = local_assigns.fetch(:history_filter_params, {}) %>
-<% date_from = history_filter_params[:date_from].presence || 30.days.ago.to_date.to_s %>
-<% date_to = history_filter_params[:date_to].presence || Date.current.to_s %>
-<section class="card receipt-section bg-base-100 border border-base-300 mt-4">
-  <div class="card-body">
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <h2 class="card-title text-base">Transaction History</h2>
-        <p class="text-xs text-slate-600 mt-1">Posted transactions for this account.</p>
+  <% history_form_url = local_assigns[:history_form_url] %>
+  <% history_filter_params = local_assigns.fetch(:history_filter_params, {}) %>
+
+  <% date_from = history_filter_params[:date_from].presence || 30.days.ago.to_date.to_s %>
+  <% date_to   = history_filter_params[:date_to].presence   || Date.current.to_s %>
+
+  <section class="card bg-base-100 border border-base-300 mt-4">
+    <div class="card-body">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="card-title text-base">Transaction History</h2>
+          <p class="text-xs text-slate-600 mt-1">Posted transactions for this account.</p>
+        </div>
       </div>
-    </div>
-    <% if history_form_url.present? %>
-      <% base_params = history_filter_params.to_h.slice("date_from", "date_to", "amount_min", "amount_max").compact %>
-      <% base_params["transaction_types"] = Array(history_filter_params[:transaction_types] || history_filter_params["transaction_types"]) if (history_filter_params[:transaction_types] || history_filter_params["transaction_types"]).present? %>
-      <%= form_with url: history_form_url, method: :get, local: true, class: "no-print mt-3 space-y-2" do |f| %>
-        <div class="flex flex-wrap gap-3 items-end">
-          <div class="form-control">
-            <%= label_tag :date_from, "From", class: "text-xs font-medium" %>
-            <%= date_field_tag :date_from, date_from, class: "input input-bordered input-sm" %>
+
+      <% if history_form_url.present? %>
+        <%# Build a base param set for sort links without losing filters %>
+        <% base_params = history_filter_params.to_h.slice("date_from", "date_to", "amount_min", "amount_max").compact %>
+        <% if (history_filter_params[:transaction_types] || history_filter_params["transaction_types"]).present? %>
+          <% base_params["transaction_types"] = Array(history_filter_params[:transaction_types] || history_filter_params["transaction_types"]) %>
+        <% end %>
+
+        <%= form_with url: history_form_url, method: :get, local: true, class: "no-print mt-3" do |f| %>
+          <div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+            <div class="flex flex-wrap items-end gap-2">
+              <div class="form-control">
+                <%= label_tag :date_from, "From", class: "text-[11px] font-semibold text-slate-600" %>
+                <%= date_field_tag :date_from, date_from, class: "input input-bordered h-9 px-2 text-sm w-[10.5rem]" %>
+              </div>
+
+              <div class="form-control">
+                <%= label_tag :date_to, "To", class: "text-[11px] font-semibold text-slate-600" %>
+                <%= date_field_tag :date_to, date_to, class: "input input-bordered h-9 px-2 text-sm w-[10.5rem]" %>
+              </div>
+
+              <div class="form-control">
+                <%= label_tag :amount_min, "Min ($)", class: "text-[11px] font-semibold text-slate-600" %>
+                <%= number_field_tag :amount_min, history_filter_params[:amount_min], step: 0.01, class: "input input-bordered h-9 px-2 text-sm w-24" %>
+              </div>
+
+              <div class="form-control">
+                <%= label_tag :amount_max, "Max ($)", class: "text-[11px] font-semibold text-slate-600" %>
+                <%= number_field_tag :amount_max, history_filter_params[:amount_max], step: 0.01, class: "input input-bordered h-9 px-2 text-sm w-24" %>
+              </div>
+
+              <% types = TellerTransaction::TRANSACTION_TYPES %>
+              <% selected_types = Array(history_filter_params[:transaction_types] || history_filter_params["transaction_types"]).map(&:to_s) %>
+
+              <div class="form-control">
+                <div class="text-[11px] font-semibold text-slate-600">Types</div>
+
+                <div class="mt-1 flex flex-wrap gap-2">
+                  <% types.each do |t| %>
+                    <% checked = selected_types.include?(t.to_s) %>
+
+                <label class="inline-flex items-center gap-1.5
+                              rounded border border-slate-300
+                              bg-white
+                              px-2 py-1
+                              text-[12px] font-medium
+                              cursor-pointer select-none">
+                  <%= check_box_tag "transaction_types[]", t, checked,
+                        class: "h-3.5 w-3.5 rounded border-slate-300" %>
+                  <span class="whitespace-nowrap leading-none"><%= t.to_s.titleize %></span>
+                </label>
+                  <% end %>
+                </div>
+
+                <%# Optional: quick clear (keeps params for other filters) %>
+                <div class="mt-1">
+                  <button type="button" class="btn btn-ghost btn-sm h-8 px-2"
+                    onclick="document.querySelectorAll('input[name=&quot;transaction_types[]&quot;]').forEach(el => el.checked = false)">
+                    Clear types
+                  </button>
+                </div>
+              </div>
+
+              <%= hidden_field_tag :sort, history_filter_params[:sort] || "date" %>
+              <%= hidden_field_tag :sort_dir, history_filter_params[:sort_dir] || "desc" %>
+
+              <div class="flex items-center gap-2 ml-auto">
+                <span class="text-[11px] font-semibold text-slate-600">Sort</span>
+
+                <%= link_to "Date ↑",
+                      "#{history_form_url}?#{(base_params.merge("sort" => "date", "sort_dir" => "asc")).to_query}",
+                      class: "btn btn-ghost btn-sm h-9 px-2" %>
+
+                <%= link_to "Date ↓",
+                      "#{history_form_url}?#{(base_params.merge("sort" => "date", "sort_dir" => "desc")).to_query}",
+                      class: "btn btn-ghost btn-sm h-9 px-2" %>
+
+                <%= link_to "Amt ↑",
+                      "#{history_form_url}?#{(base_params.merge("sort" => "amount", "sort_dir" => "asc")).to_query}",
+                      class: "btn btn-ghost btn-sm h-9 px-2" %>
+
+                <%= link_to "Amt ↓",
+                      "#{history_form_url}?#{(base_params.merge("sort" => "amount", "sort_dir" => "desc")).to_query}",
+                      class: "btn btn-ghost btn-sm h-9 px-2" %>
+
+                <%= f.submit "Filter", class: "btn btn-primary btn-sm h-9" %>
+              </div>
+            </div>
           </div>
-          <div class="form-control">
-            <%= label_tag :date_to, "To", class: "text-xs font-medium" %>
-            <%= date_field_tag :date_to, date_to, class: "input input-bordered input-sm" %>
-          </div>
-          <div class="form-control">
-            <%= label_tag :amount_min, "Amount min ($)", class: "text-xs font-medium" %>
-            <%= number_field_tag :amount_min, history_filter_params[:amount_min], step: 0.01, class: "input input-bordered input-sm w-24" %>
-          </div>
-          <div class="form-control">
-            <%= label_tag :amount_max, "Amount max ($)", class: "text-xs font-medium" %>
-            <%= number_field_tag :amount_max, history_filter_params[:amount_max], step: 0.01, class: "input input-bordered input-sm w-24" %>
-          </div>
-          <div class="form-control">
-            <%= label_tag :transaction_types, "Types", class: "text-xs font-medium" %>
-            <%= select_tag "transaction_types[]", options_for_select(TellerTransaction::TRANSACTION_TYPES.map { |t| [ t.titleize, t ] }, Array(history_filter_params[:transaction_types])), { multiple: true, class: "select select-bordered select-sm", size: 3 } %>
-          </div>
-          <%= hidden_field_tag :sort, history_filter_params[:sort] || "date" %>
-          <%= hidden_field_tag :sort_dir, history_filter_params[:sort_dir] || "desc" %>
-          <%= f.submit "Filter", class: "btn btn-primary btn-sm" %>
-        </div>
-        <div class="flex gap-2 items-center">
-          <span class="text-xs text-slate-600">Sort:</span>
-          <%= link_to "Date ↑", "#{history_form_url}?#{(base_params.merge("sort" => "date", "sort_dir" => "asc")).to_query}", class: "btn btn-ghost btn-xs" %>
-          <%= link_to "Date ↓", "#{history_form_url}?#{(base_params.merge("sort" => "date", "sort_dir" => "desc")).to_query}", class: "btn btn-ghost btn-xs" %>
-          <%= link_to "Amount ↑", "#{history_form_url}?#{(base_params.merge("sort" => "amount", "sort_dir" => "asc")).to_query}", class: "btn btn-ghost btn-xs" %>
-          <%= link_to "Amount ↓", "#{history_form_url}?#{(base_params.merge("sort" => "amount", "sort_dir" => "desc")).to_query}", class: "btn btn-ghost btn-xs" %>
-        </div>
+        <% end %>
       <% end %>
-    <% end %>
-    <div class="divider my-3"></div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="row-border t-head">
-            <th class="py-2 text-left">Posted</th>
-            <th class="py-2 text-left">Type</th>
-            <th class="py-2 text-left">Description</th>
-            <th class="py-2 text-left">Direction</th>
-            <th class="py-2 text-right">Amount</th>
-            <th class="no-print py-2 text-right">Receipt</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if account_transactions.any? %>
-            <% account_transactions.each do |at| %>
-              <% tt = at.teller_transaction %>
-              <% signed_cents = at.direction == "credit" ? at.amount_cents : -at.amount_cents %>
-              <% posted_display = tt.posted_at ? "#{tt.posted_at.strftime('%b %-d, %Y')} at #{tt.posted_at.strftime('%-l:%M %p')}" : "—" %>
+
+      <div class="divider my-3"></div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="row-border t-head">
+              <th class="py-1.5 text-left">Posted</th>
+              <th class="py-1.5 text-left">Type</th>
+              <th class="py-1.5 text-left">Description</th>
+              <th class="py-1.5 text-left">DR/CR</th>
+              <th class="py-1.5 text-right">Amount</th>
+              <th class="no-print py-1.5 text-right">Receipt</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% if account_transactions.any? %>
+              <% account_transactions.each do |at| %>
+                <% tt = at.teller_transaction %>
+                <% signed_cents = at.direction == "credit" ? at.amount_cents : -at.amount_cents %>
+                <% posted_display = tt.posted_at ? "#{tt.posted_at.strftime('%b %-d, %Y')} #{tt.posted_at.strftime('%-l:%M %p')}" : "—" %>
+
+                <tr class="row-border">
+                  <td class="py-1.5"><%= posted_display %></td>
+                  <td class="py-1.5"><%= tt.transaction_type.titleize %></td>
+                  <td class="py-1.5"><%= at.description.presence || "—" %></td>
+
+                  <td class="py-1.5 font-semibold text-slate-700">
+                    <%= at.direction == "credit" ? "Credit" : "Debit" %>
+                  </td>
+
+                  <td class="py-1.5 text-right mono tabular-nums text-slate-900">
+                    <%= signed_cents.negative? ? "−" : "+" %><%= number_to_currency(signed_cents.abs / 100.0) %>
+                  </td>
+
+                  <td class="no-print py-1.5 text-right">
+                    <% if tt.posting_batch.present? %>
+                      <div class="flex gap-1 justify-end">
+                        <%= link_to "Receipt", teller_receipt_path(request_id: tt.request_id), class: "btn btn-ghost btn-sm h-8 px-2" %>
+                        <%= link_to "Audit", teller_receipt_path(request_id: tt.request_id, view: "audit"), class: "btn btn-ghost btn-sm h-8 px-2" %>
+                      </div>
+                    <% else %>
+                      <span class="text-slate-500 text-xs">—</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
               <tr class="row-border">
-                <td class="py-2"><%= posted_display %></td>
-                <td class="py-2"><%= tt.transaction_type.titleize %></td>
-                <td class="py-2"><%= at.description.presence || "—" %></td>
-                <td class="py-2">
-                  <% if at.direction == "credit" %>
-                    <span class="badge badge-sm badge-success badge-outline">Credit</span>
-                  <% else %>
-                    <span class="badge badge-sm badge-error badge-outline">Debit</span>
-                  <% end %>
-                </td>
-                <td class="py-2 text-right mono tabular-nums <%= signed_cents.negative? ? 'text-error font-medium' : 'ui-money' %>">
-                  <%= signed_cents.negative? ? "" : "+" %><%= number_to_currency(signed_cents / 100.0) %>
-                </td>
-                <td class="no-print py-2 text-right">
-                  <% if tt.posting_batch.present? %>
-                    <div class="flex gap-1 justify-end">
-                      <%= link_to "Receipt", teller_receipt_path(request_id: tt.request_id), class: "btn btn-ghost btn-sm" %>
-                      <%= link_to "Audit", teller_receipt_path(request_id: tt.request_id, view: "audit"), class: "btn btn-ghost btn-sm" %>
-                    </div>
-                  <% else %>
-                    <span class="text-slate-500 text-xs">—</span>
-                  <% end %>
-                </td>
+                <td colspan="6" class="py-8 text-center text-slate-600">No transactions yet.</td>
               </tr>
             <% end %>
-          <% else %>
-            <tr class="row-border">
-              <td colspan="6" class="py-8 text-center text-slate-600">No transactions yet.</td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 <% end %>
