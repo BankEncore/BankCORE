@@ -31,12 +31,12 @@ class Party < ApplicationRecord
 
   # Parties that share jointly owned accounts with this party (accounts with >1 owner)
   def related_parties
-    joint_account_ids = Account
-      .joins(:account_owners)
-      .where(account_owners: { party_id: id })
-      .group("accounts.id")
-      .having("COUNT(account_owners.id) > 1")
-      .pluck(:id)
+    my_account_ids = AccountOwner.where(party_id: id).pluck(:account_id)
+    joint_account_ids = AccountOwner
+      .where(account_id: my_account_ids)
+      .group(:account_id)
+      .having("COUNT(*) > 1")
+      .pluck(:account_id)
 
     return Party.none if joint_account_ids.empty?
 

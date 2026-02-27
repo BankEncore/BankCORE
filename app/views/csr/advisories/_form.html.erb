@@ -1,0 +1,77 @@
+<% create_path = @scope_record.is_a?(Party) ? csr_party_advisories_path(@scope_record) : csr_account_advisories_path(@scope_record) %>
+<% update_path = @advisory.persisted? ? (@scope_record.is_a?(Party) ? csr_party_advisory_path(@scope_record, @advisory) : csr_account_advisory_path(@scope_record, @advisory)) : nil %>
+<%= form_with model: @advisory, url: @advisory.persisted? ? update_path : create_path, method: @advisory.persisted? ? :patch : :post, local: true, class: "space-y-4" do |f| %>
+  <% if @advisory.errors.any? %>
+    <div class="alert alert-error">
+      <ul class="list-disc list-inside">
+        <% @advisory.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-control">
+    <%= f.label :title, class: "text-xs font-medium text-slate-700" %>
+    <%= f.text_field :title, class: "input input-bordered w-full", required: true, placeholder: "Advisory title" %>
+  </div>
+
+  <div class="form-control">
+    <%= f.label :body, class: "text-xs font-medium text-slate-700" %>
+    <%= f.text_area :body, class: "textarea textarea-bordered w-full", rows: 4, placeholder: "Optional details" %>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="form-control">
+      <%= f.label :category, class: "text-xs font-medium text-slate-700" %>
+      <%= f.select :category,
+            options_for_select(%w[fraud compliance legal operational relationship monitoring].map { |c| [ c.titleize, c ] }, @advisory.category),
+            { include_blank: "Select…" },
+            class: "select select-bordered w-full" %>
+    </div>
+    <div class="form-control">
+      <%= f.label :severity, class: "text-xs font-medium text-slate-700" %>
+      <%= f.select :severity,
+            Advisory.severities.map { |k, _v| [ advisory_severity_label_for_enum(k), k ] },
+            {},
+            class: "select select-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="form-control">
+      <%= f.label :effective_start_at, "Effective from", class: "text-xs font-medium text-slate-700" %>
+      <%= f.datetime_local_field :effective_start_at, class: "input input-bordered w-full" %>
+    </div>
+    <div class="form-control">
+      <%= f.label :effective_end_at, "Effective until", class: "text-xs font-medium text-slate-700" %>
+      <%= f.datetime_local_field :effective_end_at, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="form-control">
+      <%= f.label :workspace_visibility, class: "text-xs font-medium text-slate-700" %>
+      <%= f.select :workspace_visibility,
+            Advisory.workspace_visibilities.map { |k, _v| [ k.titleize, k ] },
+            {},
+            class: "select select-bordered w-full" %>
+    </div>
+    <div class="form-control flex flex-row items-center gap-2 pt-6">
+      <label class="label cursor-pointer gap-2">
+        <%= f.check_box :pinned, class: "checkbox checkbox-sm" %>
+        <span class="label-text text-sm">Pinned</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="form-control">
+    <%= f.label :restriction_code, "Restriction code (optional)", class: "text-xs font-medium text-slate-700" %>
+    <%= f.text_field :restriction_code, class: "input input-bordered w-full", placeholder: "Optional" %>
+  </div>
+
+  <div class="flex gap-2 pt-4">
+    <%= f.submit @advisory.persisted? ? "Update" : "Create", class: "btn btn-primary" %>
+    <%= link_to "Cancel", @scope_advisories_path, class: "btn btn-ghost" %>
+  </div>
+<% end %>

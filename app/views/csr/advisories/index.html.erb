@@ -1,0 +1,85 @@
+<%= render "csr/shared/record_screen" do %>
+
+  <%= render "csr/shared/record_header",
+    title: @scope_record ? "Advisories for #{@scope_record.is_a?(Party) ? @scope_record.display_name.presence || "Party ##{@scope_record.id}" : "Account #{@scope_record.account_number}"}" : "Advisories",
+    subtitle: @scope_record ? "Customer advisories for this #{@scope_record.is_a?(Party) ? "party" : "account"}" : "All advisories visible in CSR workspace" do %>
+    <% if @scope_record %>
+      <%= link_to "Back to #{@scope_record.is_a?(Party) ? "Party" : "Account"}", @scope_record.is_a?(Party) ? csr_party_path(@scope_record) : csr_account_path(@scope_record), class: "btn btn-sm btn-ghost" %>
+    <% else %>
+      <%= link_to "Back to Dashboard", csr_root_path, class: "btn btn-sm btn-ghost" %>
+    <% end %>
+    <% if @scope_record && policy([ :csr, Advisory ]).create? %>
+      <%= link_to "Add Advisory", @scope_record.is_a?(Party) ? new_csr_party_advisory_path(@scope_record, filter_params) : new_csr_account_advisory_path(@scope_record, filter_params), class: "btn btn-sm btn-primary" %>
+    <% end %>
+  <% end %>
+
+  <% if @scope_record %>
+    <div role="tablist" class="tabs tabs-boxed mb-4">
+      <%= link_to "Details", @scope_record.is_a?(Party) ? csr_party_path(@scope_record) : csr_account_path(@scope_record), role: "tab", class: "tab" %>
+      <%= link_to "Advisories", @scope_record.is_a?(Party) ? csr_party_advisories_path(@scope_record, filter_params) : csr_account_advisories_path(@scope_record, filter_params), role: "tab", class: "tab tab-active" %>
+    </div>
+  <% end %>
+
+  <%= render "csr/advisories/filter_bar", filter_params: filter_params, scope_record: @scope_record %>
+
+  <%= render "csr/shared/panel", title: "Advisories" do %>
+    <% if @advisories.any? %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="row-border t-head">
+              <% if @scope_record.nil? %>
+                <th class="py-2 text-left">Linked to</th>
+              <% end %>
+              <th class="py-2 text-left">Category</th>
+              <th class="py-2 text-left">Severity</th>
+              <th class="py-2 text-left">Title</th>
+              <th class="py-2 text-left">Effective</th>
+              <th class="py-2 text-left">Created by</th>
+              <th class="py-2 text-left">Pinned</th>
+              <th class="py-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @advisories.each do |advisory| %>
+              <tr class="row-border">
+                <% if @scope_record.nil? %>
+                  <td class="py-2">
+                    <% sr = advisory.scope_record %>
+                    <% if sr %>
+                      <%= link_to sr.is_a?(Party) ? (sr.display_name.presence || "Party ##{sr.id}") : "Account #{sr.account_number}", sr.is_a?(Party) ? csr_party_path(sr) : csr_account_path(sr), class: "link link-hover" %>
+                    <% else %>
+                      —
+                    <% end %>
+                  </td>
+                <% end %>
+                <td class="py-2"><%= advisory.category.presence&.titleize || "—" %></td>
+                <td class="py-2">
+                  <span class="badge badge-<%= advisory_severity_badge(advisory) %> badge-sm"><%= advisory_severity_label(advisory) %></span>
+                </td>
+                <td class="py-2"><%= advisory.title %></td>
+                <td class="py-2 text-xs">
+                  <%= advisory.effective_start_at&.strftime("%Y-%m-%d") || "—" %> – <%= advisory.effective_end_at&.strftime("%Y-%m-%d") || "—" %>
+                </td>
+                <td class="py-2"><%= advisory.created_by&.email_address || "—" %></td>
+                <td class="py-2"><%= advisory.pinned? ? "Yes" : "—" %></td>
+                <td class="py-2 text-right">
+                  <% edit_path = @scope_record ? (@scope_record.is_a?(Party) ? edit_csr_party_advisory_path(@scope_record, advisory) : edit_csr_account_advisory_path(@scope_record, advisory)) : advisory_edit_path(advisory) %>
+                  <% if edit_path && policy([ :csr, Advisory ]).edit? %>
+                    <%= link_to "Edit", edit_path, class: "btn btn-ghost btn-sm" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-sm text-base-content/70">No advisories match the current filters.</p>
+      <% if @scope_record && policy([ :csr, Advisory ]).create? %>
+        <p class="text-sm mt-2"><%= link_to "Add the first advisory", @scope_record.is_a?(Party) ? new_csr_party_advisory_path(@scope_record, filter_params) : new_csr_account_advisory_path(@scope_record, filter_params), class: "link link-hover" %></p>
+      <% end %>
+    <% end %>
+  <% end %>
+
+<% end %>
