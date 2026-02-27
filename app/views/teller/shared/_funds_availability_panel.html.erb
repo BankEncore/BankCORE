@@ -6,16 +6,20 @@
         <p class="text-xs text-slate-600 mt-1">When funds will be available after posting.</p>
       </div>
     </div>
+
     <div class="divider my-3"></div>
-    <table class="table table-sm text-sm w-full">
+
+    <table class="w-full text-sm table-fixed">
       <thead>
-        <tr>
-          <th class="text-left">Availability</th>
-          <th class="text-right tabular-nums">Amount</th>
+        <tr class="t-head row-border">
+          <th class="py-2 text-left w-2/3">Availability</th>
+          <th class="py-2 text-right w-1/3 tabular-nums">Amount</th>
         </tr>
       </thead>
-      <tbody data-posting-form-target="availabilityBody"></tbody>
+      <tbody data-posting-form-target="availabilityBody"
+             class="[&>tr>td]:py-2 [&>tr]:row-border"></tbody>
     </table>
+
     <p class="mt-2 text-xs text-slate-600" data-posting-form-target="availabilityEmpty">Enter cash and/or checks to see availability.</p>
   </div>
 </section>

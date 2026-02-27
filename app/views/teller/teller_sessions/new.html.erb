@@ -6,19 +6,13 @@
   primary_button_path: teller_root_path,
   primary_button_label: "Go to Transaction Flows" %>
 
-<%= render "teller/dashboard/teller_session_card", teller_session: @teller_session, drawers: @drawers %>
-
-<section class="card bg-base-100 border border-base-300">
-  <div class="card-body">
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <h2 class="card-title text-base">Context Settings</h2>
-        <p class="text-xs text-slate-600 mt-1">Need to change branch or workstation?</p>
-      </div>
-    </div>
-    <div class="divider my-3"></div>
-    <div>
-      <%= link_to "Open Branch / Workstation Settings", teller_context_path, class: "btn btn-ghost btn-sm" %>
-    </div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+  <div class="lg:col-span-8 space-y-4">
+    <%= render "teller/dashboard/teller_session_card", teller_session: @teller_session, drawers: @drawers %>
   </div>
-</section>
+
+  <aside class="lg:col-span-4 space-y-4">
+    <%= render "teller/shared/drawer_totals_panel", teller_session: @teller_session %>
+    <%= render "teller/shared/context_settings_panel" %>
+  </aside>
+</div>

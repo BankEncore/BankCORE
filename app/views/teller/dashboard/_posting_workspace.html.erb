@@ -19,6 +19,10 @@
       <a data-posting-form-target="advisoriesViewAllLink" href="#" class="text-xs link link-hover mt-2 block" hidden>View all advisories</a>
     </div>
 
+    <div class="mb-4" data-posting-form-target="readinessStrip">
+      <%= render "teller/shared/posting_readiness_strip" %>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
       <div class="lg:col-span-8 space-y-4">
       <section aria-label="Entry Panel" class="card bg-base-100 border border-base-300">
@@ -36,9 +40,7 @@
               flow_type,
               data: { posting_form_target: "transactionType" } %>
             <!-- <p class="text-xs font-medium text-slate-700">Transaction Type: <%= flow_type.titleize %></p> -->
-          <% end %>
-          <div class="divider my-3"></div>
-         
+          <% end %>         
 
           <div class="flex flex-col md:flex-row gap-3">
             <div class="form-control overflow-visible flex-1 min-w-0" data-posting-form-target="primaryAccountRow" <%= "hidden" if flow_type == "check_cashing" || flow_type == "vault_transfer" %>>
@@ -121,56 +123,198 @@
               data: { posting_form_target: "transferFeeIncomeAccountReference" } %>
           </section>
 
+          <!-- THIS IS WHERE THE FUN BEGINS -->
+
           <section data-posting-form-target="checkSection" <%= "hidden" unless show_checks %>>
             <div class="divider my-3"></div>
+
             <div class="flex items-center justify-between">
               <div class="font-medium">Checks In</div>
               <button type="button" class="btn btn-sm btn-outline" data-action="line-items#addCheckRow">+ Add Check</button>
             </div>
-            <div class="mt-3 overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="row-border t-head">
-                    <th class="py-2 text-left">#</th>
-                    <th class="py-2 text-left">Routing</th>
-                    <th class="py-2 text-left">Account</th>
-                    <th class="py-2 text-left">Check #</th>
-                    <th class="py-2 text-right">Amount</th>
-                    <th class="py-2 text-left">Type</th>
-                    <th class="py-2 text-right">Hold</th>
-                    <th class="py-2 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody data-posting-form-target="checkRows" data-line-items-target="checkRows"></tbody>
-              </table>
+
+            <%# Header row (desktop) %>
+            <div class="mt-3 hidden md:grid text-xs font-semibold text-slate-600"
+                style="grid-template-columns: 2.5rem 7rem 8.5rem 6rem 1fr 5rem 5rem;">
+              <div class="px-2 py-[0.25rem]">#</div>
+              <div class="px-2 py-[0.25rem]">Routing</div>
+              <div class="px-2 py-[0.25rem]">Account</div>
+              <div class="px-2 py-[0.25rem]">Check #</div>
+              <div class="px-2 py-[0.25rem]">Amount / Type</div>
+              <div class="px-2 py-[0.25rem] text-center"></div>
+              <div class="px-2 py-[0.25rem] text-right"></div>
             </div>
+
+            <%# Rows container (JS appends rows here) %>
+            <div class="mt-1 space-y-2"
+                data-posting-form-target="checkRows"
+                data-line-items-target="checkRows"></div>
+
             <template data-posting-form-target="checkTemplate" data-line-items-target="checkTemplate">
-              <tr data-check-row>
-                <td class="py-2 pr-2 mono text-xs text-slate-600" data-check-index>01</td>
-                <td class="py-2 pr-2"><input type="text" class="input input-bordered h-9 px-2 py-1 text-sm" placeholder="123456789" data-check-field="routing" data-action="input->posting-form#recalculate"></td>
-                <td class="py-2 pr-2"><input type="text" class="input input-bordered h-9 px-2 py-1 text-sm" placeholder="000123456789" data-check-field="account" data-action="input->posting-form#recalculate"></td>
-                <td class="py-2 pr-2"><input type="text" class="input input-bordered h-9 px-2 py-1 text-sm" placeholder="1042" data-check-field="number" data-action="input->posting-form#recalculate"></td>
-                <td class="py-2 pl-2">
-                  <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                    <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
-                    <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm text-right tabular-nums" inputmode="decimal" placeholder="$0.00" aria-label="Check amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur">
+              <div data-check-row
+                  class="rounded-md border border-base-300 bg-base-100 p-2 md:p-0 md:border-0 md:rounded-none">
+
+                <%# Desktop grid row %>
+                <div class="hidden md:grid items-center"
+                    style="grid-template-columns: 2.5rem 7rem 8.5rem 6rem 1fr 5rem 5rem;">
+
+                  <%# index %>
+                  <div class="mono text-xs text-slate-600 px-2" data-check-index>01</div>
+
+                  <%# routing %>
+                  <div class="px-2">
+                    <input type="text"
+                          class="input input-bordered h-9 px-1 text-sm w-full"
+                          placeholder="123456789"
+                          data-check-field="routing"
+                          data-action="input->posting-form#recalculate">
                   </div>
-                </td>
-                <td class="py-2 pl-2">
-                  <select class="select select-bordered h-9 min-h-0 py-1 text-sm" data-check-field="checkType" data-action="change->posting-form#recalculate">
-                    <option value="transit">Transit</option>
-                    <option value="on_us">On Us</option>
-                  </select>
-                </td>
-                <td class="py-2 pl-2">
-                  <input type="hidden" data-check-field="holdReason" value="">
-                  <input type="hidden" data-check-field="holdUntil" value="">
-                  <button type="button" class="btn btn-ghost btn-sm hold-button" data-action="click->hold-modal#openFromButton" title="Add or edit hold">Hold</button>
-                </td>
-                <td class="py-2 pl-2 text-right"><button type="button" class="btn btn-ghost btn-sm" data-action="line-items#removeCheckRow">Remove</button></td>
-              </tr>
+
+                  <%# account %>
+                  <div class="px-2">
+                    <input type="text"
+                          class="input input-bordered h-9 px-1 text-sm w-full"
+                          placeholder="000123456789"
+                          data-check-field="account"
+                          data-action="input->posting-form#recalculate">
+                  </div>
+
+                  <%# check number %>
+                  <div class="px-2">
+                    <input type="text"
+                          class="input input-bordered h-9 px-1 text-sm w-full"
+                          placeholder="1042"
+                          data-check-field="number"
+                          data-action="input->posting-form#recalculate">
+                  </div>
+
+                  <%# amount + type %>
+                  <div class="px-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <div class="w-[7.5rem] shrink-0"
+                          data-controller="currency-input"
+                          data-action="input->posting-form#recalculate">
+                        <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
+                        <input type="text"
+                              class="input input-bordered h-9 px-2 text-sm w-full text-right tabular-nums"
+                              inputmode="decimal"
+                              placeholder="$0.00"
+                              aria-label="Check amount"
+                              data-currency-input-target="displayInput"
+                              data-action="input->currency-input#input blur->currency-input#blur">
+                      </div>
+
+                      <select class="select select-bordered h-9 min-h-0 py-1 text-sm w-[6rem] shrink-0"
+                              data-check-field="checkType"
+                              data-action="change->posting-form#recalculate"
+                              aria-label="Check type">
+                        <option value="transit">Transit</option>
+                        <option value="on_us">On us</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <%# hold %>
+                  <div class="px-2 text-center">
+                    <input type="hidden" data-check-field="holdReason" value="">
+                    <input type="hidden" data-check-field="holdUntil" value="">
+
+                    <button type="button"
+                            class="btn btn-ghost btn-sm h-9 w-full hold-button"
+                            data-action="click->hold-modal#openFromButton"
+                            title="Add or edit hold">
+                      Hold
+                    </button>
+                  </div>
+
+                  <%# remove %>
+                  <div class="px-2 text-right">
+                    <button type="button"
+                            class="btn btn-ghost btn-sm h-9"
+                            data-action="line-items#removeCheckRow">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+
+                <%# Mobile stacked layout (no horizontal scroll) %>
+                <div class="md:hidden space-y-2">
+                  <div class="flex items-center justify-between">
+                    <div class="mono text-xs text-slate-600" data-check-index>01</div>
+                    <button type="button"
+                            class="btn btn-ghost btn-sm h-9"
+                            data-action="line-items#removeCheckRow">
+                      Remove
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-2">
+                    <div class="form-control">
+                      <label class="text-xs font-medium text-slate-700">Routing</label>
+                      <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm w-full"
+                            placeholder="123456789"
+                            data-check-field="routing"
+                            data-action="input->posting-form#recalculate">
+                    </div>
+
+                    <div class="form-control">
+                      <label class="text-xs font-medium text-slate-700">Account</label>
+                      <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm w-full"
+                            placeholder="000123456789"
+                            data-check-field="account"
+                            data-action="input->posting-form#recalculate">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="form-control">
+                        <label class="text-xs font-medium text-slate-700">Check #</label>
+                        <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm w-full"
+                              placeholder="1042"
+                              data-check-field="number"
+                              data-action="input->posting-form#recalculate">
+                      </div>
+
+                      <div class="form-control">
+                        <label class="text-xs font-medium text-slate-700">Type</label>
+                        <select class="select select-bordered h-9 min-h-0 py-1 text-sm w-[5rem] shrink-0"
+                                data-check-field="checkType"
+                                data-action="change->posting-form#recalculate"
+                                aria-label="Check type">
+                          <option value="transit">Tran</option>
+                          <option value="on_us">On us</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="form-control" data-controller="currency-input" data-action="input->posting-form#recalculate">
+                      <label class="text-xs font-medium text-slate-700">Amount</label>
+                      <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
+                      <input type="text"
+                            class="input input-bordered h-9 px-2 py-1 text-sm text-right tabular-nums w-full"
+                            inputmode="decimal"
+                            placeholder="$0.00"
+                            data-currency-input-target="displayInput"
+                            data-action="input->currency-input#input blur->currency-input#blur">
+                    </div>
+
+                    <div class="form-control">
+                      <label class="text-xs font-medium text-slate-700">Hold</label>
+                      <input type="hidden" data-check-field="holdReason" value="">
+                      <input type="hidden" data-check-field="holdUntil" value="">
+                      <button type="button"
+                              class="btn btn-outline btn-sm h-9 w-full"
+                              data-action="click->hold-modal#openFromButton">
+                        Hold
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </template>
           </section>
+
+          <!-- THIS IS WHERE THE FUN ENDS -->
 
           <% if flow_type == "deposit" || local_assigns.fetch(:show_transaction_type, true) %>
           <p class="form-control" data-posting-form-target="cashBackRow" <%= "hidden" unless flow_type == "deposit" %>>
@@ -179,7 +323,7 @@
               <%= form.hidden_field :cash_back_cents, value: 0, data: { posting_form_target: "cashBackCents", currency_input_target: "hiddenInput" } %>
               <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Back" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" />
             </div>
-            <span class="text-xs text-slate-600 mt-1 block">Credit drawer, deduct from deposit. Max: total deposit (cash + checks).</span>
+            <!-- <span class="text-xs text-slate-600 mt-1 block">Credit drawer, deduct from deposit. Max: total deposit (cash + checks).</span> -->
           </p>
           <% end %>
 
@@ -412,7 +556,7 @@
       <aside class="lg:col-span-4 space-y-4">
         <%= render "teller/shared/live_account_panel" %>
         <%= render "teller/shared/funds_availability_panel" %>
-        <%= render "teller/shared/posting_readiness_panel" %>
+        <%# %= render "teller/shared/posting_readiness_panel" %>
         <%# drawer_totals removed from transaction screen; partial kept at teller/shared/_drawer_totals.html.erb %>
       </aside>
     </div>
