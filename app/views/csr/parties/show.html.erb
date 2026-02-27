@@ -8,6 +8,11 @@
     <%= link_to "Edit", edit_csr_party_path(@party), class: "btn btn-sm btn-primary" %>
   <% end %>
 
+  <div role="tablist" class="tabs tabs-boxed mb-4">
+    <%= link_to "Details", csr_party_path(@party), role: "tab", class: "tab tab-active" %>
+    <%= link_to "Advisories", csr_party_advisories_path(@party), role: "tab", class: "tab" %>
+  </div>
+
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <%= render "csr/shared/panel", title: "Contact" do %>
       <dl class="divide-y divide-base-300/60 text-sm">

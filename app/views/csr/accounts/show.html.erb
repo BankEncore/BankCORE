@@ -11,6 +11,11 @@
     <% end %>
   </div>
 
+  <div role="tablist" class="tabs tabs-boxed mb-4 no-print">
+    <%= link_to "Details", csr_account_path(@account), role: "tab", class: "tab tab-active" %>
+    <%= link_to "Advisories", csr_account_advisories_path(@account), role: "tab", class: "tab" %>
+  </div>
+
   <div class="print-only mb-4">
     <h1 class="text-lg font-bold">BankCORE</h1>
     <p class="text-sm">Account Details — <%= mask_account_number(@account.account_number) %></p>
