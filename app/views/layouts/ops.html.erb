@@ -19,7 +19,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-base-100">
+  <body class="bg-base-100" data-controller="session-lock" data-session-lock-inactivity-minutes-value="5" data-session-lock-skip-value="<%= !authenticated? %>">
     <a href="#main" class="no-print sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:m-3 focus:rounded focus:bg-base-100 focus:px-3 focus:py-2 focus:shadow">
       Skip to content
     </a>

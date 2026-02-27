@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   resource :session
+  resource :lock, only: [ :show, :create, :update ], controller: "locks"
   resources :passwords, param: :token
   namespace :teller do
     root "dashboard#index"

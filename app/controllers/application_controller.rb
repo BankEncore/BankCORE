@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::Base
   include Authentication
+  include SessionLock
   include RequestContext
   include Pundit::Authorization
   include Pagy::Method

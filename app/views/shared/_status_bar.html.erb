@@ -64,6 +64,11 @@
           <% end %>
         <% end %>
       <% end %>
+      <% if authenticated? && !session[:session_locked] %>
+        <span class="ml-auto">
+          <%= button_to "Lock", lock_path, method: :post, class: "btn btn-ghost btn-xs" %>
+        </span>
+      <% end %>
     </div>
   </div>
 </section>

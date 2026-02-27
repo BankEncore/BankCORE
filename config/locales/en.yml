@@ -29,3 +29,6 @@
 
 en:
   hello: "Hello world"
+  time:
+    formats:
+      locked: "%A, %B %d, %Y at %I:%M %p"
