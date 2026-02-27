@@ -92,7 +92,7 @@ roles = {
   },
   "csr" => {
     name: "Customer Service Representative",
-    permissions: [ "csr.dashboard.view" ]
+    permissions: [ "csr.dashboard.view", "advisories.view", "advisories.create", "advisories.edit" ]
   }
 }
 
