@@ -59,6 +59,22 @@ class LocksController < ApplicationController
     redirect_to return_to.presence || helpers.default_workspace_or_root_path, notice: "Session unlocked."
   end
 
+  def show
+    unless session[:session_locked]
+      redirect_to helpers.default_workspace_or_root_path
+      return
+    end
+    @locked_at = to_time(session[:locked_at])
+  end
+
+  def to_time(value)
+    return value if value.is_a?(Time) || value.is_a?(ActiveSupport::TimeWithZone)
+    return nil if value.blank?
+    Time.zone.parse(value.to_s)
+  rescue ArgumentError
+    nil
+  end
+
   private
     def return_to_for_unlock
       request.referer.presence ||

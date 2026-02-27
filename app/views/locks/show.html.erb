@@ -6,7 +6,7 @@
     <p class="text-sm text-slate-600 mt-1">
       <%= Current.user&.display_label || "—" %> • Locked <%= @locked_at.is_a?(Time) ? l(@locked_at, format: :locked) : @locked_at %>
       <% if @locked_at.is_a?(Time) %>
-        <span class="text-slate-500">(<%= time_ago_in_words(@locked_at) %> ago)</span>
+        <br/><span class="text-slate-500">(<%= time_ago_in_words(@locked_at) %> ago)</span><hr/>
       <% end %>
     </p>
     <% if current_branch.present? || current_workstation.present? %>

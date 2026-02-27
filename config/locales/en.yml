@@ -31,4 +31,4 @@ en:
   hello: "Hello world"
   time:
     formats:
-      locked: "%A, %B %d, %Y at %I:%M %p"
+      locked: "%A, %b %d, %Y %I:%M %p"
