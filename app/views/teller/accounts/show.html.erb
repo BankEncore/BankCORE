@@ -85,84 +85,86 @@
   <%= render "shared/accounts/balance_and_history", account: @account, account_transactions: @account_transactions, sections: [:balance], compact: true %>
 </div>
 
-<section class="card receipt-section bg-base-100 border border-base-300 mt-4">
-  <div class="card-body">
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <h2 class="card-title text-base">Owners</h2>
-        <p class="text-xs text-slate-600 mt-1">Parties with ownership of this account.</p>
+<div class="no-print">
+  <section class="card receipt-section bg-base-100 border border-base-300 mt-4">
+    <div class="card-body">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="card-title text-base">Owners</h2>
+          <p class="text-xs text-slate-600 mt-1">Parties with ownership of this account.</p>
+        </div>
+        <% if @parties_for_owner&.any? %>
+          <a href="#add-owner-form" class="no-print btn btn-primary btn-sm">Add owner</a>
+        <% end %>
       </div>
-      <% if @parties_for_owner&.any? %>
-        <a href="#add-owner-form" class="no-print btn btn-primary btn-sm">Add owner</a>
-      <% end %>
-    </div>
-    <div class="divider my-3"></div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="row-border t-head">
-            <th class="py-2 text-left">Party</th>
-            <th class="py-2 text-left">Primary</th>
-            <th class="no-print py-2 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @account.owners_ordered.each do |ao| %>
-            <tr class="row-border">
-              <td class="py-2"><%= link_to ao.party.display_name.presence || "Party ##{ao.party_id}", teller_party_path(ao.party), class: "link link-hover" %></td>
-              <td class="py-2">
-                <% if ao.is_primary? %>
-                  Yes
-                <% else %>
-                  <span class="no-print">
-                    <%= button_to "Set as primary",
-                          teller_account_account_owner_path(@account, ao),
-                          method: :patch,
-                          params: { account_owner: { is_primary: true } },
-                          class: "btn btn-ghost btn-sm" %>
-                  </span>
-                  <span class="print-only">—</span>
-                <% end %>
-              </td>
-              <td class="no-print py-2 text-right">
-                <%= link_to "Edit", edit_teller_party_path(ao.party), class: "btn btn-ghost btn-sm" %>
-                <% if @account.account_owners.size > 1 %>
-                  <%= button_to "Remove",
-                        teller_account_account_owner_path(@account, ao),
-                        method: :delete,
-                        form: { data: { turbo_confirm: "Remove this owner?" } },
-                        class: "btn btn-ghost btn-sm text-error" %>
-                <% end %>
-              </td>
+      <div class="divider my-3"></div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="row-border t-head">
+              <th class="py-2 text-left">Party</th>
+              <th class="py-2 text-left">Primary</th>
+              <th class="no-print py-2 text-right">Actions</th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            <% @account.owners_ordered.each do |ao| %>
+              <tr class="row-border">
+                <td class="py-2"><%= link_to ao.party.display_name.presence || "Party ##{ao.party_id}", teller_party_path(ao.party), class: "link link-hover" %></td>
+                <td class="py-2">
+                  <% if ao.is_primary? %>
+                    Yes
+                  <% else %>
+                    <span class="no-print">
+                      <%= button_to "Set as primary",
+                            teller_account_account_owner_path(@account, ao),
+                            method: :patch,
+                            params: { account_owner: { is_primary: true } },
+                            class: "btn btn-ghost btn-sm" %>
+                    </span>
+                    <span class="print-only">—</span>
+                  <% end %>
+                </td>
+                <td class="no-print py-2 text-right">
+                  <%= link_to "Edit", edit_teller_party_path(ao.party), class: "btn btn-ghost btn-sm" %>
+                  <% if @account.account_owners.size > 1 %>
+                    <%= button_to "Remove",
+                          teller_account_account_owner_path(@account, ao),
+                          method: :delete,
+                          form: { data: { turbo_confirm: "Remove this owner?" } },
+                          class: "btn btn-ghost btn-sm text-error" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
 
-    <% if @parties_for_owner&.any? %>
-      <%= form_with scope: :account_owner, url: teller_account_account_owners_path(@account), method: :post, local: true, class: "no-print mt-4 pt-4 border-t border-base-300 flex flex-wrap items-end gap-3", id: "add-owner-form" do |f| %>
-        <div class="form-control">
-          <%= f.label :party_id, "Add owner", class: "text-xs font-medium text-slate-700" %>
-          <%= f.select :party_id,
-                options_from_collection_for_select(@parties_for_owner, :id, :display_name),
-                { include_blank: "Select party…" },
-                class: "select select-bordered select-sm",
-                required: true %>
-        </div>
-        <div class="form-control">
-          <label class="label cursor-pointer gap-2">
-            <%= f.check_box :is_primary, class: "checkbox checkbox-sm" %>
-            <span class="label-text text-sm">Primary</span>
-          </label>
-        </div>
-        <%= f.submit "Add", class: "btn btn-primary btn-sm" %>
+      <% if @parties_for_owner&.any? %>
+        <%= form_with scope: :account_owner, url: teller_account_account_owners_path(@account), method: :post, local: true, class: "no-print mt-4 pt-4 border-t border-base-300 flex flex-wrap items-end gap-3", id: "add-owner-form" do |f| %>
+          <div class="form-control">
+            <%= f.label :party_id, "Add owner", class: "text-xs font-medium text-slate-700" %>
+            <%= f.select :party_id,
+                  options_from_collection_for_select(@parties_for_owner, :id, :display_name),
+                  { include_blank: "Select party…" },
+                  class: "select select-bordered select-sm",
+                  required: true %>
+          </div>
+          <div class="form-control">
+            <label class="label cursor-pointer gap-2">
+              <%= f.check_box :is_primary, class: "checkbox checkbox-sm" %>
+              <span class="label-text text-sm">Primary</span>
+            </label>
+          </div>
+          <%= f.submit "Add", class: "btn btn-primary btn-sm" %>
+        <% end %>
+      <% elsif @parties_for_owner.present? %>
+        <p class="no-print mt-4 pt-4 border-t border-base-300 text-sm text-slate-600">All eligible parties are already owners.</p>
       <% end %>
-    <% elsif @parties_for_owner.present? %>
-      <p class="no-print mt-4 pt-4 border-t border-base-300 text-sm text-slate-600">All eligible parties are already owners.</p>
-    <% end %>
+    </div>
+  </section>
   </div>
-</section>
 
 <%= render "shared/accounts/balance_and_history",
   account: @account,
