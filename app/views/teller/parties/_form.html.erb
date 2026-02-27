@@ -1,4 +1,4 @@
-<%= form_with model: [ :teller, @party ], local: true, class: "space-y-4" do |f| %>
+<%= form_with model: [ :teller, @party ], local: true, class: "space-y-4", data: { controller: "party-form" } do |f| %>
   <% if @party.errors.any? %>
     <div class="alert alert-error">
       <ul class="list-disc list-inside">
@@ -12,7 +12,7 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="form-control">
       <%= f.label :party_kind, class: "text-xs font-medium text-slate-700" %>
-      <%= f.select :party_kind, Party::PARTY_KINDS.map { |k| [ k.titleize, k ] }, {}, class: "select select-bordered w-full" %>
+      <%= f.select :party_kind, Party::PARTY_KINDS.map { |k| [ k.titleize, k ] }, {}, class: "select select-bordered w-full", data: { party_form_target: "partyKind" } %>
     </div>
     <div class="form-control">
       <%= f.label :relationship_kind, class: "text-xs font-medium text-slate-700" %>
@@ -22,7 +22,7 @@
 
   <div class="divider my-3"></div>
 
-  <div id="individual-fields" class="space-y-4" style="<%= 'display:none' unless @party.individual? %>">
+  <div id="individual-fields" class="space-y-4" style="<%= 'display:none' unless @party.individual? %>" data-party-form-target="individualFields">
     <h3 class="font-medium text-sm">Individual</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="form-control">
@@ -52,7 +52,7 @@
     </div>
   </div>
 
-  <div id="organization-fields" class="space-y-4" style="<%= 'display:none' unless @party.organization? %>">
+  <div id="organization-fields" class="space-y-4" style="<%= 'display:none' unless @party.organization? %>" data-party-form-target="organizationFields">
     <h3 class="font-medium text-sm">Organization</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="form-control">
@@ -123,18 +123,3 @@
     <%= link_to "Cancel", @party.persisted? ? teller_party_path(@party) : teller_parties_path, class: "btn btn-ghost" %>
   </div>
 <% end %>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const partyKindSelect = document.querySelector("#party_party_kind");
-    const individualFields = document.getElementById("individual-fields");
-    const organizationFields = document.getElementById("organization-fields");
-    if (partyKindSelect) {
-      partyKindSelect.addEventListener("change", function() {
-        const v = this.value;
-        individualFields.style.display = v === "individual" ? "block" : "none";
-        organizationFields.style.display = v === "organization" ? "block" : "none";
-      });
-    }
-  });
-</script>
