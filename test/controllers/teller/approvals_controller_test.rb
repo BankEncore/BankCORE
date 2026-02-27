@@ -4,7 +4,8 @@ module Teller
   class ApprovalsControllerTest < ActionDispatch::IntegrationTest
     setup do
       @user = User.take
-      @supervisor = User.create!(email_address: "supervisor-approval@example.com", password: "password")
+      @supervisor = User.create!(email_address: "supervisor-approval@example.com", password: "password", teller_number: "S01")
+      @supervisor.update_column(:password_hash, BCrypt::Password.create("1234").to_s)
       @branch = Branch.create!(code: "601", name: "Approval Branch")
       @workstation = Workstation.create!(branch: @branch, code: "AW1", name: "Approval WS")
       @drawer = CashLocation.create!(
@@ -59,6 +60,47 @@ module Teller
       assert_response :unauthorized
       body = JSON.parse(response.body)
       assert_equal false, body["ok"]
+    end
+
+    test "creates approval token with valid teller number and PIN" do
+      post teller_approvals_path, params: {
+        request_id: "approval-3",
+        reason: "threshold_exceeded",
+        policy_trigger: "amount_threshold",
+        policy_context: {}.to_json,
+        supervisor_teller_number: @supervisor.teller_number,
+        supervisor_pin: "1234"
+      }
+
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal true, body["ok"]
+      assert body["approval_token"].present?
+    end
+
+    test "rejects invalid teller number or PIN" do
+      post teller_approvals_path, params: {
+        request_id: "approval-4",
+        reason: "threshold_exceeded",
+        supervisor_teller_number: @supervisor.teller_number,
+        supervisor_pin: "wrong"
+      }
+
+      assert_response :unauthorized
+      body = JSON.parse(response.body)
+      assert_equal false, body["ok"]
+    end
+
+    test "returns bad request when no credentials provided" do
+      post teller_approvals_path, params: {
+        request_id: "approval-5",
+        reason: "threshold_exceeded"
+      }
+
+      assert_response :bad_request
+      body = JSON.parse(response.body)
+      assert_equal false, body["ok"]
+      assert_includes body["error"], "email"
     end
 
     private

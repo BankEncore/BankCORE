@@ -1,16 +1,31 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["panel", "reason", "supervisorEmail", "supervisorPassword", "approvalReasonInput", "policyTriggerInput", "policyContextInput"]
+  static targets = [
+    "panel", "reason",
+    "supervisorEmail", "supervisorPassword",
+    "supervisorTellerNumber", "supervisorPin",
+    "emailTab", "tellerTab", "emailPanel", "tellerPanel",
+    "approvalReasonInput", "policyTriggerInput", "policyContextInput"
+  ]
 
   static values = {
-    approvalUrl: String
+    approvalUrl: String,
+    credentialMode: { type: String, default: "teller" }
+  }
+
+  connect() {
+    this.applyMode()
   }
 
   show(event) {
     const policyTrigger = event.detail?.policyTrigger || ""
     const policyContext = event.detail?.policyContext || {}
     this.lastFocusedElement = document.activeElement
+
+    this.credentialModeValue = "teller"
+    this.applyMode()
+    this.clearCredentials()
 
     if (this.hasPanelTarget) {
       if (typeof this.panelTarget.showModal === "function") {
@@ -32,7 +47,33 @@ export default class extends Controller {
       this.policyContextInputTarget.value = JSON.stringify(policyContext)
     }
 
-    if (this.hasSupervisorEmailTarget) {
+    this.focusActivePanel()
+  }
+
+  switchToTeller() {
+    this.credentialModeValue = "teller"
+    this.applyMode()
+    this.focusActivePanel()
+  }
+
+  switchToEmail() {
+    this.credentialModeValue = "email"
+    this.applyMode()
+    this.focusActivePanel()
+  }
+
+  applyMode() {
+    const isTeller = this.credentialModeValue === "teller"
+    if (this.hasTellerTabTarget) this.tellerTabTarget.classList.toggle("tab-active", isTeller)
+    if (this.hasEmailTabTarget) this.emailTabTarget.classList.toggle("tab-active", !isTeller)
+    if (this.hasTellerPanelTarget) this.tellerPanelTarget.classList.toggle("hidden", !isTeller)
+    if (this.hasEmailPanelTarget) this.emailPanelTarget.classList.toggle("hidden", isTeller)
+  }
+
+  focusActivePanel() {
+    if (this.credentialModeValue === "teller" && this.hasSupervisorTellerNumberTarget) {
+      this.supervisorTellerNumberTarget.focus()
+    } else if (this.credentialModeValue === "email" && this.hasSupervisorEmailTarget) {
       this.supervisorEmailTarget.focus()
     }
   }
@@ -83,8 +124,14 @@ export default class extends Controller {
     formData.set("reason", this.hasApprovalReasonInputTarget ? this.approvalReasonInputTarget.value : "")
     formData.set("policy_trigger", this.hasPolicyTriggerInputTarget ? this.policyTriggerInputTarget.value : "")
     formData.set("policy_context", this.hasPolicyContextInputTarget ? this.policyContextInputTarget.value : "{}")
-    formData.set("supervisor_email_address", this.hasSupervisorEmailTarget ? this.supervisorEmailTarget.value : "")
-    formData.set("supervisor_password", this.hasSupervisorPasswordTarget ? this.supervisorPasswordTarget.value : "")
+
+    if (this.credentialModeValue === "teller") {
+      formData.set("supervisor_teller_number", this.hasSupervisorTellerNumberTarget ? this.supervisorTellerNumberTarget.value : "")
+      formData.set("supervisor_pin", this.hasSupervisorPinTarget ? this.supervisorPinTarget.value : "")
+    } else {
+      formData.set("supervisor_email_address", this.hasSupervisorEmailTarget ? this.supervisorEmailTarget.value : "")
+      formData.set("supervisor_password", this.hasSupervisorPasswordTarget ? this.supervisorPasswordTarget.value : "")
+    }
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content")
 
@@ -121,12 +168,9 @@ export default class extends Controller {
   }
 
   clearCredentials() {
-    if (this.hasSupervisorEmailTarget) {
-      this.supervisorEmailTarget.value = ""
-    }
-
-    if (this.hasSupervisorPasswordTarget) {
-      this.supervisorPasswordTarget.value = ""
-    }
+    if (this.hasSupervisorEmailTarget) this.supervisorEmailTarget.value = ""
+    if (this.hasSupervisorPasswordTarget) this.supervisorPasswordTarget.value = ""
+    if (this.hasSupervisorTellerNumberTarget) this.supervisorTellerNumberTarget.value = ""
+    if (this.hasSupervisorPinTarget) this.supervisorPinTarget.value = ""
   }
 }
