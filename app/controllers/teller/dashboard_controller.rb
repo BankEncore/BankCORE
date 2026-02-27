@@ -1,5 +1,20 @@
 module Teller
   class DashboardController < BaseController
+    def last_transaction_primary_account
+      authorize([ :teller, :dashboard ], :index?)
+      teller_session = current_teller_session
+      ref = if teller_session.present? && teller_session.open?
+        last_tx = teller_session.teller_transactions
+          .where(status: "posted")
+          .order(posted_at: :desc, id: :desc)
+          .limit(1)
+          .includes(posting_batch: :posting_legs)
+          .first
+        last_tx&.primary_account_reference
+      end
+      render json: { ok: true, primary_account_reference: ref }
+    end
+
     def index
       authorize([ :teller, :dashboard ], :index?)
       @teller_session = current_teller_session

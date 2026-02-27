@@ -410,11 +410,10 @@
       </div>
 
       <aside class="lg:col-span-4 space-y-4">
-        <%= render "teller/shared/reference_panel" %>
         <%= render "teller/shared/live_account_panel" %>
-        <%= render "teller/shared/drawer_totals", teller_session: teller_session %>
         <%= render "teller/shared/funds_availability_panel" %>
-        <%= render "teller/shared/recent_activity", teller_session: teller_session %>
+        <%= render "teller/shared/posting_readiness_panel" %>
+        <%# drawer_totals removed from transaction screen; partial kept at teller/shared/_drawer_totals.html.erb %>
       </aside>
     </div>
 

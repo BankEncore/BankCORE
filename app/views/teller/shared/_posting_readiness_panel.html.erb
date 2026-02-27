@@ -1,0 +1,29 @@
+<section aria-label="Posting Readiness" class="card bg-base-100 border border-base-300">
+  <div class="card-body p-3 md:p-4">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Posting Readiness</h2>
+        <p class="text-xs text-slate-600 mt-1">Request ID and readiness status.</p>
+      </div>
+    </div>
+    <div class="divider my-3"></div>
+    <dl class="space-y-1">
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Request ID</dt>
+        <dd class="ui-kv-value text-sm mono" data-posting-form-target="summaryRequestId">N/A</dd>
+      </div>
+      <div class="ui-kv-row">
+        <dt class="ui-kv-key text-xs">Status</dt>
+        <dd class="ui-kv-value text-sm">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <span class="badge badge-neutral" data-posting-form-target="summaryReadinessBadge">Blocked</span>
+            <span class="text-xs opacity-70" data-posting-form-target="summaryReadinessReason">Amount must be greater than zero.</span>
+          </div>
+        </dd>
+      </div>
+    </dl>
+    <div class="mt-3">
+      <button type="button" class="btn btn-ghost btn-sm" data-action="click->reference-panel#copyLastAccount">Use last account</button>
+    </div>
+  </div>
+</section>

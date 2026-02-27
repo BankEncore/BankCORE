@@ -33,4 +33,21 @@ class TellerTransaction < ApplicationRecord
 
     true
   end
+
+  INTERNAL_ACCOUNT_PREFIXES = %w[cash: check: income: official_check: expense:].freeze
+
+  def primary_account_reference
+    return nil unless posting_batch.present?
+    legs = posting_batch.posting_legs
+    customer_leg = legs.find { |l| customer_account_reference?(l.account_reference) }
+    customer_leg&.account_reference
+  end
+
+  private
+
+    def customer_account_reference?(ref)
+      ref = ref.to_s.strip
+      return false if ref.blank?
+      INTERNAL_ACCOUNT_PREFIXES.none? { |p| ref.start_with?(p) }
+    end
 end
