@@ -18,7 +18,7 @@ module Ops
         workstation: @workstation,
         cash_location: @drawer,
         status: "closed",
-        opened_at: 1.hour.ago,
+        opened_at: Date.current.beginning_of_day + 1.hour,
         closed_at: Time.current,
         opening_cash_cents: 5_000,
         closing_cash_cents: 5_150,
@@ -39,7 +39,7 @@ module Ops
       assert_response :success
       assert_select "h2", "Teller Sessions"
       assert_select "table"
-      assert_select "a", "Detail"
+      assert_select "table a", "Detail"
     end
 
     test "index with no matching sessions" do

@@ -6,11 +6,17 @@ module Teller
     before_action :require_posting_context!
 
     def create
-      supervisor = User.find_by(email_address: approval_params[:supervisor_email_address].to_s.strip.downcase)
+      identifier, secret = resolve_credentials
+      if identifier.blank? || secret.blank?
+        render json: { ok: false, error: "Provide either email + password or teller number + PIN" }, status: :bad_request
+        return
+      end
+
+      supervisor = Teller::CredentialVerifier.verify(identifier: identifier, secret: secret)
       policy_trigger = approval_params[:policy_trigger].presence || "amount_threshold"
       policy_context = parsed_policy_context
 
-      if supervisor.blank? || !supervisor.authenticate(approval_params[:supervisor_password].to_s)
+      if supervisor.blank?
         render json: { ok: false, error: "Invalid supervisor credentials" }, status: :unauthorized
         return
       end
@@ -57,7 +63,19 @@ module Teller
       end
 
       def approval_params
-        params.permit(:request_id, :reason, :supervisor_email_address, :supervisor_password, :policy_trigger, :policy_context)
+        params.permit(:request_id, :reason, :supervisor_email_address, :supervisor_password, :supervisor_teller_number, :supervisor_pin, :policy_trigger, :policy_context)
+      end
+
+      def resolve_credentials
+        teller_number = approval_params[:supervisor_teller_number].to_s.strip
+        pin = approval_params[:supervisor_pin].to_s
+        if teller_number.present?
+          [ teller_number, pin ]
+        else
+          email = approval_params[:supervisor_email_address].to_s.strip.downcase
+          password = approval_params[:supervisor_password].to_s
+          [ email.presence, password.presence ]
+        end
       end
 
       def parsed_policy_context
