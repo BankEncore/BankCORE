@@ -1,0 +1,31 @@
+<section aria-label="Posting readiness"
+         class="card bg-base-100 border border-base-300"
+         data-posting-form-target="readinessStrip">
+  <div class="card-body py-2 px-3 md:px-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="badge badge-neutral"
+              data-posting-form-target="summaryReadinessBadge">Blocked</span>
+
+        <span class="text-xs text-slate-600 leading-snug"
+              data-posting-form-target="summaryReadinessReason">
+          Amount must be greater than zero.
+        </span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="text-xs text-slate-500">
+          <span class="whitespace-nowrap">Request ID</span>
+          <span class="mono text-slate-900 break-all ml-2"
+                data-posting-form-target="summaryRequestId">N/A</span>
+        </div>
+
+        <button type="button"
+                class="btn btn-ghost btn-sm"
+                data-action="click->reference-panel#copyLastAccount">
+          Use last account
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
