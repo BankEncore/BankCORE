@@ -113,6 +113,17 @@ module Teller
       assert_equal supervisor, tt.approved_by_user
     end
 
+    test "assigns server-generated request_id when request_id is blank" do
+      post teller_posting_path, params: valid_posting_payload(request_id: "")
+
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal true, body["ok"]
+      assert body["request_id"].present?, "Response should include request_id"
+      assert_match(/\Aserver-\d+-[a-f0-9]+\z/, body["request_id"], "Request ID should be server-generated")
+      assert_equal 1, TellerTransaction.where(request_id: body["request_id"]).count
+    end
+
     test "persists check hold metadata into posting batch metadata" do
       post teller_posting_path, params: valid_posting_payload(
         request_id: "http-post-hold-1",

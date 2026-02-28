@@ -58,6 +58,9 @@ module Teller
       assert_select "div[data-deposit-form-target='cashAmountRow']", count: 1
       assert_select "input[type='hidden'][name='cash_account_reference'][value='cash:#{@drawer.code}']", count: 1
       assert_select "p[data-deposit-form-target='counterpartyRow']", count: 0
+      assert_select "input[type='hidden'][name='request_id'][value='']", count: 1
+      assert_select "input[name='request_id'][data-deposit-form-target='requestId']", count: 1
+      assert_select "input[name='request_id'][data-posting-form-target='requestId']", count: 1
 
       get teller_withdrawal_transaction_path
       assert_response :success
@@ -104,6 +107,21 @@ module Teller
       assert_select "h2", "Vault Transfer"
       assert_select "input[name='transaction_type'][value='vault_transfer']", count: 1
       assert_select "section[data-vault-transfer-form-target='vaultTransferSection']:not([hidden])", count: 1
+    end
+
+    test "modals are outside posting form to avoid nested forms" do
+      grant_posting_access(@user, @branch, @workstation)
+      sign_in_as(@user)
+      patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000, cash_location_id: @drawer.id }
+
+      get teller_deposit_transaction_path
+      assert_response :success
+
+      posting_form = css_select("#posting-form").first
+      assert posting_form, "Posting form should exist"
+      nested_forms = css_select("#posting-form form")
+      assert_equal 0, nested_forms.size, "Posting form should not contain nested forms"
     end
 
     test "allows transfer page with session" do
