@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["searchInput", "resultsList", "hiddenInput"]
+  static targets = ["searchInput", "resultsList", "hiddenInput", "maskedIdDisplay"]
 
   static values = {
     searchUrl: String
@@ -11,13 +11,33 @@ export default class extends Controller {
     this.searchTimeout = null
     this.blurHideTimeout = null
     this.element.addEventListener("tx:form-reset", this.handleFormReset.bind(this))
+    this.boundApplyPartyFromEvent = this.applyPartyFromEvent.bind(this)
+    document.addEventListener("apply-last-party", this.boundApplyPartyFromEvent)
     if (this.hasResultsListTarget) {
       this.resultsListTarget.addEventListener("mousedown", this.boundCancelBlurHide = () => this.cancelBlurHide())
+    }
+    this.notifyPrefilledParty()
+  }
+
+  notifyPrefilledParty() {
+    if (!this.hasHiddenInputTarget || !this.hasSearchInputTarget) return
+    const partyId = this.hiddenInputTarget.value?.trim()
+    const partyName = this.searchInputTarget.value?.trim()
+    if (partyId && partyName) {
+      requestAnimationFrame(() => {
+        document.dispatchEvent(
+          new CustomEvent("party-search:party-selected", {
+            bubbles: true,
+            detail: { partyId, partyName }
+          })
+        )
+      })
     }
   }
 
   disconnect() {
     this.element.removeEventListener("tx:form-reset", this.handleFormReset.bind(this))
+    document.removeEventListener("apply-last-party", this.boundApplyPartyFromEvent)
     if (this.hasResultsListTarget && this.boundCancelBlurHide) {
       this.resultsListTarget.removeEventListener("mousedown", this.boundCancelBlurHide)
     }
@@ -27,6 +47,8 @@ export default class extends Controller {
 
   handleFormReset() {
     this.hideResults()
+    this.clearMaskedIdDisplay()
+    this.dispatchPartyCleared()
     if (this.hasHiddenInputTarget) {
       this.hiddenInputTarget.value = ""
     }
@@ -111,6 +133,12 @@ export default class extends Controller {
     return div.innerHTML
   }
 
+  applyPartyFromEvent(event) {
+    const p = event?.detail
+    if (!p || !p.id) return
+    this.selectParty(p)
+  }
+
   selectParty(p) {
     if (this.hasHiddenInputTarget) {
       this.hiddenInputTarget.value = String(p.id)
@@ -118,13 +146,11 @@ export default class extends Controller {
     this.searchInputTarget.value = p.display_name || `Party #${p.id}`
     this.hideResults()
 
+    this.updateMaskedIdDisplay(p)
     document.dispatchEvent(
-      new CustomEvent("party-search:govt-id-populate", {
+      new CustomEvent("party-search:party-selected", {
         bubbles: true,
-        detail: {
-          govt_id_type: p.govt_id_type || "",
-          govt_id: p.govt_id || ""
-        }
+        detail: { partyId: String(p.id), partyName: p.display_name || `Party #${p.id}` }
       })
     )
 
@@ -132,16 +158,43 @@ export default class extends Controller {
   }
 
   clearSelection() {
+    this.clearMaskedIdDisplay()
+    this.dispatchPartyCleared()
     if (this.hasHiddenInputTarget) {
       this.hiddenInputTarget.value = ""
     }
-    document.dispatchEvent(
-      new CustomEvent("party-search:govt-id-populate", {
-        bubbles: true,
-        detail: { govt_id_type: "", govt_id: "" }
-      })
-    )
     this.dispatchRecalculate()
+  }
+
+  updateMaskedIdDisplay(p) {
+    if (!this.hasMaskedIdDisplayTarget) return
+    const el = this.maskedIdDisplayTarget
+    if (p.govt_id && p.govt_id.toString().trim().length > 0) {
+      const masked = p.govt_id.length > 4 ? `****${p.govt_id.slice(-4)}` : "****"
+      const typeLabel = this.titleizeGovtIdType(p.govt_id_type)
+      el.textContent = `ID: ${typeLabel} ${masked}`
+      el.hidden = false
+    } else {
+      el.textContent = ""
+      el.hidden = true
+    }
+  }
+
+  clearMaskedIdDisplay() {
+    if (!this.hasMaskedIdDisplayTarget) return
+    this.maskedIdDisplayTarget.textContent = ""
+    this.maskedIdDisplayTarget.hidden = true
+  }
+
+  titleizeGovtIdType(type) {
+    if (!type || typeof type !== "string") return "ID"
+    return type
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+  }
+
+  dispatchPartyCleared() {
+    document.dispatchEvent(new CustomEvent("party-search:party-cleared", { bubbles: true }))
   }
 
   hideResults() {

@@ -640,12 +640,8 @@ export default class extends Controller {
     })
   }
 
-  populateGovtIdFromParty(event) {
-    if (!this.hasIdTypeTarget || !this.hasIdNumberTarget) return
-    const { govt_id_type, govt_id } = event.detail || {}
-    this.idTypeTarget.value = govt_id_type || ""
-    this.idNumberTarget.value = govt_id || ""
-    this.recalculate()
+  populateGovtIdFromParty(_event) {
+    // No-op: ID fields removed; party govt_id shown as read-only masked display
   }
 
   setAmountCents(target, cents) {

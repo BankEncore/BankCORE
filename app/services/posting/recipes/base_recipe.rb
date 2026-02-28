@@ -15,10 +15,17 @@ module Posting
       end
 
       def served_party_metadata
+        party_id = posting_params[:party_id].to_s.presence
+        return {} if party_id.blank?
+
+        party = Party.find_by(id: party_id)
+        return { party_id: party_id } unless party
+
+        pi = party.party_individual
         {
-          party_id: posting_params[:party_id].to_s.presence,
-          id_type: posting_params[:id_type].to_s.presence,
-          id_number: posting_params[:id_number].to_s.presence
+          party_id: party_id,
+          id_type: (pi&.govt_id_type == "driver_license" ? "drivers_license" : pi&.govt_id_type).to_s.presence,
+          id_number: pi&.govt_id.to_s.presence
         }.compact
       end
 

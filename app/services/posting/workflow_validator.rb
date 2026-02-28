@@ -59,15 +59,9 @@ module Posting
 
       private
         def add_served_party_errors!(errors, params)
-          has_party = params[:party_id].to_s.strip.present?
-          has_id = params[:id_type].to_s.strip.present? && params[:id_number].to_s.strip.present?
-          return if has_party || has_id
+          return if params[:party_id].to_s.strip.present?
 
-          errors << "Party or ID (type + number) is required for the person being served"
-          return unless params[:party_id].to_s.strip.blank?
-
-          errors << "ID type is required when no party is selected" if params[:id_type].to_s.strip.blank?
-          errors << "ID number is required when no party is selected" if params[:id_number].to_s.strip.blank?
+          errors << "Party is required. Use search or 'Add new non-customer' for walk-ins."
         end
 
         def validate_draft(errors, params, mode:)

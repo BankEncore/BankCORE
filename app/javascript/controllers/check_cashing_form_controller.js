@@ -20,8 +20,6 @@ export default class extends PostingFormBase {
     "partyId",
     "feeCents",
     "feeIncomeAccountReference",
-    "idType",
-    "idNumber",
     "computedCashSubtotal",
     "computedCheckSubtotal",
     "computedCashBackRow",
@@ -68,8 +66,6 @@ export default class extends PostingFormBase {
       accountNumber: "",
       payerName: "",
       presenterType: "",
-      idType: this.hasIdTypeTarget ? this.idTypeTarget.value : "",
-      idNumber: this.hasIdNumberTarget ? this.idNumberTarget.value : "",
       partyId: this.hasPartyIdTarget ? this.partyIdTarget.value : ""
     }
   }
@@ -87,7 +83,7 @@ export default class extends PostingFormBase {
     }
 
     const totalAmountCents = state.effectiveAmountCents
-    const hasParty = state.partyId.trim().length > 0 || (state.idType.trim().length > 0 && state.idNumber.trim().length > 0)
+    const hasParty = state.partyId.trim().length > 0
     const requiresParty = getRequiresParty(transactionType, this.workflowSchema)
     const hasInvalidCheckRows = this.hasInvalidCheckRows()
     const hasInvalidCheckCashingFields = this.hasInvalidCheckCashingFields(checkCashingAmounts)
@@ -127,11 +123,6 @@ export default class extends PostingFormBase {
 
     if (this.hasCheckSectionTarget) this.checkSectionTarget.hidden = !showCheckSection
     if (this.hasCheckCashingSectionTarget) this.checkCashingSectionTarget.hidden = !showCheckCashingSection
-    if (this.hasIdNumberTarget) {
-      const idRequired = showCheckCashingSection && !hasParty
-      this.idNumberTarget.required = idRequired
-      this.idNumberTarget.setAttribute("aria-required", idRequired ? "true" : "false")
-    }
 
     if (this.hasComputedCashSubtotalTarget) this.computedCashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
     if (this.hasComputedCheckSubtotalTarget) this.computedCheckSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
@@ -234,13 +225,7 @@ export default class extends PostingFormBase {
   }
 
   hasInvalidCheckCashingFields({ checkAmountCents, feeCents, netCashPayoutCents }) {
-    const hasParty = (this.hasPartyIdTarget && this.partyIdTarget.value.trim().length > 0) || (this.hasIdTypeTarget && this.idTypeTarget.value.trim().length > 0 && this.hasIdNumberTarget && this.idNumberTarget.value.trim().length > 0)
-    const hasIdType = this.hasIdTypeTarget && this.idTypeTarget.value.trim().length > 0
-    const hasIdNumber = this.hasIdNumberTarget && this.idNumberTarget.value.trim().length > 0
-    const idRequired = !hasParty
-    const hasValidId = !idRequired || (hasIdType && hasIdNumber)
-
-    return checkAmountCents <= 0 || feeCents < 0 || feeCents > checkAmountCents || netCashPayoutCents <= 0 || !hasValidId
+    return checkAmountCents <= 0 || feeCents < 0 || feeCents > checkAmountCents || netCashPayoutCents <= 0
   }
 
   checkAccountReference(check, index) {
@@ -258,8 +243,6 @@ export default class extends PostingFormBase {
     if (this.hasAmountCentsTarget) this.setAmountCents(this.amountCentsTarget, 0)
     if (this.hasFeeCentsTarget) this.setAmountCents(this.feeCentsTarget, 0)
     if (this.hasPartyIdTarget) this.partyIdTarget.value = ""
-    if (this.hasIdTypeTarget) this.idTypeTarget.value = "drivers_license"
-    if (this.hasIdNumberTarget) this.idNumberTarget.value = ""
     if (this.hasFeeIncomeAccountReferenceTarget) this.feeIncomeAccountReferenceTarget.value = "income:check_cashing_fee"
     if (this.hasCheckRowsTarget) this.checkRowsTarget.innerHTML = ""
     if (isAfterPost && this.hasCashAccountReferenceTarget) {

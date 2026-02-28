@@ -70,7 +70,7 @@ module Teller
         end
         if requires_served_party?(transaction_type)
           @parties = Party.where(is_active: true, party_kind: "individual").order(display_name: :asc).limit(50)
-          @selected_party = Party.find_by(id: params[:party_id]) if params[:party_id].present?
+          @selected_party = Party.includes(:party_individual).find_by(id: params[:party_id]) if params[:party_id].present?
         end
         render :show
       end

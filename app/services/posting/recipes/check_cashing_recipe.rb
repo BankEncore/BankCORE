@@ -15,6 +15,7 @@ module Posting
 
         metadata = {}
         metadata[:served_party] = served_party_metadata if served_party_metadata.any?
+        sp = served_party_metadata
         metadata[:check_cashing] = {
           check_items: check_items.map do |item|
             {
@@ -30,8 +31,8 @@ module Posting
           net_cash_payout_cents: net_cash_payout_cents,
           party_id: posting_params[:party_id].to_s,
           fee_income_account_reference: fee_income_account_reference,
-          id_type: posting_params[:id_type].to_s,
-          id_number: posting_params[:id_number].to_s
+          id_type: sp[:id_type].to_s,
+          id_number: sp[:id_number].to_s
         }
         metadata
       end

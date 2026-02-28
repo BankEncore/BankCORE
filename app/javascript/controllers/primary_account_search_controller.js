@@ -21,11 +21,34 @@ export default class extends Controller {
     this.partyAccounts = []
     this.isSelectingParty = false
     this.element.addEventListener("tx:form-reset", this.handleFormReset.bind(this))
+    this.boundOnNowServingPartySelected = this.onNowServingPartySelected.bind(this)
+    this.boundOnNowServingPartyCleared = this.onNowServingPartyCleared.bind(this)
+    document.addEventListener("party-search:party-selected", this.boundOnNowServingPartySelected)
+    document.addEventListener("party-search:party-cleared", this.boundOnNowServingPartyCleared)
   }
 
   disconnect() {
     this.element.removeEventListener("tx:form-reset", this.handleFormReset.bind(this))
+    document.removeEventListener("party-search:party-selected", this.boundOnNowServingPartySelected)
+    document.removeEventListener("party-search:party-cleared", this.boundOnNowServingPartyCleared)
     if (this.searchTimeout) clearTimeout(this.searchTimeout)
+  }
+
+  onNowServingPartySelected(event) {
+    const { partyId, partyName } = event.detail || {}
+    if (partyId && this.partyAccountsUrlTemplateValue) {
+      this.selectParty(partyId, partyName || `Party #${partyId}`)
+    }
+  }
+
+  onNowServingPartyCleared() {
+    this.hidePartyAccounts()
+    this.selectedPartyId = null
+    this.partyAccounts = []
+    if (this.hasAccountSelectTarget) {
+      this.accountSelectTarget.innerHTML = ""
+      this.accountSelectTarget.value = ""
+    }
   }
 
   handleFormReset() {

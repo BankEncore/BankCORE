@@ -4,7 +4,8 @@ export default class extends Controller {
   static values = {
     accountReferenceUrl: String,
     advisoriesUrl: String,
-    lastAccountUrl: String
+    lastAccountUrl: String,
+    lastServedPartyUrl: String
   }
 
   connect() {
@@ -342,6 +343,34 @@ export default class extends Controller {
       this.showCopyMessage("Last account applied.")
     } catch {
       this.showCopyMessage("Could not load last account.")
+    }
+  }
+
+  async copyLastServedParty() {
+    if (!this.hasLastServedPartyUrlValue) return
+    try {
+      const response = await fetch(this.lastServedPartyUrlValue, { headers: { Accept: "application/json" } })
+      const body = await response.json()
+      const partyId = body.party_id
+      if (!partyId || typeof partyId !== "string") {
+        this.showCopyMessage("No previous party.")
+        return
+      }
+      const party = {
+        id: partyId,
+        display_name: body.display_name || `Party #${partyId}`,
+        govt_id_type: body.govt_id_type,
+        govt_id: body.govt_id
+      }
+      document.dispatchEvent(
+        new CustomEvent("apply-last-party", {
+          bubbles: true,
+          detail: party
+        })
+      )
+      this.showCopyMessage("Previous party applied.")
+    } catch {
+      this.showCopyMessage("Could not load previous party.")
     }
   }
 

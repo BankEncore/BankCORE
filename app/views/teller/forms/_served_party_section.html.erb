@@ -1,13 +1,19 @@
 <%# Shared "Now Serving" / served party section for customer transactions.
     Used by: deposit, withdrawal, transfer, draft, check cashing.
     Requires: form, workflow_form_controller (wfc)
-    Optional: selected_party, show_id_row (default true for non-customer fallback), hint (custom hint text)
+    Optional: selected_party, hint (custom hint text)
 %>
 <% form = local_assigns.fetch(:form) %>
 <% wfc = local_assigns.fetch(:workflow_form_controller, "form") %>
 <% selected_party = local_assigns[:selected_party] %>
-<% show_id_row = local_assigns.fetch(:show_id_row, true) %>
-<% hint = local_assigns.fetch(:hint, "Person with whom the teller is performing this transaction (customer or non-customer).") %>
+<% hint = local_assigns.fetch(:hint, "Now serving (customer or non-customer).") %>
+<% masked_id_text = nil %>
+<% if selected_party&.party_individual&.govt_id.present? %>
+  <% pi = selected_party.party_individual %>
+  <% id_type_label = (pi.govt_id_type == "driver_license" ? "Drivers License" : pi.govt_id_type&.titleize) || "ID" %>
+  <% masked = pi.govt_id.length > 4 ? "****#{pi.govt_id[-4, 4]}" : "****" %>
+  <% masked_id_text = "ID: #{id_type_label} #{masked}" %>
+<% end %>
 
 <section data-<%= wfc %>-target="servedPartySection" class="served-party-section">
   <div class="font-medium mb-2">Now Serving</div>
@@ -29,23 +35,8 @@
         </div>
       </div>
       <span class="text-xs text-slate-600 mt-1 block"><%= hint %></span>
-      <%= link_to "Add new party", new_teller_party_path(party_kind: "individual", return_to: request.original_url), class: "link link-hover text-xs mt-1 inline-block" %>
+      <p class="text-xs text-slate-600 mt-1" data-party-search-target="maskedIdDisplay" <%= "hidden" unless masked_id_text %>><%= masked_id_text %></p>
+      <%= link_to "Add new non-customer", new_teller_party_path(party_kind: "individual", relationship_kind: "non_customer", return_to: request.original_url), class: "link link-hover text-xs mt-1 inline-block" %>
     </div>
   </div>
-
-  <% if show_id_row %>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3" data-<%= wfc %>-target="servedPartyIdRow">
-      <p class="form-control">
-        <%= form.label :id_type, "ID Type", class: "text-xs font-medium text-slate-700" %><br>
-        <%= form.select :id_type,
-          options_for_select([["Driver's License", "drivers_license"], ["Passport", "passport"], ["State ID", "state_id"], ["Other", "other"]], ""),
-          { include_blank: "Select type" },
-          { data: { "#{wfc}_target": "idType", action: "change->#{wfc}#recalculate" }, class: "select select-bordered w-full" } %>
-      </p>
-      <p class="form-control">
-        <%= form.label :id_number, "ID Number", class: "text-xs font-medium text-slate-700" %><br>
-        <%= form.text_field :id_number, data: { "#{wfc}_target": "idNumber", action: "input->#{wfc}#recalculate" }, class: "input input-bordered", placeholder: "Required when no party selected" %>
-      </p>
-    </div>
-  <% end %>
 </section>

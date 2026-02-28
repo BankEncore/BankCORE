@@ -30,9 +30,7 @@ export default class extends PostingFormBase {
     "computedCashBackSubtotal",
     "computedFeeSubtotal",
     "computedNetTotal",
-    "partyId",
-    "idType",
-    "idNumber"
+    "partyId"
   ]
 
   connect() {
@@ -74,8 +72,6 @@ export default class extends PostingFormBase {
       accountNumber: "",
       payerName: "",
       presenterType: "",
-      idType: this.hasIdTypeTarget ? this.idTypeTarget.value : "",
-      idNumber: this.hasIdNumberTarget ? this.idNumberTarget.value : "",
       partyId: this.hasPartyIdTarget ? this.partyIdTarget.value : ""
     }
   }
@@ -94,7 +90,7 @@ export default class extends PostingFormBase {
     const requiresCounterparty = getRequiresCounterpartyAccount(transactionType, this.workflowSchema)
     const requiresCashAccount = getRequiresCashAccount(transactionType, this.workflowSchema, {})
     const requiresParty = getRequiresParty(transactionType, this.workflowSchema)
-    const hasServedParty = state.partyId.trim().length > 0 || (state.idType.trim().length > 0 && state.idNumber.trim().length > 0)
+    const hasServedParty = state.partyId.trim().length > 0
     const hasCashAccount = state.cashAccountReference.trim().length > 0
     const hasInvalidTransferFields = this.hasInvalidTransferFields(transferAmounts, totalAmountCents, showTransferSection)
 
@@ -212,8 +208,6 @@ export default class extends PostingFormBase {
     if (this.hasPrimaryAccountReferenceTarget) this.primaryAccountReferenceTarget.value = ""
     if (this.hasCounterpartyAccountReferenceTarget) this.counterpartyAccountReferenceTarget.value = ""
     if (this.hasPartyIdTarget) this.partyIdTarget.value = ""
-    if (this.hasIdTypeTarget) this.idTypeTarget.value = ""
-    if (this.hasIdNumberTarget) this.idNumberTarget.value = ""
     if (this.hasAmountCentsTarget) this.setAmountCents(this.amountCentsTarget, 0)
     if (this.hasTransferFeeCentsTarget) this.setAmountCents(this.transferFeeCentsTarget, 0)
     if (isAfterPost && this.hasCashAccountReferenceTarget) {

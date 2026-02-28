@@ -33,6 +33,7 @@ Rails.application.routes.draw do
     get "transactions/search", to: "transaction_searches#index", as: :transaction_search
     get "account_reference", to: "account_references#show", as: :account_reference
     get "last_transaction_primary_account", to: "dashboard#last_transaction_primary_account", as: :last_transaction_primary_account
+    get "last_transaction_served_party", to: "dashboard#last_transaction_served_party", as: :last_transaction_served_party
     get "advisories/for_entity", to: "advisories#for_entity", as: :advisories_for_entity
     post "advisories/:id/acknowledge", to: "advisories#acknowledge", as: :acknowledge_advisory
     get "account_history", to: "account_references#history", as: :account_history

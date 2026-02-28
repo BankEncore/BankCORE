@@ -1,6 +1,7 @@
 <div class="posting-workspace">
   <% flow_type = local_assigns.fetch(:default_transaction_type, "deposit").presence || "deposit" %>
   <% workflow_form_controller = local_assigns.fetch(:workflow_form_controller, "#{flow_type.tr('_', '-')}-form") %>
+  <% selected_party = local_assigns[:selected_party] %>
   <% cash_account_reference_value = teller_session.cash_location.present? ? "cash:#{teller_session.cash_location.code}" : "" %>
   <% cash_locations = Array(local_assigns.fetch(:cash_locations, [])).compact %>
 
@@ -14,7 +15,7 @@
     </div>
 
     <div class="mb-4">
-      <%= render "teller/shared/posting_readiness_strip" %>
+      <%= render "teller/shared/posting_readiness_strip", show_serve_previous_party: %w[deposit withdrawal transfer draft check_cashing].include?(flow_type) %>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">

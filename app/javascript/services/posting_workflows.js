@@ -189,7 +189,7 @@ export function blockedReason({
   if (requiresPrimaryAccount && !hasPrimaryAccount) return "Primary account reference is required."
   if (requiresCounterparty && !hasCounterparty) return "Counterparty account reference is required."
   if (requiresSettlementAccount && !hasSettlementAccount) return "Settlement account reference is required."
-  if (requiresParty && !hasParty) return "Party or ID (type + number) is required for the person being served."
+  if (requiresParty && !hasParty) return "Party is required. Use search or Add new non-customer for walk-ins."
   if (requiresCashAccount && !hasCashAccount) return "Cash account reference is required."
   if (hasInvalidCheckRows) return "Complete check routing, account, and number for each entered check."
   if (hasInvalidCheckCashingFields) return "Complete party, check amounts, and ID (when no party selected)."

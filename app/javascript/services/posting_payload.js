@@ -76,8 +76,6 @@ function appendVaultTransferPayload(formData, state) {
 
 function appendServedPartyPayload(formData, state) {
   formData.set("party_id", (state.partyId ?? "").trim())
-  formData.set("id_type", (state.idType ?? "").trim())
-  formData.set("id_number", (state.idNumber ?? "").trim())
 }
 
 function appendCheckCashingPayload(formData, state) {
