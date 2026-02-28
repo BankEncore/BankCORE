@@ -5,6 +5,7 @@ module Teller
     setup do
       @user = User.take
       @branch = Branch.create!(code: "401", name: "Post Branch")
+      @party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Post Test Party", is_active: true)
       @workstation = Workstation.create!(branch: @branch, code: "PW1", name: "Post WS")
       @drawer = CashLocation.create!(
         branch: @branch,
@@ -34,8 +35,10 @@ module Teller
     test "returns unprocessable entity for unbalanced request" do
       post teller_posting_path, params: valid_posting_payload(
         request_id: "http-post-2",
+        amount_cents: 5_000,
         entries: [
-          { side: "debit", account_reference: "check:111000:222000:9001", amount_cents: 9_500 }
+          { side: "debit", account_reference: "check:111000:222000:9001", amount_cents: 9_500 },
+          { side: "credit", account_reference: "acct:deposit", amount_cents: 5_000 }
         ]
       )
 
@@ -162,6 +165,7 @@ module Teller
           request_id: request_id,
           transaction_type: "deposit",
           amount_cents: amount_cents,
+          party_id: @party.id,
           primary_account_reference: "acct:deposit",
           cash_account_reference: "cash:#{@drawer.code}",
           entries: entries || [

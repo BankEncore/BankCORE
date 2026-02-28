@@ -17,6 +17,7 @@ module Teller
       sign_in_as(@user)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
       post teller_teller_session_path, params: { opening_cash_cents: 10_000, cash_location_id: @drawer.id }
+      @party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Validate Party", is_active: true)
     end
 
     test "validates a balanced deposit request" do
@@ -24,6 +25,7 @@ module Teller
         request_id: "validate-1",
         transaction_type: "deposit",
         amount_cents: 20_000,
+        party_id: @party.id,
         primary_account_reference: "acct:customer",
         cash_account_reference: "cash:drawer"
       }
@@ -43,6 +45,7 @@ module Teller
         request_id: "validate-2",
         transaction_type: "deposit",
         amount_cents: 150_000,
+        party_id: @party.id,
         primary_account_reference: "acct:customer",
         cash_account_reference: "cash:drawer"
       }
@@ -64,6 +67,7 @@ module Teller
         request_id: "validate-3",
         transaction_type: "deposit",
         amount_cents: 30_000,
+        party_id: @party.id,
         primary_account_reference: "acct:customer",
         cash_account_reference: "cash:drawer",
         entries: [
@@ -87,6 +91,7 @@ module Teller
         request_id: "validate-draft-1",
         transaction_type: "draft",
         amount_cents: 12_500,
+        party_id: @party.id,
         draft_amount_cents: 12_000,
         draft_fee_cents: 500,
         draft_cash_cents: 0,
