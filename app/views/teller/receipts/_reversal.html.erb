@@ -67,7 +67,7 @@
       <% posting_legs.each do |leg| %>
         <tr class="row-border">
           <td class="py-1"><%= leg.side %></td>
-          <td class="py-1 font-mono text-xs"><%= leg.account_reference %></td>
+          <td class="py-1 font-mono text-xs"><%= leg_display_label(leg, branch: teller_transaction.branch) %></td>
           <td class="py-1 text-right tabular-nums"><%= receipt_money(leg.amount_cents) %></td>
         </tr>
       <% end %>
