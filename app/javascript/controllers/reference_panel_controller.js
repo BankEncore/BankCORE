@@ -229,7 +229,7 @@ export default class extends Controller {
   }
 
   renderReadiness(readyToPost, blockedReason) {
-    const badges = this.element.querySelectorAll("[data-posting-form-target=\"summaryReadinessBadge\"]")
+    const badges = this.findAllPostingTargets("summaryReadinessBadge")
     this.setTextAll("summaryReadinessBadge", readyToPost ? "Ready to Post" : "Blocked")
     this.setTextAll("summaryReadinessReason", readyToPost ? "Balanced and required fields complete." : (blockedReason || "Resolve form issues before posting."))
 
@@ -262,8 +262,7 @@ export default class extends Controller {
   }
 
   setTextAll(postingTargetName, value) {
-    const elements = this.element.querySelectorAll(`[data-posting-form-target="${postingTargetName}"]`)
-    elements.forEach((el) => { el.textContent = value })
+    this.findAllPostingTargets(postingTargetName).forEach((el) => { el.textContent = value })
   }
 
   setHtml(postingTargetName, value) {
@@ -281,7 +280,17 @@ export default class extends Controller {
   }
 
   findPostingTarget(targetName) {
-    return this.element.querySelector(`[data-posting-form-target="${targetName}"]`)
+    const el = this.findAllPostingTargets(targetName)[0]
+    return el || null
+  }
+
+  findAllPostingTargets(targetName) {
+    const prefixes = ["posting-form", "deposit-form", "withdrawal-form", "transfer-form", "check-cashing-form", "draft-form", "vault-transfer-form"]
+    const found = new Set()
+    for (const p of prefixes) {
+      this.element.querySelectorAll(`[data-${p}-target="${targetName}"]`).forEach((el) => found.add(el))
+    }
+    return [...found]
   }
 
   formatCents(cents) {

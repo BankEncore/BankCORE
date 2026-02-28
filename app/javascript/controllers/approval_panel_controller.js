@@ -94,7 +94,7 @@ export default class extends Controller {
       return
     }
 
-    const fallbackPostButton = this.element.querySelector('[data-posting-form-target="headerSubmitButton"]') || this.element.querySelector('[data-posting-form-target="submitButton"]')
+    const fallbackPostButton = this.element.querySelector('#posting-form-header-submit')
     if (fallbackPostButton && typeof fallbackPostButton.focus === "function") {
       fallbackPostButton.focus()
     }
@@ -109,8 +109,9 @@ export default class extends Controller {
     this.clearCredentials()
   }
 
-  async request() {
-    const requestIdElement = this.element.querySelector('[data-posting-form-target="requestId"]')
+  async request(event) {
+    if (event?.preventDefault) event.preventDefault()
+    const requestIdElement = this.element.querySelector('input[name="request_id"]')
     if (!requestIdElement || !requestIdElement.value) {
       this.element.dispatchEvent(new CustomEvent("tx:approval-error", {
         bubbles: true,

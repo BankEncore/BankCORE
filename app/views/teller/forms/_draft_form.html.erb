@@ -1,0 +1,110 @@
+<% form = local_assigns.fetch(:form) %>
+<% cash_account_reference_value = local_assigns.fetch(:cash_account_reference_value, "") %>
+<% wfc = local_assigns.fetch(:workflow_form_controller, "draft-form") %>
+
+<%= hidden_field_tag :transaction_type, "draft", data: { "#{wfc}_target": "transactionType" } %>
+
+<div class="flex flex-col md:flex-row gap-3">
+  <div class="form-control overflow-visible flex-1 min-w-0" data-<%= wfc %>-target="primaryAccountRow">
+    <%= form.label :primary_account_reference, "Primary Account (optional)", class: "text-xs font-medium text-slate-700 block" %>
+    <div class="relative overflow-visible" data-controller="primary-account-search"
+         data-primary-account-search-search-url-value="<%= teller_transaction_search_path %>"
+         data-primary-account-search-party-accounts-url-template-value="<%= accounts_teller_party_path('__ID__') %>">
+      <%= form.text_field :primary_account_reference,
+        data: {
+          "#{wfc}_target": "primaryAccountReference",
+          primary_account_search_target: "searchInput",
+          action: "input->#{wfc}#recalculate input->primary-account-search#search input->primary-account-search#onInputFreeTyping"
+        },
+        required: false,
+        class: "input input-bordered w-full",
+        placeholder: "Search party or account #, or leave blank",
+        autocomplete: "off" %>
+      <div data-primary-account-search-target="resultsList"
+           class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
+           hidden>
+      </div>
+      <div data-primary-account-search-target="partyAccountsRow" class="mt-2" hidden>
+        <label class="text-xs font-medium text-slate-700">Select account for <span data-primary-account-search-target="partyName"></span></label>
+        <select data-primary-account-search-target="accountSelect"
+                data-action="change->primary-account-search#selectAccountFromDropdown"
+                class="select select-bordered w-full mt-1">
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%= form.hidden_field :amount_cents, value: 0, data: { "#{wfc}_target": "amountCents" } %>
+
+<%= form.hidden_field :cash_account_reference,
+  value: cash_account_reference_value,
+  data: { "#{wfc}_target": "cashAccountReference" } %>
+
+<section data-<%= wfc %>-target="draftSection">
+  <div class="divider my-3"></div>
+  <div class="font-medium">Bank Draft Details</div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+    <div class="form-control">
+      <%= form.label :draft_amount_cents, "Draft Amount", class: "text-xs font-medium text-slate-700 block" %>
+      <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+        <%= form.hidden_field :draft_amount_cents, value: 0, data: { "#{wfc}_target": "draftAmountCents", currency_input_target: "hiddenInput" } %>
+        <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Draft Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_amount_cents) %>" />
+      </div>
+    </div>
+    <div class="form-control">
+      <%= form.label :draft_fee_cents, "Fee", class: "text-xs font-medium text-slate-700 block" %>
+      <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+        <%= form.hidden_field :draft_fee_cents, value: 0, data: { "#{wfc}_target": "draftFeeCents", currency_input_target: "hiddenInput" } %>
+        <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Draft Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_fee_cents) %>" />
+      </div>
+    </div>
+    <div class="form-control md:col-span-2">
+      <%= form.label :draft_payee_name, "Payee", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.text_field :draft_payee_name, data: { "#{wfc}_target": "draftPayeeName", action: "input->#{wfc}\#recalculate" }, class: "input input-bordered" %>
+    </div>
+    <div class="form-control">
+      <%= form.label :draft_instrument_number, "Instrument Number", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.text_field :draft_instrument_number, data: { "#{wfc}_target": "draftInstrumentNumber", action: "input->#{wfc}\#recalculate" }, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <%= render "teller/forms/check_section", workflow_form_controller: wfc %>
+
+  <div class="mt-3">
+    <div class="font-medium text-sm mb-2">Payment (cash + checks + account = total due)</div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div class="form-control">
+        <%= form.label :draft_cash_cents, "Cash", class: "text-xs font-medium text-slate-700 block" %>
+        <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+          <%= form.hidden_field :draft_cash_cents, value: 0, data: { "#{wfc}_target": "draftCashCents", currency_input_target: "hiddenInput" } %>
+          <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_cash_cents) %>" />
+        </div>
+      </div>
+      <div class="form-control">
+        <span class="text-xs font-medium text-slate-700 block">Checks</span>
+        <p class="text-sm mono py-2" data-<%= wfc %>-target="draftCheckSubtotal">$0.00</p>
+        <span class="text-xs text-slate-600">From check rows above</span>
+      </div>
+      <div class="form-control">
+        <%= form.label :draft_account_cents, "Account Transfer", class: "text-xs font-medium text-slate-700 block" %>
+        <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+          <%= form.hidden_field :draft_account_cents, value: 0, data: { "#{wfc}_target": "draftAccountCents", currency_input_target: "hiddenInput" } %>
+          <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Account payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_account_cents) %>" />
+        </div>
+      </div>
+    </div>
+    <div class="mt-2 text-sm">
+      <span data-<%= wfc %>-target="draftTotalDue">Total due: $0.00</span>
+      <span class="ml-3" data-<%= wfc %>-target="draftBalance">Balance: $0.00</span>
+    </div>
+  </div>
+
+  <%= form.hidden_field :draft_liability_account_reference,
+    value: "official_check:outstanding",
+    data: { "#{wfc}_target": "draftLiabilityAccountReference" } %>
+  <%= form.hidden_field :draft_fee_income_account_reference,
+    value: "income:draft_fee",
+    data: { "#{wfc}_target": "draftFeeIncomeAccountReference" } %>
+</section>

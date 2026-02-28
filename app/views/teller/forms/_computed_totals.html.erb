@@ -1,0 +1,41 @@
+<% show_cash_back = local_assigns.fetch(:show_cash_back, false) %>
+<% wfc = local_assigns.fetch(:workflow_form_controller, "posting-form") %>
+<div class="mt-4 rounded-lg border border-base-300 bg-base-200 p-3">
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+    <div>
+      <div class="font-medium text-sm mb-2">Computed</div>
+      <dl class="space-y-1">
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Cash</dt>
+          <dd class="ui-kv-value text-sm mono" data-<%= wfc %>-target="computedCashSubtotal">$0.00</dd>
+        </div>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Checks</dt>
+          <dd class="ui-kv-value text-sm mono" data-<%= wfc %>-target="computedCheckSubtotal">$0.00</dd>
+        </div>
+        <% if show_cash_back %>
+        <div class="ui-kv-row" data-<%= wfc %>-target="computedCashBackRow">
+          <dt class="ui-kv-key text-xs">Cash Back</dt>
+          <dd class="ui-kv-value text-sm mono" data-<%= wfc %>-target="computedCashBackSubtotal">$0.00</dd>
+        </div>
+        <% else %>
+        <div class="ui-kv-row" data-<%= wfc %>-target="computedCashBackRow" hidden>
+          <dt class="ui-kv-key text-xs">Cash Back</dt>
+          <dd class="ui-kv-value text-sm mono" data-<%= wfc %>-target="computedCashBackSubtotal">$0.00</dd>
+        </div>
+        <% end %>
+        <div class="ui-kv-row">
+          <dt class="ui-kv-key text-xs">Fee</dt>
+          <dd class="ui-kv-value text-sm mono" data-<%= wfc %>-target="computedFeeSubtotal">$0.00</dd>
+        </div>
+      </dl>
+    </div>
+    <div class="md:text-right">
+      <div class="font-medium text-sm mb-2">Net total</div>
+      <div class="text-lg font-semibold">
+        <span class="ui-money" data-<%= wfc %>-target="computedNetTotal">$0.00</span>
+      </div>
+      <p class="text-xs text-slate-600 mt-1">Posted to customer account upon submit.</p>
+    </div>
+  </div>
+</div>

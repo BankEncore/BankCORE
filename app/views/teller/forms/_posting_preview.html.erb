@@ -1,0 +1,26 @@
+<section aria-label="Posting Preview" class="card bg-base-100 border border-base-300" data-posting-form-target="postingPreviewSection">
+  <div class="card-body">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="card-title text-base">Posting Preview</h2>
+        <p class="text-xs text-slate-600 mt-1">Ledger entries: debits and credits.</p>
+      </div>
+      <span class="badge badge-outline">Preview</span>
+    </div>
+    <div class="divider my-3"></div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="row-border t-head">
+            <th class="py-2 text-left">Leg</th>
+            <th class="py-2 text-left">GL Account</th>
+            <th class="py-2 text-right">Debit</th>
+            <th class="py-2 text-right">Credit</th>
+          </tr>
+        </thead>
+        <tbody data-posting-form-target="postingPreviewBody"></tbody>
+      </table>
+    </div>
+    <p class="mt-3 text-xs text-slate-600" data-posting-form-target="postingPreviewEmpty">Enter amounts to see posting preview.</p>
+  </div>
+</section>

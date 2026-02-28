@@ -3,42 +3,44 @@
     <h2 class="font-semibold text-lg">Approval Required</h2>
     <p class="text-sm opacity-70 mt-1" data-approval-panel-target="reason"></p>
 
-    <div role="tablist" class="tabs tabs-boxed mt-4">
-      <button type="button" role="tab" data-approval-panel-target="tellerTab" data-action="click->approval-panel#switchToTeller" class="tab tab-active">Teller Number & PIN</button>
-      <button type="button" role="tab" data-approval-panel-target="emailTab" data-action="click->approval-panel#switchToEmail" class="tab">Email & Password</button>
-    </div>
+    <form id="approval-modal-form" data-action="submit->approval-panel#request" class="mt-4">
+      <div role="tablist" class="tabs tabs-boxed">
+        <button type="button" role="tab" data-approval-panel-target="tellerTab" data-action="click->approval-panel#switchToTeller" class="tab tab-active">Teller Number & PIN</button>
+        <button type="button" role="tab" data-approval-panel-target="emailTab" data-action="click->approval-panel#switchToEmail" class="tab">Email & Password</button>
+      </div>
 
-    <div data-approval-panel-target="tellerPanel" class="mt-4">
-      <p class="form-control">
-        <label for="supervisor_teller_number">Teller Number</label><br>
-        <input id="supervisor_teller_number" type="text" class="input input-bordered" data-approval-panel-target="supervisorTellerNumber" maxlength="4" placeholder="e.g. 002" autocomplete="off">
-      </p>
-      <p class="form-control mt-2">
-        <label for="supervisor_pin">PIN</label><br>
-        <input id="supervisor_pin" type="password" class="input input-bordered" data-approval-panel-target="supervisorPin" inputmode="numeric" autocomplete="off">
-      </p>
-    </div>
+      <div data-approval-panel-target="tellerPanel" class="mt-4">
+        <p class="form-control">
+          <label for="supervisor_teller_number">Teller Number</label><br>
+          <input id="supervisor_teller_number" type="text" class="input input-bordered" data-approval-panel-target="supervisorTellerNumber" maxlength="4" placeholder="e.g. 002" autocomplete="off">
+        </p>
+        <p class="form-control mt-2">
+          <label for="supervisor_pin">PIN</label><br>
+          <input id="supervisor_pin" type="password" class="input input-bordered" data-approval-panel-target="supervisorPin" inputmode="numeric" autocomplete="off">
+        </p>
+      </div>
 
-    <div data-approval-panel-target="emailPanel" class="mt-4 hidden">
-      <p class="form-control">
-        <label for="supervisor_email_address">Supervisor Email</label><br>
-        <input id="supervisor_email_address" type="email" class="input input-bordered" data-approval-panel-target="supervisorEmail" autocomplete="email">
-      </p>
-      <p class="form-control mt-2">
-        <label for="supervisor_password">Supervisor Password</label><br>
-        <input id="supervisor_password" type="password" class="input input-bordered" data-approval-panel-target="supervisorPassword" autocomplete="current-password">
-      </p>
-    </div>
+      <div data-approval-panel-target="emailPanel" class="mt-4 hidden">
+        <p class="form-control">
+          <label for="supervisor_email_address">Supervisor Email</label><br>
+          <input id="supervisor_email_address" type="email" class="input input-bordered" data-approval-panel-target="supervisorEmail" autocomplete="email">
+        </p>
+        <p class="form-control mt-2">
+          <label for="supervisor_password">Supervisor Password</label><br>
+          <input id="supervisor_password" type="password" class="input input-bordered" data-approval-panel-target="supervisorPassword" autocomplete="current-password">
+        </p>
+      </div>
 
-    <p class="form-control mt-4">
-      <label for="approval_reason">Reason</label><br>
-      <input id="approval_reason" type="text" class="input input-bordered" data-approval-panel-target="approvalReasonInput" value="threshold_exceeded">
-    </p>
-    <input id="approval_policy_trigger" type="hidden" data-approval-panel-target="policyTriggerInput" value="">
-    <input id="approval_policy_context" type="hidden" data-approval-panel-target="policyContextInput" value="{}">
-    <div class="modal-action">
-      <button type="button" class="btn btn-ghost" data-action="approval-panel#deny">Deny</button>
-      <button type="button" class="btn btn-primary" data-action="approval-panel#request">Approve & Continue</button>
-    </div>
+      <p class="form-control mt-4">
+        <label for="approval_reason">Reason</label><br>
+        <input id="approval_reason" type="text" class="input input-bordered" data-approval-panel-target="approvalReasonInput" value="threshold_exceeded">
+      </p>
+      <input id="approval_policy_trigger" type="hidden" data-approval-panel-target="policyTriggerInput" value="">
+      <input id="approval_policy_context" type="hidden" data-approval-panel-target="policyContextInput" value="{}">
+      <div class="modal-action">
+        <button type="button" class="btn btn-ghost" data-action="approval-panel#deny">Deny</button>
+        <button type="submit" class="btn btn-primary">Approve & Continue</button>
+      </div>
+    </form>
   </div>
 </dialog>
