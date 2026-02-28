@@ -13,7 +13,13 @@ module Posting
           side: inverted_side(leg.side),
           account_reference: leg.account_reference,
           amount_cents: leg.amount_cents,
-          position: index
+          position: index,
+          reference_type: leg.reference_type,
+          reference_identifier: leg.reference_identifier,
+          check_routing_number: leg.check_routing_number,
+          check_account_number: leg.check_account_number,
+          check_number: leg.check_number,
+          check_type: leg.check_type
         }
       end
     end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_26_220656) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_27_000002) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -222,9 +222,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_220656) do
   create_table "posting_legs", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.string "account_reference", null: false
     t.integer "amount_cents", null: false
+    t.string "check_account_number"
+    t.string "check_number"
+    t.string "check_routing_number"
+    t.string "check_type"
     t.datetime "created_at", null: false
     t.integer "position", null: false
     t.bigint "posting_batch_id", null: false
+    t.string "reference_identifier"
+    t.string "reference_type"
     t.string "side", null: false
     t.datetime "updated_at", null: false
     t.index ["posting_batch_id", "position"], name: "index_posting_legs_on_posting_batch_id_and_position", unique: true
