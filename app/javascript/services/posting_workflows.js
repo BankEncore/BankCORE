@@ -109,7 +109,9 @@ export function getRequiresSettlementAccount(transactionType, schema) {
 }
 
 export function getRequiresParty(transactionType, schema) {
-  const required = schema?.[transactionType]?.required_fields
+  const workflow = schema?.[transactionType]
+  if (workflow?.requires_served_party) return true
+  const required = workflow?.required_fields
   if (Array.isArray(required)) return required.includes("party_id")
   return transactionType === "check_cashing"
 }
@@ -187,7 +189,7 @@ export function blockedReason({
   if (requiresPrimaryAccount && !hasPrimaryAccount) return "Primary account reference is required."
   if (requiresCounterparty && !hasCounterparty) return "Counterparty account reference is required."
   if (requiresSettlementAccount && !hasSettlementAccount) return "Settlement account reference is required."
-  if (requiresParty && !hasParty) return "Party is required."
+  if (requiresParty && !hasParty) return "Party is required. Use search or Add new non-customer for walk-ins."
   if (requiresCashAccount && !hasCashAccount) return "Cash account reference is required."
   if (hasInvalidCheckRows) return "Complete check routing, account, and number for each entered check."
   if (hasInvalidCheckCashingFields) return "Complete party, check amounts, and ID (when no party selected)."

@@ -10,29 +10,15 @@
   value: cash_account_reference_value,
   data: { "#{wfc}_target": "cashAccountReference" } %>
 
-<section data-<%= wfc %>-target="checkCashingSection">
-  <div class="font-medium">Check Cashing Details</div>
+<%= render "teller/forms/served_party_section",
+  form: form,
+  workflow_form_controller: wfc,
+  selected_party: selected_party,
+  hint: "Individual presenting the check(s)." %>
 
+<section data-<%= wfc %>-target="checkCashingSection" class="mt-4">
+  <div class="font-medium">Check Cashing Details</div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-    <div class="form-control" data-controller="party-search" data-party-search-search-url-value="<%= search_teller_parties_path %>">
-      <%= form.label :party_id, "Party", class: "text-xs font-medium text-slate-700 block" %>
-      <div class="relative">
-        <%= form.hidden_field :party_id, value: params[:party_id], data: { "#{wfc}_target": "partyId", party_search_target: "hiddenInput" } %>
-        <input type="text"
-          class="input input-bordered w-full"
-          placeholder="Search by name or phone"
-          autocomplete="off"
-          data-party-search-target="searchInput"
-          data-action="input->party-search#search blur->party-search#hideResultsOnBlur"
-          value="<%= selected_party&.display_name || "" %>" />
-        <div data-party-search-target="resultsList"
-          class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
-          hidden>
-        </div>
-      </div>
-      <span class="text-xs text-slate-600 mt-1 block">Individual presenting the check(s).</span>
-      <%= link_to "Add new party", new_teller_party_path(party_kind: "individual", return_to: request.original_url), class: "link link-hover text-xs mt-1 inline-block" %>
-    </div>
     <div class="form-control">
       <%= form.label :fee_cents, "Fee", class: "text-xs font-medium text-slate-700 block" %>
       <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
@@ -41,20 +27,6 @@
       </div>
       <span class="text-xs text-slate-600 mt-1 block">Optional fee withheld from payout.</span>
     </div>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3" data-<%= wfc %>-target="checkCashingIdRow">
-    <p class="form-control">
-      <%= form.label :id_type, "ID Type", class: "text-xs font-medium text-slate-700" %><br>
-      <%= form.select :id_type,
-        options_for_select([["Driver's License", "drivers_license"], ["Passport", "passport"], ["State ID", "state_id"], ["Other", "other"]], ""),
-        { include_blank: "Select type" },
-        { data: { "#{wfc}_target": "idType", action: "change->#{wfc}#recalculate" }, class: "select select-bordered w-full" } %>
-    </p>
-    <p class="form-control">
-      <%= form.label :id_number, "ID Number", class: "text-xs font-medium text-slate-700" %><br>
-      <%= form.text_field :id_number, data: { "#{wfc}_target": "idNumber", action: "input->#{wfc}#recalculate" }, class: "input input-bordered", placeholder: "Required when no party selected" %>
-    </p>
   </div>
 
   <%= form.hidden_field :fee_income_account_reference,

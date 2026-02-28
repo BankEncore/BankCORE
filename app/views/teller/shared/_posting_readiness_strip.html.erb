@@ -20,6 +20,13 @@
                 data-posting-form-target="summaryRequestId">N/A</span>
         </div>
 
+        <% if local_assigns[:show_serve_previous_party] %>
+        <button type="button"
+                class="btn btn-ghost btn-sm"
+                data-action="click->reference-panel#copyLastServedParty">
+          Serve previous party
+        </button>
+        <% end %>
         <button type="button"
                 class="btn btn-ghost btn-sm"
                 data-action="click->reference-panel#copyLastAccount">

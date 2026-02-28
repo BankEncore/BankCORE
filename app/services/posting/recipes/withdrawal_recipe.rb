@@ -1,6 +1,11 @@
 module Posting
   module Recipes
     class WithdrawalRecipe < BaseRecipe
+      def posting_metadata
+        meta = served_party_metadata.any? ? { served_party: served_party_metadata } : {}
+        meta.presence || {}
+      end
+
       def normalized_entries
         generated_entries
       end

@@ -14,6 +14,7 @@
 
 <div class="receipt-type-details text-sm">
   <table class="table table-sm text-sm w-full">
+    <%= render "teller/receipts/receipt_served_party", posting_batch: posting_batch %>
     <tr>
       <td>Draft #:</td>
       <td class="tabular-nums text-right"><%= instrument.presence || "—" %></td>

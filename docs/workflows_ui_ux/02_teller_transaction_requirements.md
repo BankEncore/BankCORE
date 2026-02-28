@@ -16,6 +16,7 @@ Implementation references:
 
 **Required (server):**
 
+- `served_party` — person being served: either `party_id` (customer/non-customer in system) or `id_type` + `id_number` (non-customer walk-in)
 - `primary_account_reference` — customer account to credit
 - `amount_cents` > 0 — effective total (must equal cash + check subtotal; at least one of cash > 0 or check items with amount > 0)
 - `entries` — balanced legs (client sends explicit entries: debits = cash account + check account refs, credit = primary)
@@ -38,6 +39,7 @@ Implementation references:
 
 **Required (server):**
 
+- `served_party` — person being served: either `party_id` or `id_type` + `id_number`
 - `primary_account_reference` — account to debit
 - `amount_cents` > 0
 - `entries` — balanced legs (debit primary, credit cash account)
@@ -54,6 +56,7 @@ Implementation references:
 
 **Required (server):**
 
+- `served_party` — person being served: either `party_id` or `id_type` + `id_number`
 - `primary_account_reference` — "from" account (when entries not pre-filled)
 - `counterparty_account_reference` — "to" account (when entries not pre-filled)
 - `amount_cents` > 0
@@ -73,10 +76,9 @@ Implementation references:
 
 **Required (server):**
 
+- `served_party` — person presenting the check: either `party_id` or `id_type` + `id_number`
 - `check_amount_cents` > 0
 - `settlement_account_reference` — account to debit for the check
-- `id_type` — presenter ID type (e.g. drivers_license, passport)
-- `id_number` — presenter ID number
 - `amount_cents` = net cash payout (check_amount_cents − fee_cents); must be positive
 - `entries` — balanced legs (debit settlement, credit cash for net payout; if fee > 0, credit fee income)
 
@@ -98,6 +100,7 @@ Implementation references:
 
 **Required (server):**
 
+- `served_party` — person being served: either `party_id` or `id_type` + `id_number`
 - `draft_amount_cents` > 0
 - `draft_payee_name`
 - `draft_instrument_number`

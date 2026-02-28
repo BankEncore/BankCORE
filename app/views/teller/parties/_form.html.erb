@@ -1,4 +1,5 @@
 <%= form_with model: [ :teller, @party ], local: true, class: "space-y-4", data: { controller: "party-form" } do |f| %>
+  <%= hidden_field_tag :return_to, local_assigns[:return_to] if local_assigns[:return_to].present? %>
   <% if @party.errors.any? %>
     <div class="alert alert-error">
       <ul class="list-disc list-inside">

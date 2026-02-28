@@ -66,9 +66,11 @@ module Posting
     end
 
     test "returns no errors for valid transfer" do
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Transfer Party", is_active: true)
       errors = WorkflowValidator.errors({
         transaction_type: "transfer",
         amount_cents: 5_000,
+        party_id: party.id,
         primary_account_reference: "acct:from",
         counterparty_account_reference: "acct:to"
       })
@@ -84,20 +86,21 @@ module Posting
         entries: []
       }, mode: :post)
 
-      assert_includes errors, "Party is required"
+      assert_includes errors, "Party is required. Use search or 'Add new non-customer' for walk-ins."
     end
 
-    test "check_cashing returns errors when id_type or id_number is blank and no party" do
+    test "check_cashing returns party error when party_id is blank and no id fallback" do
       errors = WorkflowValidator.errors({
         transaction_type: "check_cashing",
         amount_cents: 10_000,
         party_id: "",
+        id_type: "state_id",
+        id_number: "12345678",
         check_items: [ { routing: "021", account: "123", number: "1", account_reference: "check:021:123:1", amount_cents: 10_000 } ],
         entries: []
       }, mode: :post)
 
-      assert_includes errors, "ID type is required when no party is selected"
-      assert_includes errors, "ID number is required when no party is selected"
+      assert_includes errors, "Party is required. Use search or 'Add new non-customer' for walk-ins."
     end
 
     test "check_cashing returns no ID errors when party_id present" do
@@ -115,9 +118,11 @@ module Posting
     end
 
     test "deposit returns error when cash_back exceeds total deposit" do
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "CashBack Party", is_active: true)
       errors = WorkflowValidator.errors({
         transaction_type: "deposit",
         amount_cents: 13_000,
+        party_id: party.id,
         primary_account_reference: "acct:customer",
         cash_back_cents: 20_000,
         entries: [
@@ -132,9 +137,11 @@ module Posting
     end
 
     test "deposit returns no error when cash_back within total deposit" do
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "CashBack Party", is_active: true)
       errors = WorkflowValidator.errors({
         transaction_type: "deposit",
         amount_cents: 13_000,
+        party_id: party.id,
         primary_account_reference: "acct:customer",
         cash_back_cents: 2_000,
         entries: [

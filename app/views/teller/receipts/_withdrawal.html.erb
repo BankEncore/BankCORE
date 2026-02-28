@@ -4,6 +4,7 @@
 <% masked = account ? masked_account_number(from_ref) : (from_ref || "—") %>
 
 <table class="table table-xs text-xs w-full">
+  <%= render "teller/receipts/receipt_served_party", posting_batch: posting_batch %>
   <tr>
     <td>Amount:</td>
     <td class="text-right tabular-nums"><%= receipt_money(teller_transaction.amount_cents) %></td>

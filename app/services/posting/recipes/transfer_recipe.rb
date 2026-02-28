@@ -7,13 +7,14 @@ module Posting
       end
 
       def posting_metadata
+        metadata = {}
+        metadata[:served_party] = served_party_metadata if served_party_metadata.any?
         fee_cents = posting_params[:fee_cents].to_i
-        return {} if fee_cents <= 0
-
-        {
-          fee_cents: fee_cents,
-          fee_income_account_reference: transfer_fee_income_account_reference
-        }
+        if fee_cents.positive?
+          metadata[:fee_cents] = fee_cents
+          metadata[:fee_income_account_reference] = transfer_fee_income_account_reference
+        end
+        metadata.presence || {}
       end
 
       private

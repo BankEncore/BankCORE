@@ -2,18 +2,13 @@
 <% meta = meta.with_indifferent_access if meta.respond_to?(:with_indifferent_access) %>
 <% cc = meta["check_cashing"] || meta[:check_cashing] || {} %>
 <% cc = cc.with_indifferent_access if cc.respond_to?(:with_indifferent_access) %>
-<% party_id = cc["party_id"] || cc[:party_id] %>
-<% party = Party.find_by(id: party_id) %>
 <% check_amount = (cc["check_amount_cents"] || cc[:check_amount_cents] || 0).to_i %>
 <% fee = (cc["fee_cents"] || cc[:fee_cents] || 0).to_i %>
 <% disbursement = (cc["net_cash_payout_cents"] || cc[:net_cash_payout_cents] || 0).to_i %>
 <% check_items = check_items_from_metadata(posting_batch) %>
 
 <table class="table table-xs text-xs w-full">
-  <tr>
-    <td>Party:</td>
-    <td class="text-right"><%= party&.display_name || "ID #{party_id}" %> <%= "(#{party_id})" if party_id.present? %></td>
-  </tr>
+  <%= render "teller/receipts/receipt_served_party", posting_batch: posting_batch %>
   <tr>
     <td>Checks In:</td>
     <td class="text-right tabular-nums"><%= receipt_money(check_amount) %></td>

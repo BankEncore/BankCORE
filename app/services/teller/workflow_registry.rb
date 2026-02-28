@@ -4,6 +4,7 @@ module Teller
       "deposit" => {
         label: "Deposit",
         required_fields: [],
+        requires_served_party: true,
         funding_modes: %w[cash check mixed],
         ui_sections: %w[checks],
         entry_profile: "deposit",
@@ -18,6 +19,7 @@ module Teller
       "withdrawal" => {
         label: "Withdrawal",
         required_fields: [],
+        requires_served_party: true,
         funding_modes: %w[cash],
         ui_sections: [],
         entry_profile: "withdrawal",
@@ -32,6 +34,7 @@ module Teller
       "transfer" => {
         label: "Transfer",
         required_fields: [],
+        requires_served_party: true,
         funding_modes: %w[account],
         ui_sections: %w[transfer],
         entry_profile: "transfer",
@@ -46,6 +49,7 @@ module Teller
       "check_cashing" => {
         label: "Check Cashing",
         required_fields: %i[party_id],
+        requires_served_party: true,
         funding_modes: %w[check],
         ui_sections: %w[check_cashing checks],
         entry_profile: "check_cashing",
@@ -60,6 +64,7 @@ module Teller
       "draft" => {
         label: "Bank Draft",
         required_fields: %i[draft_amount_cents draft_payee_name draft_instrument_number draft_liability_account_reference],
+        requires_served_party: true,
         funding_modes: %w[account cash check],
         ui_sections: %w[draft checks],
         entry_profile: "draft",
@@ -96,11 +101,12 @@ module Teller
         WORKFLOWS.key?(transaction_type.to_s)
       end
 
-      def workflow_schema
+      def       workflow_schema
         WORKFLOWS.transform_values do |definition|
           {
             label: definition.fetch(:label),
             required_fields: required_fields_for(definition),
+            requires_served_party: definition.fetch(:requires_served_party, false),
             funding_modes: Array(definition[:funding_modes]).map(&:to_s),
             ui_sections: Array(definition[:ui_sections]).map(&:to_s),
             entry_profile: definition.fetch(:entry_profile).to_s,

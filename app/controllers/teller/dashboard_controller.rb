@@ -15,6 +15,40 @@ module Teller
       render json: { ok: true, primary_account_reference: ref }
     end
 
+    def last_transaction_served_party
+      authorize([ :teller, :dashboard ], :index?)
+      teller_session = current_teller_session
+      payload = nil
+      if teller_session.present? && teller_session.open?
+        last_tx = teller_session.teller_transactions
+          .where(status: "posted", transaction_type: %w[deposit withdrawal transfer draft check_cashing])
+          .order(posted_at: :desc, id: :desc)
+          .limit(20)
+          .includes(posting_batch: [])
+          .find { |tx| tx.posting_batch&.metadata&.dig("served_party", "party_id").present? }
+        if last_tx
+          meta = last_tx.posting_batch.metadata
+          served = meta&.dig("served_party") || meta&.dig(:served_party) || {}
+          party_id = (served["party_id"] || served[:party_id]).to_s.presence
+          if party_id.present?
+            party = Party.find_by(id: party_id)
+            if party
+              pi = party.party_individual
+              govt_id_type = (pi&.govt_id_type == "driver_license" ? "drivers_license" : pi&.govt_id_type).to_s.presence
+              govt_id = pi&.govt_id.to_s.presence
+              payload = {
+                party_id: party_id,
+                display_name: party.display_name.presence || "Party ##{party.id}",
+                govt_id_type: govt_id_type,
+                govt_id: govt_id
+              }
+            end
+          end
+        end
+      end
+      render json: { ok: true }.merge(payload || {})
+    end
+
     def index
       authorize([ :teller, :dashboard ], :index?)
       @teller_session = current_teller_session

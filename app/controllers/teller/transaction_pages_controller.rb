@@ -39,6 +39,10 @@ module Teller
         @teller_session = current_teller_session
       end
 
+      def requires_served_party?(transaction_type)
+        %w[deposit withdrawal transfer draft check_cashing].include?(transaction_type)
+      end
+
       def render_page(transaction_type:, title:)
         @transaction_type = transaction_type
         @page_title = title
@@ -64,9 +68,9 @@ module Teller
         else
           teller_posting_path
         end
-        if transaction_type == "check_cashing"
+        if requires_served_party?(transaction_type)
           @parties = Party.where(is_active: true, party_kind: "individual").order(display_name: :asc).limit(50)
-          @selected_party = Party.find_by(id: params[:party_id]) if params[:party_id].present?
+          @selected_party = Party.includes(:party_individual).find_by(id: params[:party_id]) if params[:party_id].present?
         end
         render :show
       end

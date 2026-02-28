@@ -29,6 +29,7 @@ module Teller
       sign_in_as(@user)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
       post teller_teller_session_path, params: { opening_cash_cents: 5_000, cash_location_id: @drawer.id }
+      @party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Typed Test Party", is_active: true)
     end
 
     test "deposit create enforces deposit transaction type" do
@@ -36,6 +37,7 @@ module Teller
         request_id: "typed-dep-1",
         transaction_type: "transfer",
         amount_cents: 12_000,
+        party_id: @party.id,
         primary_account_reference: "acct:dep",
         cash_account_reference: "cash:spoofed"
       }
@@ -51,6 +53,7 @@ module Teller
         request_id: "typed-dep-cb-1",
         transaction_type: "deposit",
         amount_cents: 8_000,
+        party_id: @party.id,
         primary_account_reference: "acct:dep",
         cash_account_reference: "cash:#{@drawer.code}",
         cash_back_cents: 2_000,
@@ -73,6 +76,7 @@ module Teller
         request_id: "typed-wd-1",
         transaction_type: "deposit",
         amount_cents: 9_000,
+        party_id: @party.id,
         primary_account_reference: "acct:wd",
         cash_account_reference: "cash:spoofed"
       }
@@ -88,6 +92,7 @@ module Teller
         request_id: "typed-tr-1",
         transaction_type: "deposit",
         amount_cents: 8_000,
+        party_id: @party.id,
         primary_account_reference: "acct:from",
         counterparty_account_reference: "acct:to"
       }
@@ -152,6 +157,7 @@ module Teller
         request_id: "typed-dr-1",
         transaction_type: "deposit",
         amount_cents: 8_000,
+        party_id: @party.id,
         draft_amount_cents: 8_000,
         draft_fee_cents: 0,
         draft_cash_cents: 0,
@@ -170,6 +176,7 @@ module Teller
         request_id: "typed-dr-2",
         transaction_type: "draft",
         amount_cents: 10_250,
+        party_id: @party.id,
         draft_amount_cents: 10_000,
         draft_fee_cents: 250,
         draft_cash_cents: 0,
@@ -205,6 +212,7 @@ module Teller
         request_id: "typed-dr-3",
         transaction_type: "draft",
         amount_cents: 5_150,
+        party_id: @party.id,
         draft_amount_cents: 5_000,
         draft_fee_cents: 150,
         draft_cash_cents: 5_150,

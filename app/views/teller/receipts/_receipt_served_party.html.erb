@@ -1,0 +1,7 @@
+<% served = served_party_from_metadata(posting_batch) %>
+<% if served.present? && served[:display_name].present? %>
+  <tr>
+    <td>Now Serving:</td>
+    <td class="text-right"><%= served[:display_name] %></td>
+  </tr>
+<% end %>

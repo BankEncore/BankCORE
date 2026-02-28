@@ -1,10 +1,16 @@
 <% form = local_assigns.fetch(:form) %>
 <% cash_account_reference_value = local_assigns.fetch(:cash_account_reference_value, "") %>
 <% wfc = local_assigns.fetch(:workflow_form_controller, "deposit-form") %>
+<% selected_party = local_assigns[:selected_party] %>
 
 <%= hidden_field_tag :transaction_type, "deposit", data: { "#{wfc}_target": "transactionType" } %>
 
-<div class="flex flex-col md:flex-row gap-3">
+<%= render "teller/forms/served_party_section",
+  form: form,
+  workflow_form_controller: wfc,
+  selected_party: selected_party %>
+
+<div class="flex flex-col md:flex-row gap-3 mt-4">
   <div class="form-control overflow-visible flex-1 min-w-0" data-<%= wfc %>-target="primaryAccountRow">
     <%= form.label :primary_account_reference, "Primary Account", class: "text-xs font-medium text-slate-700 block" %>
     <div class="relative overflow-visible" data-controller="primary-account-search"

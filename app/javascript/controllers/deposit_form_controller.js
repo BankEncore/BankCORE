@@ -6,6 +6,7 @@ import {
   getEffectiveAmountSource,
   getRequiresPrimaryAccount,
   getRequiresCashAccount,
+  getRequiresParty,
   hasSection as workflowHasSectionInConfig,
   blockedReason as workflowBlockedReason
 } from "services/posting_workflows"
@@ -31,7 +32,8 @@ export default class extends PostingFormBase {
     "computedNetTotal",
     "availabilitySection",
     "availabilityBody",
-    "availabilityEmpty"
+    "availabilityEmpty",
+    "partyId"
   ]
 
   connect() {
@@ -72,9 +74,7 @@ export default class extends PostingFormBase {
       accountNumber: "",
       payerName: "",
       presenterType: "",
-      idType: "",
-      idNumber: "",
-      partyId: ""
+      partyId: this.hasPartyIdTarget ? this.partyIdTarget.value : ""
     }
   }
 
@@ -86,6 +86,8 @@ export default class extends PostingFormBase {
     const hasPrimaryAccount = state.primaryAccountReference.trim().length > 0
     const requiresPrimaryAccount = getRequiresPrimaryAccount(transactionType, this.workflowSchema, {})
     const requiresCashAccount = getRequiresCashAccount(transactionType, this.workflowSchema, {})
+    const requiresParty = getRequiresParty(transactionType, this.workflowSchema)
+    const hasServedParty = state.partyId.trim().length > 0
     const hasCashAccount = state.cashAccountReference.trim().length > 0
     const hasInvalidCheckRows = this.hasInvalidCheckRows()
 
@@ -102,8 +104,8 @@ export default class extends PostingFormBase {
       hasCashAccount,
       requiresSettlementAccount: false,
       hasSettlementAccount: false,
-      requiresParty: false,
-      hasParty: false,
+      requiresParty,
+      hasParty: hasServedParty,
       requiresDraftDetails: false,
       hasDraftPayee: false,
       hasDraftInstrumentNumber: false,
@@ -159,7 +161,7 @@ export default class extends PostingFormBase {
     const cashImpact = calculateCashImpact(transactionType, { amountCents: displayedCashAmount }, this.workflowSchema)
     const projectedDrawer = (this.openingCashCentsValue || 0) + cashImpact
 
-    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCashAccount && !hasCashAccount) || hasInvalidCheckRows
+    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCashAccount && !hasCashAccount) || (requiresParty && !hasServedParty) || hasInvalidCheckRows
     let disabled = blockedReason.length > 0 || !balanced || hasMissingFields
     if (this.postedLocked) disabled = true
 
@@ -188,7 +190,7 @@ export default class extends PostingFormBase {
         primaryReference: (this.hasPrimaryAccountReferenceTarget ? this.primaryAccountReferenceTarget.value : "").trim(),
         counterpartyReference: "",
         cashReference: (this.hasCashAccountReferenceTarget ? this.cashAccountReferenceTarget.value : "").trim(),
-        partyId: "",
+        partyId: (this.hasPartyIdTarget ? this.partyIdTarget.value : "").trim(),
         requestId: this.requestIdInput()?.value,
         cashAmountCents: displayedCashAmount,
         checkAmountCents: checkSubtotalCents,
@@ -265,6 +267,7 @@ export default class extends PostingFormBase {
 
   resetFormFieldClearing(isAfterPost = false) {
     if (this.hasPrimaryAccountReferenceTarget) this.primaryAccountReferenceTarget.value = ""
+    if (this.hasPartyIdTarget) this.partyIdTarget.value = ""
     if (this.hasAmountCentsTarget) this.setAmountCents(this.amountCentsTarget, 0)
     if (this.hasCashBackCentsTarget) this.setAmountCents(this.cashBackCentsTarget, 0)
     if (isAfterPost && this.hasCashAccountReferenceTarget) {

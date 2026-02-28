@@ -1,0 +1,42 @@
+<%# Shared "Now Serving" / served party section for customer transactions.
+    Used by: deposit, withdrawal, transfer, draft, check cashing.
+    Requires: form, workflow_form_controller (wfc)
+    Optional: selected_party, hint (custom hint text)
+%>
+<% form = local_assigns.fetch(:form) %>
+<% wfc = local_assigns.fetch(:workflow_form_controller, "form") %>
+<% selected_party = local_assigns[:selected_party] %>
+<% hint = local_assigns.fetch(:hint, "Now serving (customer or non-customer).") %>
+<% masked_id_text = nil %>
+<% if selected_party&.party_individual&.govt_id.present? %>
+  <% pi = selected_party.party_individual %>
+  <% id_type_label = (pi.govt_id_type == "driver_license" ? "Drivers License" : pi.govt_id_type&.titleize) || "ID" %>
+  <% masked = pi.govt_id.length > 4 ? "****#{pi.govt_id[-4, 4]}" : "****" %>
+  <% masked_id_text = "ID: #{id_type_label} #{masked}" %>
+<% end %>
+
+<section data-<%= wfc %>-target="servedPartySection" class="served-party-section">
+  <div class="font-medium mb-2">Now Serving</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div class="form-control" data-controller="party-search" data-party-search-search-url-value="<%= search_teller_parties_path %>">
+      <%= form.label :party_id, "Party", class: "text-xs font-medium text-slate-700 block" %>
+      <div class="relative">
+        <%= form.hidden_field :party_id, value: selected_party&.id || params[:party_id], data: { "#{wfc}_target": "partyId", party_search_target: "hiddenInput" } %>
+        <input type="text"
+          class="input input-bordered w-full"
+          placeholder="Search by name or phone"
+          autocomplete="off"
+          data-party-search-target="searchInput"
+          data-action="input->party-search#search blur->party-search#hideResultsOnBlur"
+          value="<%= selected_party&.display_name || "" %>" />
+        <div data-party-search-target="resultsList"
+          class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
+          hidden>
+        </div>
+      </div>
+      <span class="text-xs text-slate-600 mt-1 block"><%= hint %></span>
+      <p class="text-xs text-slate-600 mt-1" data-party-search-target="maskedIdDisplay" <%= "hidden" unless masked_id_text %>><%= masked_id_text %></p>
+      <%= link_to "Add new non-customer", new_teller_party_path(party_kind: "individual", relationship_kind: "non_customer", return_to: request.original_url), class: "link link-hover text-xs mt-1 inline-block" %>
+    </div>
+  </div>
+</section>
