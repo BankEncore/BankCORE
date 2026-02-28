@@ -2,7 +2,35 @@
  * Shared balancing for teller posting: build debit/credit entries from state
  * and compute totals. No DOM; pure functions. State shape is defined by the
  * controller's getState() so they stay in sync.
- *
+ */
+
+import { getCashImpactProfile } from "services/posting_workflows"
+
+/**
+ * Compute net drawer cash impact for a transaction type.
+ * @param {string} transactionType - deposit, withdrawal, transfer, draft, check_cashing, vault_transfer
+ * @param {Object} options - { amountCents, draftCashCents, vaultDirection }
+ * @param {Object} schema - Optional workflow schema for profile override
+ * @returns {number} Net cents impact (positive = cash in, negative = cash out)
+ */
+export function calculateCashImpact(transactionType, options = {}, schema = null) {
+  const amountCents = options.amountCents ?? 0
+  const draftCashCents = options.draftCashCents ?? 0
+  const vaultDirection = options.vaultDirection ?? ""
+  const profile = getCashImpactProfile(transactionType, schema)
+
+  if (profile === "inflow") return amountCents
+  if (profile === "draft_funding") return draftCashCents
+  if (profile === "vault_directional") {
+    if (vaultDirection === "drawer_to_vault") return -amountCents
+    if (vaultDirection === "vault_to_drawer") return amountCents
+    return 0
+  }
+  if (profile === "outflow") return -amountCents
+  return 0
+}
+
+/**
  * State shape (plain object):
  * - transactionType, primaryAccountReference, counterpartyAccountReference, cashAccountReference
  * - amountCents, effectiveAmountCents (total for the transaction)
@@ -13,7 +41,6 @@
  * - draftLiabilityAccountReference, draftFeeIncomeAccountReference
  * - vaultTransferDetails: { valid, sourceReference, destinationReference }
  */
-
 export function buildEntries(transactionType, state) {
   const entryProfile = state.entryProfile ?? transactionType
   const amountCents = state.effectiveAmountCents ?? 0

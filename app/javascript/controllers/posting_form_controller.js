@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { buildEntries, computeTotals } from "services/posting_balance"
+import { buildEntries, computeTotals, calculateCashImpact } from "services/posting_balance"
 import {
   getSections,
   getEntryProfile,
@@ -367,8 +367,6 @@ export default class extends Controller {
       this.cashAmountRowTarget.hidden = showCheckCashingSection
     }
 
-    if (this.hasCashSubtotalTarget) this.cashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
-    if (this.hasCheckSubtotalTarget) this.checkSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
     if (this.hasComputedCashSubtotalTarget) this.computedCashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
     if (this.hasComputedCheckSubtotalTarget) this.computedCheckSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
     const cashBackCentsForComputed = transactionType === "deposit" ? this.cashBackCents() : 0
@@ -386,10 +384,6 @@ export default class extends Controller {
       this.draftBalanceTarget.classList.toggle("text-error", balance !== 0)
     }
     if (this.hasComputedNetTotalTarget) this.computedNetTotalTarget.textContent = this.formatCents(totalAmountCents)
-    if (this.hasDebitTotalTarget) this.debitTotalTarget.textContent = this.formatCents(debitTotal)
-    if (this.hasCreditTotalTarget) this.creditTotalTarget.textContent = this.formatCents(creditTotal)
-    if (this.hasImbalanceTarget) this.imbalanceTarget.textContent = this.formatCents(imbalance)
-    if (this.hasTotalAmountTarget) this.totalAmountTarget.textContent = this.formatCents(totalAmountCents)
     if (this.hasStatusBadgeTarget) {
       this.setBalanceBadge(balanced ? "Balanced" : "Out of Balance")
     }
@@ -397,11 +391,13 @@ export default class extends Controller {
       this.headerStatusTarget.textContent = balanced ? "Balanced" : "Editing"
     }
 
-    const cashImpact = this.calculateCashImpact(displayedCashAmount)
+    const vaultDetails = this.vaultTransferDetails()
+    const cashImpact = calculateCashImpact(transactionType, {
+      amountCents: displayedCashAmount,
+      draftCashCents: draftAmounts.draftCashCents ?? 0,
+      vaultDirection: vaultDetails.direction ?? ""
+    }, this.workflowSchema)
     const projectedDrawer = (this.openingCashCentsValue || 0) + cashImpact
-
-    if (this.hasCashImpactTarget) this.cashImpactTarget.textContent = this.formatCents(cashImpact)
-    if (this.hasProjectedDrawerTarget) this.projectedDrawerTarget.textContent = this.formatCents(projectedDrawer)
 
     if (this.hasThresholdWarningTarget) {
       this.thresholdWarningTarget.hidden = totalAmountCents < 100_000
@@ -887,25 +883,6 @@ export default class extends Controller {
     if (!this.requestIdTarget.value) {
       this.requestIdTarget.value = this.generateRequestId()
     }
-  }
-
-  calculateCashImpact(amountCents) {
-    const transactionType = this.transactionTypeTarget.value
-    const cashImpactProfile = getCashImpactProfile(transactionType, this.workflowSchema)
-
-    if (cashImpactProfile === "inflow") return amountCents
-    if (cashImpactProfile === "draft_funding") {
-      return this.draftAmounts().draftCashCents || 0
-    }
-    if (cashImpactProfile === "vault_directional") {
-      const amt = Math.max(parseInt(this.amountCentsTarget.value || "0", 10), 0)
-      const direction = this.vaultTransferDetails().direction
-      if (direction === "drawer_to_vault") return -amt
-      if (direction === "vault_to_drawer") return amt
-      return 0
-    }
-    if (cashImpactProfile === "outflow") return -amountCents
-    return 0
   }
 
   generateRequestId() {
