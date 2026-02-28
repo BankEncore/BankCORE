@@ -286,7 +286,7 @@ export default class extends Controller {
   }
 
   findAllPostingTargets(targetName) {
-    const prefixes = ["posting-form", "deposit-form", "withdrawal-form", "transfer-form", "check-cashing-form", "draft-form", "vault-transfer-form"]
+    const prefixes = ["posting-form", "deposit-form", "withdrawal-form", "transfer-form", "check-cashing-form", "draft-form", "misc-receipt-form", "vault-transfer-form"]
     const found = new Set()
     for (const p of prefixes) {
       this.element.querySelectorAll(`[data-${p}-target="${targetName}"]`).forEach((el) => found.add(el))

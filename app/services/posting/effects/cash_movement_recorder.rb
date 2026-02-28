@@ -31,7 +31,7 @@ module Posting
 
         def cash_direction(cash_legs)
           case request.fetch(:transaction_type)
-          when "deposit", "draft"
+          when "deposit", "draft", "misc_receipt"
             "in"
           when "withdrawal", "check_cashing"
             "out"
@@ -46,7 +46,7 @@ module Posting
 
         def cash_amount(cash_legs, direction)
           case request.fetch(:transaction_type)
-          when "deposit", "draft"
+          when "deposit", "draft", "misc_receipt"
             cash_legs.select { |leg| leg.fetch(:side) == "debit" }.sum { |leg| leg.fetch(:amount_cents) }
           when "withdrawal", "check_cashing"
             cash_legs.select { |leg| leg.fetch(:side) == "credit" }.sum { |leg| leg.fetch(:amount_cents) }
@@ -64,7 +64,7 @@ module Posting
         def reversal_cash_direction(cash_legs)
           original_type = request.dig(:metadata, :reversal, :original_transaction_type).to_s
           case original_type
-          when "deposit", "draft"
+          when "deposit", "draft", "misc_receipt"
             "out"
           when "withdrawal", "check_cashing"
             "in"

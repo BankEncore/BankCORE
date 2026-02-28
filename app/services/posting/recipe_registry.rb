@@ -6,6 +6,7 @@ module Posting
       "transfer" => Recipes::TransferRecipe,
       "check_cashing" => Recipes::CheckCashingRecipe,
       "draft" => Recipes::DraftRecipe,
+      "misc_receipt" => Recipes::MiscReceiptRecipe,
       "vault_transfer" => Recipes::VaultTransferRecipe
     }.freeze
 

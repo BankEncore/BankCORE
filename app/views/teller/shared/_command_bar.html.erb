@@ -18,7 +18,7 @@
           <li><%= link_to "Check Cashing", new_teller_check_cashing_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
           <li><%= link_to "Bank Draft", new_teller_draft_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
           <li><span class="block rounded px-3 py-2 text-base-content/50 cursor-not-allowed">Bill Payment</span></li>
-          <li><span class="block rounded px-3 py-2 text-base-content/50 cursor-not-allowed">Misc Receipt</span></li>
+          <li><%= link_to "Misc Receipt", teller_misc_receipt_transaction_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
         </ul>
       </details>
 

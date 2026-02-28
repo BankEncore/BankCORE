@@ -20,7 +20,7 @@ export function appendEntriesAndTypePayload(formData, transactionType, state, sc
   if (transactionType === "deposit") {
     formData.set("cash_back_cents", String(state.cashBackCents ?? 0))
   }
-  if (["deposit", "withdrawal", "transfer", "draft", "check_cashing"].includes(transactionType)) {
+  if (["deposit", "withdrawal", "transfer", "draft", "check_cashing", "misc_receipt"].includes(transactionType)) {
     appendServedPartyPayload(formData, state)
   }
   if (transactionType === "check_cashing") {
@@ -28,6 +28,9 @@ export function appendEntriesAndTypePayload(formData, transactionType, state, sc
   }
   if (transactionType === "draft") {
     appendDraftPayload(formData, state)
+  }
+  if (transactionType === "misc_receipt") {
+    appendMiscReceiptPayload(formData, state)
   }
   if (transactionType === "vault_transfer") {
     appendVaultTransferPayload(formData, state)
@@ -63,6 +66,18 @@ function appendDraftPayload(formData, state) {
   formData.set("draft_instrument_number", (state.draftInstrumentNumber ?? "").trim())
   formData.set("draft_liability_account_reference", (state.draftLiabilityAccountReference ?? "official_check:outstanding").trim())
   formData.set("draft_fee_income_account_reference", (state.draftFeeIncomeAccountReference ?? "income:draft_fee").trim())
+}
+
+function appendMiscReceiptPayload(formData, state) {
+  const misc = state.miscAmounts ?? {}
+  formData.set("misc_receipt_type_id", (state.miscReceiptTypeId ?? "").trim())
+  formData.set("income_account_reference", (state.incomeAccountReference ?? "").trim())
+  formData.set("amount_cents", String(misc.amountCents ?? 0))
+  formData.set("unit_amount_cents", String(misc.unitAmountCents ?? 0))
+  formData.set("quantity", String(misc.quantity ?? 1))
+  formData.set("memo", (state.memo ?? "").trim())
+  formData.set("misc_cash_cents", String(misc.miscCashCents ?? 0))
+  formData.set("misc_account_cents", String(misc.miscAccountCents ?? 0))
 }
 
 function appendVaultTransferPayload(formData, state) {

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_27_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_100000) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -156,6 +156,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_27_000002) do
     t.index ["direction"], name: "index_cash_movements_on_direction"
     t.index ["teller_session_id"], name: "index_cash_movements_on_teller_session_id"
     t.index ["teller_transaction_id"], name: "index_cash_movements_on_teller_transaction_id"
+  end
+
+  create_table "misc_receipt_types", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.integer "default_amount_cents"
+    t.integer "display_order", default: 0, null: false
+    t.string "income_account_reference", null: false
+    t.boolean "is_active", default: true, null: false
+    t.string "label", null: false
+    t.boolean "memo_required", default: true, null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_misc_receipt_types_on_code", unique: true
+    t.index ["is_active", "display_order"], name: "index_misc_receipt_types_on_is_active_and_display_order"
   end
 
   create_table "parties", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|

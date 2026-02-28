@@ -136,6 +136,99 @@ module Posting
       assert_includes errors, "Cash back cannot exceed total deposit"
     end
 
+    test "misc_receipt returns errors when type and income ref missing" do
+      errors = WorkflowValidator.errors({
+        transaction_type: "misc_receipt",
+        amount_cents: 5_000,
+        party_id: "",
+        memo: "",
+        misc_cash_cents: 5_000,
+        misc_account_cents: 0,
+        check_items: []
+      })
+
+      assert_includes errors, "Misc receipt type or income account reference is required"
+    end
+
+    test "misc_receipt returns memo required error when type has memo_required and memo is blank" do
+      type = MiscReceiptType.create!(code: "feereq", label: "Fee Requiring Memo", income_account_reference: "income:test", memo_required: true)
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Misc Party", is_active: true)
+
+      errors = WorkflowValidator.errors({
+        transaction_type: "misc_receipt",
+        amount_cents: 5_000,
+        party_id: party.id,
+        misc_receipt_type_id: type.id,
+        income_account_reference: type.income_account_reference,
+        memo: "",
+        misc_cash_cents: 5_000,
+        misc_account_cents: 0,
+        cash_account_reference: "cash:D01",
+        check_items: []
+      }, mode: :validate)
+
+      assert_includes errors, "Memo is required"
+    end
+
+    test "misc_receipt returns no memo error when type has memo_required false and memo is blank" do
+      type = MiscReceiptType.create!(code: "feenoreq", label: "Fee No Memo", income_account_reference: "income:test", memo_required: false)
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Misc Party", is_active: true)
+
+      errors = WorkflowValidator.errors({
+        transaction_type: "misc_receipt",
+        amount_cents: 5_000,
+        party_id: party.id,
+        misc_receipt_type_id: type.id,
+        income_account_reference: type.income_account_reference,
+        memo: "",
+        misc_cash_cents: 5_000,
+        misc_account_cents: 0,
+        cash_account_reference: "cash:D01",
+        check_items: []
+      }, mode: :validate)
+
+      assert_empty errors, errors.inspect
+    end
+
+    test "misc_receipt returns error when payment does not equal amount" do
+      type = MiscReceiptType.create!(code: "fee1", label: "Test Fee", income_account_reference: "income:test")
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Misc Party", is_active: true)
+
+      errors = WorkflowValidator.errors({
+        transaction_type: "misc_receipt",
+        amount_cents: 5_000,
+        party_id: party.id,
+        misc_receipt_type_id: type.id,
+        income_account_reference: type.income_account_reference,
+        memo: "Test",
+        misc_cash_cents: 3_000,
+        misc_account_cents: 0,
+        check_items: []
+      })
+
+      assert_includes errors, "Payment (cash + account + checks) must equal amount"
+    end
+
+    test "misc_receipt returns no errors for valid params" do
+      type = MiscReceiptType.create!(code: "fee2", label: "Test Fee 2", income_account_reference: "income:test2")
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Misc Party 2", is_active: true)
+
+      errors = WorkflowValidator.errors({
+        transaction_type: "misc_receipt",
+        amount_cents: 5_000,
+        party_id: party.id,
+        misc_receipt_type_id: type.id,
+        income_account_reference: type.income_account_reference,
+        memo: "Test memo",
+        misc_cash_cents: 5_000,
+        misc_account_cents: 0,
+        cash_account_reference: "cash:D01",
+        check_items: []
+      }, mode: :validate)
+
+      assert_empty errors, errors.inspect
+    end
+
     test "deposit returns no error when cash_back within total deposit" do
       party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "CashBack Party", is_active: true)
       errors = WorkflowValidator.errors({

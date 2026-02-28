@@ -21,7 +21,7 @@ module Teller
       payload = nil
       if teller_session.present? && teller_session.open?
         last_tx = teller_session.teller_transactions
-          .where(status: "posted", transaction_type: %w[deposit withdrawal transfer draft check_cashing])
+          .where(status: "posted", transaction_type: %w[deposit withdrawal transfer draft check_cashing misc_receipt])
           .order(posted_at: :desc, id: :desc)
           .limit(20)
           .includes(posting_batch: [])

@@ -1,6 +1,6 @@
 class TellerTransaction < ApplicationRecord
   NON_REVERSIBLE_TYPES = %w[session_close_variance session_handoff_variance reversal].freeze
-  TRANSACTION_TYPES = %w[deposit withdrawal transfer vault_transfer draft check_cashing session_close_variance session_handoff_variance reversal].freeze
+  TRANSACTION_TYPES = %w[deposit withdrawal transfer vault_transfer draft check_cashing misc_receipt session_close_variance session_handoff_variance reversal].freeze
   STATUSES = %w[posted failed].freeze
 
   belongs_to :user

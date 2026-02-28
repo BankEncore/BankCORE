@@ -1,3 +1,59 @@
-<div class="receipt-type-details text-sm text-slate-500">
-  <p>Misc receipt — not yet implemented.</p>
+<% meta = posting_batch.metadata || {} %>
+<% meta = meta.with_indifferent_access if meta.respond_to?(:with_indifferent_access) %>
+<% misc = meta["misc_receipt"] || meta[:misc_receipt] || {} %>
+<% misc = misc.with_indifferent_access if misc.respond_to?(:with_indifferent_access) %>
+<% amount_cents = (misc["amount_cents"] || misc[:amount_cents] || 0).to_i %>
+<% misc_cash = (misc["misc_cash_cents"] || misc[:misc_cash_cents] || 0).to_i %>
+<% misc_account = (misc["misc_account_cents"] || misc[:misc_account_cents] || 0).to_i %>
+<% check_total = (misc["check_total_cents"] || misc[:check_total_cents] || 0).to_i %>
+<% memo = (misc["memo"] || misc[:memo]).to_s %>
+<% type_id = (misc["misc_receipt_type_id"] || misc[:misc_receipt_type_id]).to_s.presence %>
+<% type_label = (misc["type_label"] || misc[:type_label]).to_s.presence %>
+<% type_label = (type_id.present? ? MiscReceiptType.find_by(id: type_id)&.label : nil) || type_label || "Misc Receipt" %>
+<% unit_cents = (misc["unit_amount_cents"] || misc[:unit_amount_cents] || 0).to_i %>
+<% quantity = [(misc["quantity"] || misc[:quantity] || 1).to_i, 1].max %>
+<% user = teller_transaction.user %>
+
+<div class="receipt-type-details text-sm">
+  <table class="table table-sm text-sm w-full">
+    <%= render "teller/receipts/receipt_served_party", posting_batch: posting_batch %>
+    <tr>
+      <td>Receipt Type:</td>
+      <td class="text-right"><%= type_label %></td>
+    </tr>
+    <tr>
+      <td>Amount:</td>
+      <td class="tabular-nums text-right">
+        <% if quantity > 1 && unit_cents > 0 %>
+          <%= quantity %> × <%= receipt_money(unit_cents) %> = <%= receipt_money(amount_cents) %>
+        <% else %>
+          <%= receipt_money(amount_cents) %>
+        <% end %>
+      </td>
+    </tr>
+    <% if memo.present? %>
+    <tr>
+      <td>Memo:</td>
+      <td class="text-right"><%= memo %></td>
+    </tr>
+    <% end %>
+    <tr>
+      <td>Cash:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(misc_cash) %></td>
+    </tr>
+    <tr>
+      <td>Checks:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(check_total) %></td>
+    </tr>
+    <tr>
+      <td>Account Transfer:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(misc_account) %></td>
+    </tr>
+  </table>
+</div>
+
+<%= render "teller/receipts/receipt_account_info", posting_batch: posting_batch %>
+
+<div class="receipt-auth mt-3 text-sm">
+  <p>Auth: <%= user.teller_number.presence || teller_transaction.workstation&.code || "—" %> - <%= user.display_label %></p>
 </div>

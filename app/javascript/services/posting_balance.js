@@ -16,11 +16,13 @@ import { getCashImpactProfile } from "services/posting_workflows"
 export function calculateCashImpact(transactionType, options = {}, schema = null) {
   const amountCents = options.amountCents ?? 0
   const draftCashCents = options.draftCashCents ?? 0
+  const miscCashCents = options.miscCashCents ?? 0
   const vaultDirection = options.vaultDirection ?? ""
   const profile = getCashImpactProfile(transactionType, schema)
 
   if (profile === "inflow") return amountCents
   if (profile === "draft_funding") return draftCashCents
+  if (profile === "misc_funding") return miscCashCents
   if (profile === "vault_directional") {
     if (vaultDirection === "drawer_to_vault") return -amountCents
     if (vaultDirection === "vault_to_drawer") return amountCents
@@ -161,6 +163,40 @@ export function buildEntries(transactionType, state) {
       entries.push({ side: "credit", account_reference: draftFeeIncomeAccountReference, amount_cents: draftFeeCents })
     }
 
+    return entries
+  }
+
+  if (entryProfile === "misc_receipt") {
+    const miscAmountCents = state.miscAmounts?.amountCents ?? state.amountCents ?? 0
+    const miscCashCents = state.miscAmounts?.miscCashCents ?? 0
+    const miscAccountCents = state.miscAmounts?.miscAccountCents ?? 0
+    const miscCheckCents = (state.checks ?? []).reduce((sum, c) => sum + (c.amount_cents ?? 0), 0)
+    const totalPaymentCents = miscCashCents + miscAccountCents + miscCheckCents
+    const incomeAccountReference = (state.incomeAccountReference ?? "").trim()
+    if (miscAmountCents <= 0 || !incomeAccountReference || totalPaymentCents !== miscAmountCents) {
+      return []
+    }
+
+    const entries = []
+
+    if (miscCashCents > 0 && cashAccountReference) {
+      entries.push({ side: "debit", account_reference: cashAccountReference, amount_cents: miscCashCents })
+    }
+
+    checks
+      .filter((c) => (c.amount_cents ?? 0) > 0)
+      .forEach((check) => {
+        entries.push({ side: "debit", account_reference: check.account_reference ?? "", amount_cents: check.amount_cents })
+      })
+
+    const primaryUsed = primaryAccountReference &&
+      primaryAccountReference !== "0" &&
+      primaryAccountReference !== "acct:0"
+    if (miscAccountCents > 0 && primaryUsed) {
+      entries.push({ side: "debit", account_reference: primaryAccountReference, amount_cents: miscAccountCents })
+    }
+
+    entries.push({ side: "credit", account_reference: incomeAccountReference, amount_cents: miscAmountCents })
     return entries
   }
 

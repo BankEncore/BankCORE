@@ -1,0 +1,125 @@
+<% form = local_assigns.fetch(:form) %>
+<% cash_account_reference_value = local_assigns.fetch(:cash_account_reference_value, "") %>
+<% wfc = local_assigns.fetch(:workflow_form_controller, "misc-receipt-form") %>
+<% selected_party = local_assigns[:selected_party] %>
+<% misc_receipt_types = local_assigns.fetch(:misc_receipt_types, []) %>
+
+<%= hidden_field_tag :transaction_type, "misc_receipt", data: { "#{wfc}_target": "transactionType" } %>
+
+<%= render "teller/forms/served_party_section",
+  form: form,
+  workflow_form_controller: wfc,
+  selected_party: selected_party %>
+
+<div class="flex flex-col md:flex-row gap-3 mt-4">
+  <div class="form-control overflow-visible flex-1 min-w-0" data-<%= wfc %>-target="primaryAccountRow">
+    <%= form.label :primary_account_reference, "Primary Account (optional)", class: "text-xs font-medium text-slate-700 block" %>
+    <div class="relative overflow-visible" data-controller="primary-account-search"
+         data-primary-account-search-search-url-value="<%= teller_transaction_search_path %>"
+         data-primary-account-search-party-accounts-url-template-value="<%= accounts_teller_party_path('__ID__') %>">
+      <%= form.text_field :primary_account_reference,
+        data: {
+          "#{wfc}_target": "primaryAccountReference",
+          primary_account_search_target: "searchInput",
+          action: "input->#{wfc}#recalculate input->primary-account-search#search input->primary-account-search#onInputFreeTyping"
+        },
+        required: false,
+        class: "input input-bordered w-full",
+        placeholder: "Search party or account #, or leave blank",
+        autocomplete: "off" %>
+      <div data-primary-account-search-target="resultsList"
+           class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
+           hidden>
+      </div>
+      <div data-primary-account-search-target="partyAccountsRow" class="mt-2" hidden>
+        <label class="text-xs font-medium text-slate-700">Select account for <span data-primary-account-search-target="partyName"></span></label>
+        <select data-primary-account-search-target="accountSelect"
+                data-action="change->primary-account-search#selectAccountFromDropdown"
+                class="select select-bordered w-full mt-1">
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%= form.hidden_field :cash_account_reference,
+  value: cash_account_reference_value,
+  data: { "#{wfc}_target": "cashAccountReference" } %>
+
+<section data-<%= wfc %>-target="miscReceiptSection">
+  <div class="divider my-3"></div>
+  <div class="font-medium">Misc Receipt Details</div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+    <div class="form-control">
+      <%= form.label :misc_receipt_type_id, "Receipt Type", class: "text-xs font-medium text-slate-700 block" %>
+      <select name="misc_receipt_type_id" id="misc_receipt_type_id"
+              class="select select-bordered w-full"
+              data-<%= wfc %>-target="miscReceiptTypeSelect"
+              data-action="change-><%= wfc %>#onMiscReceiptTypeChange">
+        <option value="">Select type...</option>
+        <% misc_receipt_types.each do |mrt| %>
+          <option value="<%= mrt.id %>"
+                  data-income-ref="<%= mrt.income_account_reference %>"
+                  data-default-cents="<%= mrt.default_amount_cents || '' %>"
+                  data-memo-required="<%= mrt.memo_required? ? '1' : '0' %>">
+            <%= mrt.label %><%= " ($#{number_with_precision(mrt.default_amount_cents / 100.0)})" if mrt.default_amount_cents.present? && mrt.default_amount_cents > 0 %>
+          </option>
+        <% end %>
+      </select>
+    </div>
+    <div class="form-control" data-<%= wfc %>-target="memoRow">
+      <%= form.label :memo, "Memo (optional)", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.text_field :memo, data: { "#{wfc}_target": "memo", action: "input->#{wfc}#recalculate" }, class: "input input-bordered w-full" %>
+    </div>
+    <div class="form-control">
+      <%= form.label :unit_amount_cents, "Unit amount", class: "text-xs font-medium text-slate-700 block" %>
+      <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+        <%= form.hidden_field :unit_amount_cents, value: 0, data: { "#{wfc}_target": "unitAmountCents", currency_input_target: "hiddenInput" } %>
+        <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Unit amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="misc_receipt_unit_amount_display" />
+      </div>
+    </div>
+    <div class="form-control">
+      <%= form.label :quantity, "Qty", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.number_field :quantity, value: 1, min: 1, step: 1, data: { "#{wfc}_target": "quantity", action: "input->#{wfc}#recalculate" }, class: "input input-bordered w-full" %>
+    </div>
+    <div class="form-control">
+      <span class="text-xs font-medium text-slate-700 block">Total</span>
+      <p class="text-sm mono py-2 font-medium" data-<%= wfc %>-target="miscTotalDisplay">$0.00</p>
+    </div>
+  </div>
+
+  <%= form.hidden_field :amount_cents, value: 0, data: { "#{wfc}_target": "amountCents" } %>
+  <%= form.hidden_field :income_account_reference, value: "", data: { "#{wfc}_target": "incomeAccountReference" } %>
+
+  <%= render "teller/forms/check_section", workflow_form_controller: wfc %>
+
+  <div class="mt-3">
+    <div class="font-medium text-sm mb-2">Payment (cash + checks + account = amount)</div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div class="form-control">
+        <%= form.label :misc_cash_cents, "Cash", class: "text-xs font-medium text-slate-700 block" %>
+        <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+          <%= form.hidden_field :misc_cash_cents, value: 0, data: { "#{wfc}_target": "miscCashCents", currency_input_target: "hiddenInput" } %>
+          <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:misc_cash_cents) %>" />
+        </div>
+      </div>
+      <div class="form-control">
+        <span class="text-xs font-medium text-slate-700 block">Checks</span>
+        <p class="text-sm mono py-2" data-<%= wfc %>-target="miscCheckSubtotal">$0.00</p>
+        <span class="text-xs text-slate-600">From check rows above</span>
+      </div>
+      <div class="form-control">
+        <%= form.label :misc_account_cents, "Account Transfer", class: "text-xs font-medium text-slate-700 block" %>
+        <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+          <%= form.hidden_field :misc_account_cents, value: 0, data: { "#{wfc}_target": "miscAccountCents", currency_input_target: "hiddenInput" } %>
+          <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Account payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:misc_account_cents) %>" />
+        </div>
+      </div>
+    </div>
+    <div class="mt-2 text-sm">
+      <span data-<%= wfc %>-target="miscTotalAmount">Total amount: $0.00</span>
+      <span class="ml-3" data-<%= wfc %>-target="miscBalance">Balance: $0.00</span>
+    </div>
+  </div>
+</section>
