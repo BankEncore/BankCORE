@@ -50,6 +50,9 @@ module Posting
         when "draft"
           add_served_party_errors!(errors, params)
           validate_draft(errors, params, mode: mode)
+        when "misc_receipt"
+          add_served_party_errors!(errors, params)
+          validate_misc_receipt(errors, params, mode: mode)
         when "vault_transfer"
           validate_vault_transfer(errors, params)
         end
@@ -84,6 +87,35 @@ module Posting
             errors << "Cash account reference is required" if draft_cash_cents.positive? && params[:cash_account_reference].blank?
             errors << "Primary account reference is required" if draft_account_cents.positive? && params[:primary_account_reference].blank?
           end
+        end
+
+        def validate_misc_receipt(errors, params, mode:)
+          type_id = params[:misc_receipt_type_id].to_s.presence
+          income_ref = params[:income_account_reference].to_s.strip.presence
+          errors << "Misc receipt type or income account reference is required" if type_id.blank? && income_ref.blank?
+
+          type = MiscReceiptType.find_by(id: type_id) if type_id.present?
+          memo_required = type&.memo_required?
+          errors << "Memo is required" if memo_required && params[:memo].to_s.strip.blank?
+
+          amount_cents = params[:amount_cents].to_i
+
+          misc_cash_cents = params[:misc_cash_cents].to_i
+          misc_account_cents = params[:misc_account_cents].to_i
+          check_items = Array(params[:check_items]).map { |item| item.to_h.symbolize_keys }
+          check_total = check_items.sum { |item| item[:amount_cents].to_i }
+          total_payment = misc_cash_cents + misc_account_cents + check_total
+          errors << "Payment (cash + account + checks) must equal amount" unless total_payment == amount_cents
+
+          return unless mode == :validate
+
+          if type_id.present? && type.nil?
+            errors << "Invalid misc receipt type"
+          elsif type_id.blank? && income_ref.blank?
+            errors << "Income account reference or valid misc receipt type is required"
+          end
+          errors << "Cash account reference is required" if misc_cash_cents.positive? && params[:cash_account_reference].blank?
+          errors << "Primary account reference is required" if misc_account_cents.positive? && params[:primary_account_reference].blank?
         end
 
         def validate_vault_transfer(errors, params)

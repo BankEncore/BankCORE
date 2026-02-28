@@ -21,6 +21,7 @@ module Posting
       when "withdrawal" then withdrawal_description
       when "transfer" then transfer_description
       when "draft" then draft_description
+      when "misc_receipt" then misc_receipt_description
       when "reversal" then reversal_description
       else
         nil
@@ -83,6 +84,14 @@ module Posting
       payee = draft_meta["payee_name"] || draft_meta[:payee_name].to_s
       return "Bank Draft" if instrument.blank? && payee.blank?
       "Bank Draft ##{instrument} - #{payee}".strip
+    end
+
+    def misc_receipt_description
+      misc = metadata.dig("misc_receipt") || metadata.dig(:misc_receipt) || {}
+      label = (misc["type_label"] || misc[:type_label]).to_s.strip
+      label = "Misc Receipt" if label.blank?
+      memo = (misc["memo"] || misc[:memo]).to_s.strip
+      memo.present? ? "#{label} (#{memo})" : label
     end
 
     def reversal_description

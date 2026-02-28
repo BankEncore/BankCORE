@@ -15,7 +15,7 @@
     </div>
 
     <div class="mb-4">
-      <%= render "teller/shared/posting_readiness_strip", show_serve_previous_party: %w[deposit withdrawal transfer draft check_cashing].include?(flow_type) %>
+      <%= render "teller/shared/posting_readiness_strip", show_serve_previous_party: %w[deposit withdrawal transfer draft check_cashing misc_receipt].include?(flow_type) %>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -52,6 +52,13 @@
               form: form,
               selected_party: selected_party,
               cash_account_reference_value: cash_account_reference_value,
+              workflow_form_controller: workflow_form_controller %>
+          <% when "misc_receipt" %>
+            <%= render "teller/forms/misc_receipt_form",
+              form: form,
+              selected_party: selected_party,
+              cash_account_reference_value: cash_account_reference_value,
+              misc_receipt_types: local_assigns[:misc_receipt_types] || [],
               workflow_form_controller: workflow_form_controller %>
           <% when "vault_transfer" %>
             <%= render "teller/forms/vault_transfer_form",

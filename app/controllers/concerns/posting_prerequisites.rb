@@ -34,7 +34,7 @@ module PostingPrerequisites
         return direction != "vault_to_vault"
       end
 
-      %w[deposit withdrawal check_cashing].include?(transaction_type)
+      %w[deposit withdrawal check_cashing misc_receipt].include?(transaction_type)
     end
 
     def inferred_transaction_type
@@ -51,6 +51,8 @@ module PostingPrerequisites
         "draft"
       when "teller/check_cashings"
         "check_cashing"
+      when "teller/misc_receipts"
+        "misc_receipt"
       when "teller/reversals"
         "reversal"
       when "teller/transaction_pages"
@@ -67,6 +69,8 @@ module PostingPrerequisites
           "draft"
         when "check_cashing"
           "check_cashing"
+        when "misc_receipt"
+          "misc_receipt"
         end
       end
     end

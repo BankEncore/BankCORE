@@ -1,0 +1,42 @@
+<%= render "admin/shared/page_header",
+  title: "Misc Receipt Types",
+  description: "Manage miscellaneous receipt types for teller transactions.",
+  primary_button_path: new_admin_misc_receipt_type_path,
+  primary_button_label: "Add Misc Receipt Type" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Label</th>
+            <th>Income Account</th>
+            <th>Default Amount</th>
+            <th>Order</th>
+            <th>Memo Req.</th>
+            <th>Active</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @misc_receipt_types.each do |mrt| %>
+            <tr>
+              <td><%= mrt.code %></td>
+              <td><%= mrt.label %></td>
+              <td><%= mrt.income_account_reference %></td>
+              <td><%= mrt.default_amount_cents ? number_to_currency(mrt.default_amount_cents / 100.0) : "—" %></td>
+              <td><%= mrt.display_order %></td>
+              <td><%= mrt.memo_required? ? "Yes" : "No" %></td>
+              <td><%= mrt.is_active? ? "Yes" : "No" %></td>
+              <td class="text-right">
+                <%= link_to "Edit", edit_admin_misc_receipt_type_path(mrt), class: "btn btn-ghost btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

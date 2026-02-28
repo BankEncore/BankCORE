@@ -22,6 +22,7 @@ Rails.application.routes.draw do
     resources :transfers, only: [ :new, :create ]
     resources :vault_transfers, only: [ :new, :create ]
     resources :drafts, only: [ :new, :create ]
+    resources :misc_receipts, only: [ :new, :create ]
     resources :check_cashings, only: [ :new, :create ]
     resource :context, only: [ :show, :update ]
     get "transactions/deposit", to: "transaction_pages#deposit", as: :deposit_transaction
@@ -30,6 +31,7 @@ Rails.application.routes.draw do
     get "transactions/vault_transfer", to: "transaction_pages#vault_transfer", as: :vault_transfer_transaction
     get "transactions/draft", to: "transaction_pages#draft", as: :draft_transaction
     get "transactions/check_cashing", to: "transaction_pages#check_cashing", as: :check_cashing_transaction
+    get "transactions/misc_receipt", to: "transaction_pages#misc_receipt", as: :misc_receipt_transaction
     get "transactions/search", to: "transaction_searches#index", as: :transaction_search
     get "account_reference", to: "account_references#show", as: :account_reference
     get "last_transaction_primary_account", to: "dashboard#last_transaction_primary_account", as: :last_transaction_primary_account
@@ -82,6 +84,7 @@ Rails.application.routes.draw do
     resources :workstations, only: [ :index, :show, :edit, :update, :destroy ]
     resources :cash_locations, only: [ :index, :show, :edit, :update, :destroy ]
     resources :cash_location_assignments, only: [ :index, :show ]
+    resources :misc_receipt_types, only: [ :index, :new, :create, :edit, :update ]
     resources :users do
       resources :user_roles, only: [ :create, :destroy ], path: "roles"
     end

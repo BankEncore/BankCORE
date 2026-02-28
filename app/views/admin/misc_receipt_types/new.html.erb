@@ -1,0 +1,15 @@
+<%= render "admin/shared/page_header",
+  title: "New Misc Receipt Type",
+  description: "Add a miscellaneous receipt type for teller transactions.",
+  secondary_button_path: admin_misc_receipt_types_path,
+  secondary_button_label: "Back" %>
+
+<%= form_with model: @misc_receipt_type, url: admin_misc_receipt_types_path, class: "card bg-base-100 border border-base-300" do |f| %>
+  <div class="card-body">
+    <%= render "admin/misc_receipt_types/form", f: f %>
+
+    <div class="form-control mt-4">
+      <%= f.submit "Create Misc Receipt Type", class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>

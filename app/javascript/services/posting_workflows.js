@@ -18,11 +18,13 @@ const FALLBACK_CASH_IMPACT_PROFILES = {
   withdrawal: "outflow",
   check_cashing: "outflow",
   draft: "draft_funding",
+  misc_receipt: "misc_funding",
   vault_transfer: "vault_directional"
 }
 
 const FALLBACK_PRIMARY_ACCOUNT_POLICY = {
   draft: "draft_account_only",
+  misc_receipt: "misc_account_only",
   check_cashing: "never",
   vault_transfer: "never"
 }
@@ -30,12 +32,14 @@ const FALLBACK_PRIMARY_ACCOUNT_POLICY = {
 const FALLBACK_CASH_ACCOUNT_POLICY = {
   transfer: "never",
   vault_transfer: "never",
-  draft: "draft_cash_only"
+  draft: "draft_cash_only",
+  misc_receipt: "misc_cash_only"
 }
 
 const FALLBACK_SECTIONS = {
   deposit: ["checks"],
   draft: ["draft", "checks"],
+  misc_receipt: ["misc_receipt", "checks"],
   transfer: ["transfer"],
   vault_transfer: ["vault_transfer"],
   check_cashing: ["check_cashing"]
@@ -78,6 +82,10 @@ export function getRequiresPrimaryAccount(transactionType, schema, context = {})
     const draftAccountCents = context.draftAccountCents ?? 0
     return transactionType === "draft" && draftAccountCents > 0
   }
+  if (policy === "misc_account_only") {
+    const miscAccountCents = context.miscAccountCents ?? 0
+    return transactionType === "misc_receipt" && miscAccountCents > 0
+  }
   return true
 }
 
@@ -98,6 +106,10 @@ export function getRequiresCashAccount(transactionType, schema, context = {}) {
   if (policy === "draft_cash_only") {
     const draftCashCents = context.draftCashCents ?? 0
     return transactionType === "draft" && draftCashCents > 0
+  }
+  if (policy === "misc_cash_only") {
+    const miscCashCents = context.miscCashCents ?? 0
+    return transactionType === "misc_receipt" && miscCashCents > 0
   }
   return true
 }
@@ -181,6 +193,7 @@ export function blockedReason({
   hasInvalidCheckRows,
   hasInvalidCheckCashingFields,
   hasInvalidDraftFields,
+  hasInvalidMiscReceiptFields,
   hasInvalidTransferFields,
   hasInvalidVaultTransferFields,
   balanced
@@ -196,6 +209,7 @@ export function blockedReason({
   if (requiresDraftDetails && (!hasDraftPayee || !hasDraftInstrumentNumber || !hasDraftLiabilityAccount)) return "Complete draft payee and instrument details."
   if (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) return "Complete vault transfer direction, locations, and reason details."
   if (hasInvalidDraftFields) return "Draft amount and fee values are invalid."
+  if (hasInvalidMiscReceiptFields) return "Complete misc receipt type, amount, memo, and payment details."
   if (hasInvalidTransferFields) return "Transfer fee cannot exceed transfer amount."
   if (hasInvalidVaultTransferFields) return "Vault transfer details are invalid."
   if (!balanced) return "Entries are out of balance."

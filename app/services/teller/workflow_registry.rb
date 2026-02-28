@@ -76,6 +76,21 @@ module Teller
         cash_account_policy: "draft_cash_only",
         requires_settlement_account: false
       },
+      "misc_receipt" => {
+        label: "Misc Receipt",
+        required_fields: %i[misc_receipt_type_id income_account_reference amount_cents],
+        requires_served_party: true,
+        funding_modes: %w[account cash check],
+        ui_sections: %w[misc_receipt checks],
+        entry_profile: "misc_receipt",
+        amount_input_mode: "manual",
+        effective_amount_source: "amount_field",
+        cash_impact_profile: "misc_funding",
+        primary_account_policy: "misc_account_only",
+        requires_counterparty_account: false,
+        cash_account_policy: "misc_cash_only",
+        requires_settlement_account: false
+      },
       "vault_transfer" => {
         label: "Vault Transfer",
         required_fields: %i[vault_transfer_direction vault_transfer_reason_code],

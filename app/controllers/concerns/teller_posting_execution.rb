@@ -105,6 +105,13 @@ module TellerPostingExecution
         :draft_instrument_number,
         :draft_liability_account_reference,
         :draft_fee_income_account_reference,
+        :misc_receipt_type_id,
+        :income_account_reference,
+        :unit_amount_cents,
+        :quantity,
+        :memo,
+        :misc_cash_cents,
+        :misc_account_cents,
         acknowledged_advisory_ids: [],
         check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :check_type, :hold_reason, :hold_until ],
         entries: [ :side, :account_reference, :amount_cents ]
