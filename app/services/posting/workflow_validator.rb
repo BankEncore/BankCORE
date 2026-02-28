@@ -20,12 +20,14 @@ module Posting
         case transaction_type
         when "deposit", "withdrawal"
           errors << "Primary account reference is required" if params[:primary_account_reference].blank?
+          add_served_party_errors!(errors, params)
           if transaction_type == "deposit"
             total_deposit = Array(entries).select { |e| (e[:side] || e["side"]) == "debit" }.sum { |e| (e[:amount_cents] || e["amount_cents"]).to_i }
             cash_back = params[:cash_back_cents].to_i
             errors << "Cash back cannot exceed total deposit" if total_deposit.positive? && cash_back > total_deposit
           end
         when "transfer"
+          add_served_party_errors!(errors, params)
           if entries.blank?
             errors << "From account reference is required" if params[:primary_account_reference].blank?
             errors << "To account reference is required" if params[:counterparty_account_reference].blank?
@@ -34,7 +36,7 @@ module Posting
           amount_cents = params[:amount_cents].to_i
           errors << "Transfer fee cannot exceed transfer amount" if fee_cents.positive? && fee_cents > amount_cents
         when "check_cashing"
-          errors << "Party is required" if params[:party_id].blank?
+          add_served_party_errors!(errors, params)
           raw_items = Array(params[:check_items])
           check_items = raw_items.select { |item| (item[:amount_cents] || item["amount_cents"]).to_i.positive? }
           errors << "At least one check with amount greater than zero is required" if check_items.empty?
@@ -45,11 +47,8 @@ module Posting
             net_payout = check_total - fee_cents
             errors << "Net cash payout must be greater than zero" if net_payout <= 0
           end
-          if params[:party_id].blank?
-            errors << "ID type is required when no party is selected" if params[:id_type].blank?
-            errors << "ID number is required when no party is selected" if params[:id_number].blank?
-          end
         when "draft"
+          add_served_party_errors!(errors, params)
           validate_draft(errors, params, mode: mode)
         when "vault_transfer"
           validate_vault_transfer(errors, params)
@@ -59,6 +58,18 @@ module Posting
       end
 
       private
+        def add_served_party_errors!(errors, params)
+          has_party = params[:party_id].to_s.strip.present?
+          has_id = params[:id_type].to_s.strip.present? && params[:id_number].to_s.strip.present?
+          return if has_party || has_id
+
+          errors << "Party or ID (type + number) is required for the person being served"
+          return unless params[:party_id].to_s.strip.blank?
+
+          errors << "ID type is required when no party is selected" if params[:id_type].to_s.strip.blank?
+          errors << "ID number is required when no party is selected" if params[:id_number].to_s.strip.blank?
+        end
+
         def validate_draft(errors, params, mode:)
           draft_amount_cents = params[:draft_amount_cents].to_i
           draft_fee_cents = params[:draft_fee_cents].to_i

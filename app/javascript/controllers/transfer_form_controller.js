@@ -6,6 +6,7 @@ import {
   getRequiresPrimaryAccount,
   getRequiresCounterpartyAccount,
   getRequiresCashAccount,
+  getRequiresParty,
   hasSection as workflowHasSectionInConfig,
   blockedReason as workflowBlockedReason
 } from "services/posting_workflows"
@@ -28,7 +29,10 @@ export default class extends PostingFormBase {
     "computedCashBackRow",
     "computedCashBackSubtotal",
     "computedFeeSubtotal",
-    "computedNetTotal"
+    "computedNetTotal",
+    "partyId",
+    "idType",
+    "idNumber"
   ]
 
   connect() {
@@ -70,9 +74,9 @@ export default class extends PostingFormBase {
       accountNumber: "",
       payerName: "",
       presenterType: "",
-      idType: "",
-      idNumber: "",
-      partyId: ""
+      idType: this.hasIdTypeTarget ? this.idTypeTarget.value : "",
+      idNumber: this.hasIdNumberTarget ? this.idNumberTarget.value : "",
+      partyId: this.hasPartyIdTarget ? this.partyIdTarget.value : ""
     }
   }
 
@@ -89,6 +93,8 @@ export default class extends PostingFormBase {
     const requiresPrimaryAccount = getRequiresPrimaryAccount(transactionType, this.workflowSchema, {})
     const requiresCounterparty = getRequiresCounterpartyAccount(transactionType, this.workflowSchema)
     const requiresCashAccount = getRequiresCashAccount(transactionType, this.workflowSchema, {})
+    const requiresParty = getRequiresParty(transactionType, this.workflowSchema)
+    const hasServedParty = state.partyId.trim().length > 0 || (state.idType.trim().length > 0 && state.idNumber.trim().length > 0)
     const hasCashAccount = state.cashAccountReference.trim().length > 0
     const hasInvalidTransferFields = this.hasInvalidTransferFields(transferAmounts, totalAmountCents, showTransferSection)
 
@@ -105,8 +111,8 @@ export default class extends PostingFormBase {
       hasCashAccount,
       requiresSettlementAccount: false,
       hasSettlementAccount: false,
-      requiresParty: false,
-      hasParty: false,
+      requiresParty,
+      hasParty: hasServedParty,
       requiresDraftDetails: false,
       hasDraftPayee: false,
       hasDraftInstrumentNumber: false,
@@ -145,7 +151,7 @@ export default class extends PostingFormBase {
     const cashImpact = calculateCashImpact(transactionType, { amountCents: displayedCashAmount }, this.workflowSchema)
     const projectedDrawer = (this.openingCashCentsValue || 0) + cashImpact
 
-    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || hasInvalidTransferFields
+    const hasMissingFields = totalAmountCents <= 0 || (requiresPrimaryAccount && !hasPrimaryAccount) || (requiresCounterparty && !hasCounterparty) || (requiresCashAccount && !hasCashAccount) || (requiresParty && !hasServedParty) || hasInvalidTransferFields
     let disabled = blockedReason.length > 0 || !balanced || hasMissingFields
     if (this.postedLocked) disabled = true
 
@@ -166,7 +172,7 @@ export default class extends PostingFormBase {
         primaryReference: (this.hasPrimaryAccountReferenceTarget ? this.primaryAccountReferenceTarget.value : "").trim(),
         counterpartyReference: (this.hasCounterpartyAccountReferenceTarget ? this.counterpartyAccountReferenceTarget.value : "").trim(),
         cashReference: (this.hasCashAccountReferenceTarget ? this.cashAccountReferenceTarget.value : "").trim(),
-        partyId: "",
+        partyId: (this.hasPartyIdTarget ? this.partyIdTarget.value : "").trim(),
         requestId: this.requestIdInput()?.value,
         cashAmountCents: displayedCashAmount,
         checkAmountCents: 0,
@@ -205,6 +211,9 @@ export default class extends PostingFormBase {
   resetFormFieldClearing(isAfterPost = false) {
     if (this.hasPrimaryAccountReferenceTarget) this.primaryAccountReferenceTarget.value = ""
     if (this.hasCounterpartyAccountReferenceTarget) this.counterpartyAccountReferenceTarget.value = ""
+    if (this.hasPartyIdTarget) this.partyIdTarget.value = ""
+    if (this.hasIdTypeTarget) this.idTypeTarget.value = ""
+    if (this.hasIdNumberTarget) this.idNumberTarget.value = ""
     if (this.hasAmountCentsTarget) this.setAmountCents(this.amountCentsTarget, 0)
     if (this.hasTransferFeeCentsTarget) this.setAmountCents(this.transferFeeCentsTarget, 0)
     if (isAfterPost && this.hasCashAccountReferenceTarget) {

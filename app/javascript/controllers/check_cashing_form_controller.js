@@ -17,7 +17,6 @@ export default class extends PostingFormBase {
     "checkRows",
     "checkTemplate",
     "checkCashingSection",
-    "checkCashingIdRow",
     "partyId",
     "feeCents",
     "feeIncomeAccountReference",
@@ -88,7 +87,7 @@ export default class extends PostingFormBase {
     }
 
     const totalAmountCents = state.effectiveAmountCents
-    const hasParty = state.partyId.trim().length > 0
+    const hasParty = state.partyId.trim().length > 0 || (state.idType.trim().length > 0 && state.idNumber.trim().length > 0)
     const requiresParty = getRequiresParty(transactionType, this.workflowSchema)
     const hasInvalidCheckRows = this.hasInvalidCheckRows()
     const hasInvalidCheckCashingFields = this.hasInvalidCheckCashingFields(checkCashingAmounts)
@@ -128,7 +127,6 @@ export default class extends PostingFormBase {
 
     if (this.hasCheckSectionTarget) this.checkSectionTarget.hidden = !showCheckSection
     if (this.hasCheckCashingSectionTarget) this.checkCashingSectionTarget.hidden = !showCheckCashingSection
-    if (this.hasCheckCashingIdRowTarget) this.checkCashingIdRowTarget.hidden = !showCheckCashingSection
     if (this.hasIdNumberTarget) {
       const idRequired = showCheckCashingSection && !hasParty
       this.idNumberTarget.required = idRequired
@@ -236,7 +234,7 @@ export default class extends PostingFormBase {
   }
 
   hasInvalidCheckCashingFields({ checkAmountCents, feeCents, netCashPayoutCents }) {
-    const hasParty = this.hasPartyIdTarget && this.partyIdTarget.value.trim().length > 0
+    const hasParty = (this.hasPartyIdTarget && this.partyIdTarget.value.trim().length > 0) || (this.hasIdTypeTarget && this.idTypeTarget.value.trim().length > 0 && this.hasIdNumberTarget && this.idNumberTarget.value.trim().length > 0)
     const hasIdType = this.hasIdTypeTarget && this.idTypeTarget.value.trim().length > 0
     const hasIdNumber = this.hasIdNumberTarget && this.idNumberTarget.value.trim().length > 0
     const idRequired = !hasParty

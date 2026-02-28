@@ -25,16 +25,19 @@
           <% when "deposit" %>
             <%= render "teller/forms/deposit_form",
               form: form,
+              selected_party: selected_party,
               cash_account_reference_value: cash_account_reference_value,
               workflow_form_controller: workflow_form_controller %>
           <% when "withdrawal" %>
             <%= render "teller/forms/withdrawal_form",
               form: form,
+              selected_party: selected_party,
               cash_account_reference_value: cash_account_reference_value,
               workflow_form_controller: workflow_form_controller %>
           <% when "transfer" %>
             <%= render "teller/forms/transfer_form",
               form: form,
+              selected_party: selected_party,
               cash_account_reference_value: cash_account_reference_value,
               workflow_form_controller: workflow_form_controller %>
           <% when "check_cashing" %>
@@ -46,6 +49,7 @@
           <% when "draft" %>
             <%= render "teller/forms/draft_form",
               form: form,
+              selected_party: selected_party,
               cash_account_reference_value: cash_account_reference_value,
               workflow_form_controller: workflow_form_controller %>
           <% when "vault_transfer" %>

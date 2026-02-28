@@ -13,26 +13,27 @@ module Posting
         fee_cents = posting_params[:fee_cents].to_i
         net_cash_payout_cents = check_amount_cents - fee_cents
 
-        {
-          check_cashing: {
-            check_items: check_items.map do |item|
-              {
-                routing: item[:routing].to_s,
-                account: item[:account].to_s,
-                number: item[:number].to_s,
-                account_reference: item[:account_reference].to_s,
-                amount_cents: item[:amount_cents].to_i
-              }
-            end,
-            check_amount_cents: check_amount_cents,
-            fee_cents: fee_cents,
-            net_cash_payout_cents: net_cash_payout_cents,
-            party_id: posting_params[:party_id].to_s,
-            fee_income_account_reference: fee_income_account_reference,
-            id_type: posting_params[:id_type].to_s,
-            id_number: posting_params[:id_number].to_s
-          }
+        metadata = {}
+        metadata[:served_party] = served_party_metadata if served_party_metadata.any?
+        metadata[:check_cashing] = {
+          check_items: check_items.map do |item|
+            {
+              routing: item[:routing].to_s,
+              account: item[:account].to_s,
+              number: item[:number].to_s,
+              account_reference: item[:account_reference].to_s,
+              amount_cents: item[:amount_cents].to_i
+            }
+          end,
+          check_amount_cents: check_amount_cents,
+          fee_cents: fee_cents,
+          net_cash_payout_cents: net_cash_payout_cents,
+          party_id: posting_params[:party_id].to_s,
+          fee_income_account_reference: fee_income_account_reference,
+          id_type: posting_params[:id_type].to_s,
+          id_number: posting_params[:id_number].to_s
         }
+        metadata
       end
 
       private

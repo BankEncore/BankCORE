@@ -11,6 +11,7 @@
 <% fee_cents = (meta["fee_cents"] || meta[:fee_cents] || 0).to_i %>
 
 <table class="table table-xs text-xs w-full">
+  <%= render "teller/receipts/receipt_served_party", posting_batch: posting_batch %>
   <tr>
     <td>From:</td>
     <td><%= from_masked %></td>

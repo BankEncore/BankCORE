@@ -14,6 +14,14 @@ module Posting
         {}
       end
 
+      def served_party_metadata
+        {
+          party_id: posting_params[:party_id].to_s.presence,
+          id_type: posting_params[:id_type].to_s.presence,
+          id_number: posting_params[:id_number].to_s.presence
+        }.compact
+      end
+
       private
 
       attr_reader :posting_params, :default_cash_account_reference

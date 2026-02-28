@@ -173,6 +173,38 @@ module Teller
       "#{letter}#{asterisk}"
     end
 
+    def served_party_from_metadata(posting_batch)
+      meta = posting_batch.metadata
+      return nil unless meta.is_a?(Hash)
+
+      meta = meta.with_indifferent_access
+      served = meta["served_party"] || meta.dig("check_cashing")
+      return nil unless served.is_a?(Hash)
+
+      served = served.with_indifferent_access
+      party_id = served["party_id"] || served[:party_id]
+      party = Party.find_by(id: party_id) if party_id.present?
+      id_type = (served["id_type"] || served[:id_type]).to_s.presence
+      id_number = (served["id_number"] || served[:id_number]).to_s.presence
+
+      display_name = if party.present?
+        party.display_name
+      elsif id_type.present? && id_number.present?
+        masked = id_number.length > 4 ? "****#{id_number[-4, 4]}" : "****"
+        "Non-customer (#{id_type.titleize}: #{masked})"
+      else
+        nil
+      end
+
+      {
+        party: party,
+        party_id: party_id,
+        id_type: id_type,
+        id_number: id_number,
+        display_name: display_name
+      }
+    end
+
     def cash_location_display_name(reference, branch)
       return "—" if reference.blank? || branch.blank?
       code = reference.to_s.sub(/\Acash:/i, "").strip

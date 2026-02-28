@@ -13,6 +13,7 @@ module Posting
         cash_back_cents = [ posting_params[:cash_back_cents].to_i, total_deposit ].min
 
         metadata = {}
+        metadata[:served_party] = served_party_metadata if served_party_metadata.any?
         metadata[:cash_back_cents] = cash_back_cents if cash_back_cents.positive?
         if check_items.any?
           metadata[:check_items] = check_items.map do |item|

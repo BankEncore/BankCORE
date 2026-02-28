@@ -20,14 +20,17 @@ export function appendEntriesAndTypePayload(formData, transactionType, state, sc
   if (transactionType === "deposit") {
     formData.set("cash_back_cents", String(state.cashBackCents ?? 0))
   }
+  if (["deposit", "withdrawal", "transfer", "draft", "check_cashing"].includes(transactionType)) {
+    appendServedPartyPayload(formData, state)
+  }
+  if (transactionType === "check_cashing") {
+    appendCheckCashingPayload(formData, state)
+  }
   if (transactionType === "draft") {
     appendDraftPayload(formData, state)
   }
   if (transactionType === "vault_transfer") {
     appendVaultTransferPayload(formData, state)
-  }
-  if (transactionType === "check_cashing") {
-    appendCheckCashingPayload(formData, state)
   }
   if (transactionType === "transfer") {
     appendTransferPayload(formData, state)
@@ -71,13 +74,16 @@ function appendVaultTransferPayload(formData, state) {
   formData.set("vault_transfer_memo", details.memo ?? "")
 }
 
+function appendServedPartyPayload(formData, state) {
+  formData.set("party_id", (state.partyId ?? "").trim())
+  formData.set("id_type", (state.idType ?? "").trim())
+  formData.set("id_number", (state.idNumber ?? "").trim())
+}
+
 function appendCheckCashingPayload(formData, state) {
   const amounts = state.checkCashingAmounts ?? {}
   formData.set("fee_cents", String(amounts.feeCents ?? 0))
   formData.set("fee_income_account_reference", (state.feeIncomeAccountReference ?? "income:check_cashing_fee").trim())
-  formData.set("party_id", (state.partyId ?? "").trim())
-  formData.set("id_type", (state.idType ?? "").trim())
-  formData.set("id_number", (state.idNumber ?? "").trim())
 }
 
 function appendTransferPayload(formData, state) {

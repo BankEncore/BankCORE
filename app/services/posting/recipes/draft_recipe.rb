@@ -9,8 +9,9 @@ module Posting
       def posting_metadata
         check_items = Array(posting_params[:check_items]).map { |item| item.to_h.symbolize_keys }
         check_items = check_items.select { |item| item[:amount_cents].to_i.positive? }
-        metadata = {
-          draft: {
+        metadata = {}
+        metadata[:served_party] = served_party_metadata if served_party_metadata.any?
+        metadata[:draft] = {
             draft_amount_cents: posting_params[:draft_amount_cents].to_i,
             fee_cents: posting_params[:draft_fee_cents].to_i,
             draft_cash_cents: posting_params[:draft_cash_cents].to_i,
@@ -20,7 +21,6 @@ module Posting
             liability_account_reference: draft_liability_account_reference,
             fee_income_account_reference: draft_fee_income_account_reference
           }
-        }
         metadata[:check_items] = check_items.map do |item|
           {
             routing: item[:routing].to_s,
