@@ -1,11 +1,15 @@
-<dialog aria-label="Transaction posted" data-posting-form-target="postSuccessModal" class="modal" data-action="close->posting-form#handlePostSuccessModalClosed">
+<% wfc = local_assigns.fetch(:workflow_form_controller, "posting-form") %>
+<dialog aria-label="Transaction posted" data-<%= wfc %>-target="postSuccessModal" class="modal" data-action="close-><%= wfc %>#handlePostSuccessModalClosed">
   <div class="modal-box">
     <h2 class="font-semibold text-lg">Transaction posted</h2>
     <p class="text-sm opacity-70 mt-1">The transaction was posted successfully.</p>
-    <p class="text-sm mt-2 opacity-80" data-posting-form-target="postSuccessIds"></p>
+    <p class="text-sm mt-2 opacity-80" data-<%= wfc %>-target="postSuccessIds"></p>
     <div class="modal-action">
-      <a data-posting-form-target="postSuccessReceiptLink" href="#" class="btn btn-primary">View receipt</a>
-      <button type="button" class="btn btn-ghost" data-posting-form-target="postSuccessNewButton" data-action="posting-form#closePostSuccessAndStartNew">New transaction</button>
+      <a data-<%= wfc %>-target="postSuccessReceiptLink" href="#" class="btn btn-primary">View receipt</a>
+      <button type="button" class="btn btn-ghost" data-<%= wfc %>-target="postSuccessNewButton" data-action="<%= wfc %>#closePostSuccessAndStartNew">New transaction</button>
     </div>
   </div>
+  <form method="dialog" class="modal-backdrop">
+    <button type="submit">close</button>
+  </form>
 </dialog>

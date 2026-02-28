@@ -299,7 +299,7 @@ module Teller
     test "typed new transaction pages render without cash location errors" do
       get new_teller_deposit_path
       assert_response :success
-      assert_select "section[data-posting-form-target='checkSection']:not([hidden])", count: 1
+      assert_select "section[data-deposit-form-target='checkSection']:not([hidden])", count: 1
 
       [
         new_teller_withdrawal_path,

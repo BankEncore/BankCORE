@@ -54,10 +54,13 @@ module Teller
       assert_select "h2", text: "Cash Impact Footer", count: 0
       assert_select "p", text: /Primary Account History/, count: 0
       assert_select "input[name='transaction_type'][value='deposit']", count: 1
-      assert_select "section[data-posting-form-target='checkSection']:not([hidden])", count: 1
-      assert_select "p[data-posting-form-target='cashAccountRow']", count: 0
+      assert_select "section[data-deposit-form-target='checkSection']:not([hidden])", count: 1
+      assert_select "div[data-deposit-form-target='cashAmountRow']", count: 1
       assert_select "input[type='hidden'][name='cash_account_reference'][value='cash:#{@drawer.code}']", count: 1
-      assert_select "p[data-posting-form-target='counterpartyRow'][hidden]", count: 1
+      assert_select "p[data-deposit-form-target='counterpartyRow']", count: 0
+      assert_select "input[type='hidden'][name='request_id'][value='']", count: 1
+      assert_select "input[name='request_id'][data-deposit-form-target='requestId']", count: 1
+      assert_select "input[name='request_id'][data-posting-form-target='requestId']", count: 1
 
       get teller_withdrawal_transaction_path
       assert_response :success
@@ -66,10 +69,10 @@ module Teller
       assert_select "h2", text: "Cash Impact Footer", count: 0
       assert_select "p", text: /Primary Account History/, count: 0
       assert_select "input[name='transaction_type'][value='withdrawal']", count: 1
-      assert_select "section[data-posting-form-target='checkSection'][hidden]", count: 1
-      assert_select "p[data-posting-form-target='cashAccountRow']", count: 0
+      assert_select "section[data-withdrawal-form-target='checkSection']", count: 0
+      assert_select "div[data-withdrawal-form-target='cashAmountRow']", count: 1
       assert_select "input[type='hidden'][name='cash_account_reference'][value='cash:#{@drawer.code}']", count: 1
-      assert_select "p[data-posting-form-target='counterpartyRow'][hidden]", count: 1
+      assert_select "p[data-withdrawal-form-target='counterpartyRow']", count: 0
 
       get teller_transfer_transaction_path
       assert_response :success
@@ -78,10 +81,10 @@ module Teller
       assert_select "h2", text: "Cash Impact Footer", count: 0
       assert_select "p", text: /Primary Account History/, count: 0
       assert_select "input[name='transaction_type'][value='transfer']", count: 1
-      assert_select "section[data-posting-form-target='checkSection'][hidden]", count: 1
-      assert_select "p[data-posting-form-target='cashAccountRow']", count: 0
+      assert_select "section[data-transfer-form-target='checkSection']", count: 0
+      assert_select "div[data-transfer-form-target='cashAmountRow']", count: 1
       assert_select "input[type='hidden'][name='cash_account_reference'][value='cash:#{@drawer.code}']", count: 1
-      assert_select "p[data-posting-form-target='counterpartyRow']:not([hidden])", count: 1
+      assert_select "p[data-transfer-form-target='counterpartyRow']:not([hidden])", count: 1
 
       get teller_check_cashing_transaction_path
       assert_response :success
@@ -90,20 +93,35 @@ module Teller
       assert_select "h2", text: "Cash Impact Footer", count: 0
       assert_select "p", text: /Primary Account History/, count: 0
       assert_select "input[name='transaction_type'][value='check_cashing']", count: 1
-      assert_select "section[data-posting-form-target='checkSection']:not([hidden])", count: 1
-      assert_select "section[data-posting-form-target='checkCashingSection']:not([hidden])", count: 1
+      assert_select "section[data-check-cashing-form-target='checkSection']:not([hidden])", count: 1
+      assert_select "section[data-check-cashing-form-target='checkCashingSection']:not([hidden])", count: 1
 
       get teller_draft_transaction_path
       assert_response :success
       assert_select "h2", "Draft Issuance"
       assert_select "input[name='transaction_type'][value='draft']", count: 1
-      assert_select "section[data-posting-form-target='draftSection']:not([hidden])", count: 1
+      assert_select "section[data-draft-form-target='draftSection']:not([hidden])", count: 1
 
       get teller_vault_transfer_transaction_path
       assert_response :success
       assert_select "h2", "Vault Transfer"
       assert_select "input[name='transaction_type'][value='vault_transfer']", count: 1
-      assert_select "section[data-posting-form-target='vaultTransferSection']:not([hidden])", count: 1
+      assert_select "section[data-vault-transfer-form-target='vaultTransferSection']:not([hidden])", count: 1
+    end
+
+    test "modals are outside posting form to avoid nested forms" do
+      grant_posting_access(@user, @branch, @workstation)
+      sign_in_as(@user)
+      patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000, cash_location_id: @drawer.id }
+
+      get teller_deposit_transaction_path
+      assert_response :success
+
+      posting_form = css_select("#posting-form").first
+      assert posting_form, "Posting form should exist"
+      nested_forms = css_select("#posting-form form")
+      assert_equal 0, nested_forms.size, "Posting form should not contain nested forms"
     end
 
     test "allows transfer page with session" do

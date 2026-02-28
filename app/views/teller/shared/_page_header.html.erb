@@ -7,10 +7,11 @@
       <% end %>
 
       <% if local_assigns[:show_state_badge] %>
+        <% wfc = local_assigns[:workflow_form_controller] || "posting-form" %>
         <p>
           State:
           <strong
-            data-posting-form-target="headerStateBadge"
+            data-<%= wfc %>-target="headerStateBadge"
             class="badge"><%= local_assigns.fetch(:initial_state, "Editing") %></strong>
         </p>
       <% end %>
@@ -24,7 +25,8 @@
       <% end %>
 
       <% if local_assigns[:show_primary_submit] %>
-        <button type="button" id="posting-form-header-submit" class="btn btn-primary" data-action="click->posting-form#submitFromHeader" data-posting-form-target="headerSubmitButton"><%= local_assigns.fetch(:primary_submit_label, "Post Transaction") %></button>
+        <% wfc = local_assigns[:workflow_form_controller] || "posting-form" %>
+        <button type="button" id="posting-form-header-submit" class="btn btn-primary" data-action="click-><%= wfc %>#submitFromHeader" data-<%= wfc %>-target="headerSubmitButton"><%= local_assigns.fetch(:primary_submit_label, "Post Transaction") %></button>
       <% elsif local_assigns[:primary_button_path].present? %>
         <%= link_to local_assigns.fetch(:primary_button_label, "Continue"), local_assigns[:primary_button_path], class: "btn btn-primary btn-sm" %>
       <% end %>

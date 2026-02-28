@@ -1,0 +1,190 @@
+<% wfc = local_assigns.fetch(:workflow_form_controller, "posting-form") %>
+<section data-<%= wfc %>-target="checkSection">
+  <div class="divider my-3"></div>
+
+  <div class="flex items-center justify-between">
+    <div class="font-medium">Checks In</div>
+    <button type="button" class="btn btn-sm btn-outline" data-action="line-items#addCheckRow">+ Add Check</button>
+  </div>
+
+  <%# Header row (desktop) %>
+  <div class="mt-3 hidden md:grid text-xs font-semibold text-slate-600"
+      style="grid-template-columns: 2.5rem 7rem 8.5rem 6rem 1fr 5rem 5rem;">
+    <div class="px-2 py-[0.25rem]">#</div>
+    <div class="px-2 py-[0.25rem]">Routing</div>
+    <div class="px-2 py-[0.25rem]">Account</div>
+    <div class="px-2 py-[0.25rem]">Check #</div>
+    <div class="px-2 py-[0.25rem]">Amount / Type</div>
+    <div class="px-2 py-[0.25rem] text-center"></div>
+    <div class="px-2 py-[0.25rem] text-right"></div>
+  </div>
+
+  <%# Rows container (JS appends rows here) %>
+  <div class="mt-1 space-y-2"
+      data-<%= wfc %>-target="checkRows"
+      data-<%= wfc %>-target="checkRows"
+      data-line-items-target="checkRows"></div>
+
+  <template data-<%= wfc %>-target="checkTemplate" data-line-items-target="checkTemplate">
+    <div data-check-row
+        class="rounded-md border border-base-300 bg-base-100 p-2 md:p-0 md:border-0 md:rounded-none">
+
+      <%# Desktop grid row %>
+      <div class="hidden md:grid items-center"
+          style="grid-template-columns: 2.5rem 7rem 8.5rem 6rem 1fr 5rem 5rem;">
+
+        <%# index %>
+        <div class="mono text-xs text-slate-600 px-2" data-check-index>01</div>
+
+        <%# routing %>
+        <div class="px-2">
+          <input type="text"
+                class="input input-bordered h-9 px-1 text-sm w-full"
+                placeholder="123456789"
+                data-check-field="routing"
+                data-action="input-><%= wfc %>#recalculate">
+        </div>
+
+        <%# account %>
+        <div class="px-2">
+          <input type="text"
+                class="input input-bordered h-9 px-1 text-sm w-full"
+                placeholder="000123456789"
+                data-check-field="account"
+                data-action="input-><%= wfc %>#recalculate">
+        </div>
+
+        <%# check number %>
+        <div class="px-2">
+          <input type="text"
+                class="input input-bordered h-9 px-1 text-sm w-full"
+                placeholder="1042"
+                data-check-field="number"
+                data-action="input-><%= wfc %>#recalculate">
+        </div>
+
+        <%# amount + type %>
+        <div class="px-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-[7.5rem] shrink-0"
+                data-controller="currency-input"
+                data-action="input-><%= wfc %>#recalculate">
+              <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
+              <input type="text"
+                    class="input input-bordered h-9 px-2 text-sm w-full text-right tabular-nums"
+                    inputmode="decimal"
+                    placeholder="$0.00"
+                    aria-label="Check amount"
+                    data-currency-input-target="displayInput"
+                    data-action="input->currency-input#input blur->currency-input#blur">
+            </div>
+
+            <select class="select select-bordered h-9 min-h-0 py-1 text-sm w-[6rem] shrink-0"
+                    data-check-field="checkType"
+                    data-action="change-><%= wfc %>#recalculate"
+                    aria-label="Check type">
+              <option value="transit">Transit</option>
+              <option value="on_us">On us</option>
+            </select>
+          </div>
+        </div>
+
+        <%# hold %>
+        <div class="px-2 text-center">
+          <input type="hidden" data-check-field="holdReason" value="">
+          <input type="hidden" data-check-field="holdUntil" value="">
+
+          <button type="button"
+                  class="btn btn-ghost btn-sm h-9 w-full hold-button"
+                  data-action="click->hold-modal#openFromButton"
+                  title="Add or edit hold">
+            Hold
+          </button>
+        </div>
+
+        <%# remove %>
+        <div class="px-2 text-right">
+          <button type="button"
+                  class="btn btn-ghost btn-sm h-9"
+                  data-action="line-items#removeCheckRow">
+            Remove
+          </button>
+        </div>
+      </div>
+
+      <%# Mobile stacked layout (no horizontal scroll) %>
+      <div class="md:hidden space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="mono text-xs text-slate-600" data-check-index>01</div>
+          <button type="button"
+                  class="btn btn-ghost btn-sm h-9"
+                  data-action="line-items#removeCheckRow">
+            Remove
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-2">
+          <div class="form-control">
+            <label class="text-xs font-medium text-slate-700">Routing</label>
+            <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm w-full"
+                  placeholder="123456789"
+                  data-check-field="routing"
+                  data-action="input-><%= wfc %>#recalculate">
+          </div>
+
+          <div class="form-control">
+            <label class="text-xs font-medium text-slate-700">Account</label>
+            <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm w-full"
+                  placeholder="000123456789"
+                  data-check-field="account"
+                  data-action="input-><%= wfc %>#recalculate">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div class="form-control">
+              <label class="text-xs font-medium text-slate-700">Check #</label>
+              <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm w-full"
+                    placeholder="1042"
+                    data-check-field="number"
+                    data-action="input-><%= wfc %>#recalculate">
+            </div>
+
+            <div class="form-control">
+              <label class="text-xs font-medium text-slate-700">Type</label>
+              <select class="select select-bordered h-9 min-h-0 py-1 text-sm w-[5rem] shrink-0"
+                      data-check-field="checkType"
+                      data-action="change-><%= wfc %>#recalculate"
+                      aria-label="Check type">
+                <option value="transit">Tran</option>
+                <option value="on_us">On us</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-control" data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+            <label class="text-xs font-medium text-slate-700">Amount</label>
+            <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
+            <input type="text"
+                  class="input input-bordered h-9 px-2 py-1 text-sm text-right tabular-nums w-full"
+                  inputmode="decimal"
+                  placeholder="$0.00"
+                  data-currency-input-target="displayInput"
+                  data-action="input->currency-input#input blur->currency-input#blur">
+          </div>
+
+          <div class="form-control">
+            <label class="text-xs font-medium text-slate-700">Hold</label>
+            <input type="hidden" data-check-field="holdReason" value="">
+            <input type="hidden" data-check-field="holdUntil" value="">
+            <button type="button"
+                    class="btn btn-outline btn-sm h-9 w-full"
+                    data-action="click->hold-modal#openFromButton">
+              Hold
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </template>
+</section>

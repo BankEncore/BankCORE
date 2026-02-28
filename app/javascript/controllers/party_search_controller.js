@@ -9,12 +9,20 @@ export default class extends Controller {
 
   connect() {
     this.searchTimeout = null
+    this.blurHideTimeout = null
     this.element.addEventListener("tx:form-reset", this.handleFormReset.bind(this))
+    if (this.hasResultsListTarget) {
+      this.resultsListTarget.addEventListener("mousedown", this.boundCancelBlurHide = () => this.cancelBlurHide())
+    }
   }
 
   disconnect() {
     this.element.removeEventListener("tx:form-reset", this.handleFormReset.bind(this))
+    if (this.hasResultsListTarget && this.boundCancelBlurHide) {
+      this.resultsListTarget.removeEventListener("mousedown", this.boundCancelBlurHide)
+    }
     if (this.searchTimeout) clearTimeout(this.searchTimeout)
+    if (this.blurHideTimeout) clearTimeout(this.blurHideTimeout)
   }
 
   handleFormReset() {
@@ -138,6 +146,17 @@ export default class extends Controller {
 
   hideResults() {
     if (this.hasResultsListTarget) this.resultsListTarget.hidden = true
+  }
+
+  hideResultsOnBlur() {
+    this.blurHideTimeout = setTimeout(() => this.hideResults(), 150)
+  }
+
+  cancelBlurHide() {
+    if (this.blurHideTimeout) {
+      clearTimeout(this.blurHideTimeout)
+      this.blurHideTimeout = null
+    }
   }
 
   dispatchRecalculate() {

@@ -43,6 +43,10 @@ module ApplicationHelper
     end
   end
 
+  def leg_display_label(leg, branch: nil)
+    Posting::ReferenceLabelMapper.label_for(leg, branch: branch)
+  end
+
   def cash_location_display_name(reference, branch)
     return "—" if reference.blank? || branch.blank?
     code = reference.to_s.sub(/\Acash:/i, "").strip

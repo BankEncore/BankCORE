@@ -167,6 +167,11 @@
           <dt class="text-xs uppercase tracking-wide text-slate-500">Expected (opening + net)</dt>
           <dd class="font-semibold [font-variant-numeric:tabular-nums]"><%= money[@session.opening_cash_cents + @cash_in_cents - @cash_out_cents] %></dd>
         </div>
+
+        <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
+          <dt class="text-xs uppercase tracking-wide text-slate-500">Fees collected</dt>
+          <dd class="font-semibold [font-variant-numeric:tabular-nums]"><%= money[@fee_total_cents] %></dd>
+        </div>
       </dl>
     </div>
   </section>

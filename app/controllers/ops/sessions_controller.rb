@@ -31,6 +31,11 @@ module Ops
         .where(transaction_type: "vault_transfer", status: "posted")
         .includes(:posting_batch)
         .order(posted_at: :desc)
+      @fee_legs = PostingLeg
+        .joins(posting_batch: :teller_transaction)
+        .where(teller_transactions: { teller_session_id: @session.id })
+        .where(reference_type: "income")
+      @fee_total_cents = @fee_legs.sum(:amount_cents)
     end
 
     private

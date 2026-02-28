@@ -1,0 +1,72 @@
+<% form = local_assigns.fetch(:form) %>
+<% cash_account_reference_value = local_assigns.fetch(:cash_account_reference_value, "") %>
+<% wfc = local_assigns.fetch(:workflow_form_controller, "transfer-form") %>
+
+<%= hidden_field_tag :transaction_type, "transfer", data: { "#{wfc}_target": "transactionType" } %>
+
+<div class="flex flex-col md:flex-row gap-3">
+  <div class="form-control overflow-visible flex-1 min-w-0" data-<%= wfc %>-target="primaryAccountRow">
+    <%= form.label :primary_account_reference, "Primary Account", class: "text-xs font-medium text-slate-700 block" %>
+    <div class="relative overflow-visible" data-controller="primary-account-search"
+         data-primary-account-search-search-url-value="<%= teller_transaction_search_path %>"
+         data-primary-account-search-party-accounts-url-template-value="<%= accounts_teller_party_path('__ID__') %>">
+      <%= form.text_field :primary_account_reference,
+        data: {
+          "#{wfc}_target": "primaryAccountReference",
+          primary_account_search_target: "searchInput",
+          action: "input->#{wfc}#recalculate input->primary-account-search#search input->primary-account-search#onInputFreeTyping"
+        },
+        required: true,
+        class: "input input-bordered w-full",
+        placeholder: "Search party or account #, or type account number",
+        autocomplete: "off" %>
+      <div data-primary-account-search-target="resultsList"
+           class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
+           hidden>
+      </div>
+      <div data-primary-account-search-target="partyAccountsRow" class="mt-2" hidden>
+        <label class="text-xs font-medium text-slate-700">Select account for <span data-primary-account-search-target="partyName"></span></label>
+        <select data-primary-account-search-target="accountSelect"
+                data-action="change->primary-account-search#selectAccountFromDropdown"
+                class="select select-bordered w-full mt-1">
+        </select>
+      </div>
+    </div>
+  </div>
+
+    <div class="form-control flex-1 min-w-[8rem] md:max-w-[12rem]" data-<%= wfc %>-target="cashAmountRow">
+    <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700 block" %>
+    <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+      <%= form.hidden_field :amount_cents, value: 0, data: { "#{wfc}_target": "amountCents", currency_input_target: "hiddenInput" } %>
+      <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
+    </div>
+  </div>
+</div>
+
+<p class="form-control" data-<%= wfc %>-target="counterpartyRow">
+  <%= form.label :counterparty_account_reference, "Counterparty Account Reference", class: "text-xs font-medium text-slate-700" %><br>
+  <%= form.text_field :counterparty_account_reference, data: { "#{wfc}_target": "counterpartyAccountReference", action: "input->#{wfc}#recalculate" }, class: "input input-bordered" %>
+</p>
+
+<%= form.hidden_field :cash_account_reference,
+  value: cash_account_reference_value,
+  data: { "#{wfc}_target": "cashAccountReference" } %>
+
+<section data-<%= wfc %>-target="transferSection">
+  <div class="divider my-3"></div>
+  <div class="font-medium">Transfer Details</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+    <p class="form-control">
+      <%= form.label :transfer_fee_cents, "Fee", class: "text-xs font-medium text-slate-700" %><br>
+      <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+        <%= form.hidden_field :transfer_fee_cents, value: 0, data: { "#{wfc}_target": "transferFeeCents", currency_input_target: "hiddenInput" } %>
+        <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Transfer Fee" id="<%= form.field_id(:transfer_fee_cents) %>" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" />
+      </div>
+    </p>
+  </div>
+  <%= form.hidden_field :transfer_fee_income_account_reference,
+    value: "income:transfer_fee",
+    data: { "#{wfc}_target": "transferFeeIncomeAccountReference" } %>
+</section>
+
+<%= render "teller/forms/computed_totals", show_cash_back: false, workflow_form_controller: wfc %>

@@ -25,6 +25,7 @@ export default class extends Controller {
     const cents = this.parseToCents(raw)
     this.hiddenInputTarget.value = String(cents)
     this.hiddenInputTarget.dispatchEvent(new Event("input", { bubbles: true }))
+    this.element.dispatchEvent(new CustomEvent("tx:changed", { bubbles: true }))
   }
 
   blur() {

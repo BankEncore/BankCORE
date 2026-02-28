@@ -35,9 +35,10 @@ export default class extends Controller {
     this.setText("primaryReferenceValue", primaryReference || "N/A")
     this.setText("counterpartyReferenceValue", counterpartyReference || "N/A")
     this.setText("cashReferenceValue", cashReference || "N/A")
-    this.setText("summaryRequestId", requestId || this.currentRequestId() || "N/A")
+    this.setTextAll("summaryRequestId", requestId || this.currentRequestId() || "N/A")
 
     this.setHidden("counterpartyReferencePanel", transactionType !== "transfer")
+    this.renderAmounts(detail)
     this.renderCashFlowSummary(transactionType, cashAmountCents || 0, cashImpactCents || 0, projectedDrawerCents || 0)
     this.renderReadiness(readyToPost, blockedReason)
 
@@ -130,6 +131,15 @@ export default class extends Controller {
     )
   }
 
+  renderAmounts(detail) {
+    this.setText("cashSubtotal", this.formatCents(detail.cashAmountCents ?? 0))
+    this.setText("checkSubtotal", this.formatCents(detail.checkSubtotalCents ?? 0))
+    this.setText("totalAmount", this.formatCents(detail.totalAmountCents ?? 0))
+    this.setText("debitTotal", this.formatCents(detail.debitTotal ?? 0))
+    this.setText("creditTotal", this.formatCents(detail.creditTotal ?? 0))
+    this.setText("imbalance", this.formatCents(detail.imbalanceCents ?? 0))
+  }
+
   renderCashFlowSummary(transactionType, cashAmountCents, cashImpactCents, projectedDrawerCents) {
     const cashInCents = transactionType === "deposit" ? cashAmountCents : 0
     const cashOutCents = transactionType === "withdrawal" ? cashAmountCents : 0
@@ -219,17 +229,15 @@ export default class extends Controller {
   }
 
   renderReadiness(readyToPost, blockedReason) {
-    const badge = this.findPostingTarget("summaryReadinessBadge")
-    this.setText("summaryReadinessBadge", readyToPost ? "Ready to Post" : "Blocked")
-    this.setText("summaryReadinessReason", readyToPost ? "Balanced and required fields complete." : (blockedReason || "Resolve form issues before posting."))
+    const badges = this.findAllPostingTargets("summaryReadinessBadge")
+    this.setTextAll("summaryReadinessBadge", readyToPost ? "Ready to Post" : "Blocked")
+    this.setTextAll("summaryReadinessReason", readyToPost ? "Balanced and required fields complete." : (blockedReason || "Resolve form issues before posting."))
 
-    if (!badge) {
-      return
-    }
-
-    badge.classList.add("badge")
-    badge.classList.remove("badge-success", "badge-error", "badge-neutral")
-    badge.classList.add(readyToPost ? "badge-success" : "badge-error")
+    badges.forEach((badge) => {
+      badge.classList.add("badge")
+      badge.classList.remove("badge-success", "badge-error", "badge-neutral")
+      badge.classList.add(readyToPost ? "badge-success" : "badge-error")
+    })
   }
 
   currentRequestId() {
@@ -253,6 +261,10 @@ export default class extends Controller {
     }
   }
 
+  setTextAll(postingTargetName, value) {
+    this.findAllPostingTargets(postingTargetName).forEach((el) => { el.textContent = value })
+  }
+
   setHtml(postingTargetName, value) {
     const element = this.findPostingTarget(postingTargetName)
     if (element) {
@@ -268,7 +280,17 @@ export default class extends Controller {
   }
 
   findPostingTarget(targetName) {
-    return this.element.querySelector(`[data-posting-form-target="${targetName}"]`)
+    const el = this.findAllPostingTargets(targetName)[0]
+    return el || null
+  }
+
+  findAllPostingTargets(targetName) {
+    const prefixes = ["posting-form", "deposit-form", "withdrawal-form", "transfer-form", "check-cashing-form", "draft-form", "vault-transfer-form"]
+    const found = new Set()
+    for (const p of prefixes) {
+      this.element.querySelectorAll(`[data-${p}-target="${targetName}"]`).forEach((el) => found.add(el))
+    }
+    return [...found]
   }
 
   formatCents(cents) {

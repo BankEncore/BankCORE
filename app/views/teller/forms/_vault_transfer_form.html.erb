@@ -1,0 +1,54 @@
+<% form = local_assigns.fetch(:form) %>
+<% cash_locations = Array(local_assigns.fetch(:cash_locations, [])).compact %>
+<% wfc = local_assigns.fetch(:workflow_form_controller, "vault-transfer-form") %>
+
+<%= hidden_field_tag :transaction_type, "vault_transfer", data: { "#{wfc}_target": "transactionType" } %>
+
+<div class="form-control flex-1 min-w-[8rem] md:max-w-[12rem]" data-<%= wfc %>-target="cashAmountRow">
+  <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700 block" %>
+  <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+    <%= form.hidden_field :amount_cents, value: 0, data: { "#{wfc}_target": "amountCents", currency_input_target: "hiddenInput" } %>
+    <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
+  </div>
+</div>
+
+<section data-<%= wfc %>-target="vaultTransferSection">
+  <div class="divider my-3"></div>
+  <div class="font-medium">Vault Transfer Details</div>
+  <p class="text-sm opacity-80 mt-1">Amount above = Cash Out from Transfer From, Cash In to Transfer To.</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+    <p class="form-control">
+      <%= form.label :vault_transfer_from_reference, "Transfer From" %><br>
+      <%= form.select :vault_transfer_from_reference,
+        options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
+        { include_blank: "Select source" },
+        { data: { "#{wfc}_target": "vaultTransferFromReference", action: "change->#{wfc}#recalculate" }, class: "select select-bordered w-full" } %>
+    </p>
+    <p class="form-control">
+      <%= form.label :vault_transfer_to_reference, "Transfer To" %><br>
+      <%= form.select :vault_transfer_to_reference,
+        options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
+        { include_blank: "Select destination" },
+        { data: { "#{wfc}_target": "vaultTransferToReference", action: "change->#{wfc}#recalculate" }, class: "select select-bordered w-full" } %>
+    </p>
+    <p class="form-control">
+      <%= form.label :vault_transfer_reason_code, "Reason" %><br>
+      <%= form.select :vault_transfer_reason_code,
+        options_for_select([
+          ["Excess cash", "excess_cash"],
+          ["Replenish drawer", "replenish_drawer"],
+          ["End-of-day adjustment", "end_of_day_adjustment"],
+          ["Other", "other"]
+        ]),
+        { include_blank: "Select reason" },
+        { data: { "#{wfc}_target": "vaultTransferReasonCode", action: "change->#{wfc}#recalculate" }, class: "select select-bordered w-full" } %>
+    </p>
+    <p class="form-control md:col-span-2">
+      <%= form.label :vault_transfer_memo, "Remarks" %><br>
+      <%= form.text_field :vault_transfer_memo, data: { "#{wfc}_target": "vaultTransferMemo", action: "input->#{wfc}#recalculate" }, class: "input input-bordered" %>
+    </p>
+  </div>
+</section>
+
+<%= form.hidden_field :cash_account_reference, value: "", data: { "#{wfc}_target": "cashAccountReference" } %>

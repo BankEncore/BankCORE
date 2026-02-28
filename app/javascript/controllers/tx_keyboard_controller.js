@@ -37,7 +37,7 @@ export default class extends Controller {
       return
     }
 
-    const cancelButton = this.element.querySelector('[data-action*="posting-form#resetForm"]')
+    const cancelButton = this.element.querySelector('[data-action*="#resetForm"]')
     if (cancelButton) {
       event.preventDefault()
       this.element.dispatchEvent(new CustomEvent("tx:cancel-requested", { bubbles: true }))

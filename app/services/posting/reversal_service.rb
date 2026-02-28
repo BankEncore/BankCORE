@@ -141,7 +141,13 @@ module Posting
             side: leg.fetch(:side),
             account_reference: account_reference,
             amount_cents: leg.fetch(:amount_cents),
-            position: leg.fetch(:position)
+            position: leg.fetch(:position),
+            reference_type: leg[:reference_type],
+            reference_identifier: leg[:reference_identifier],
+            check_routing_number: leg[:check_routing_number],
+            check_account_number: leg[:check_account_number],
+            check_number: leg[:check_number],
+            check_type: leg[:check_type]
           )
 
           description = if original_batch.present?

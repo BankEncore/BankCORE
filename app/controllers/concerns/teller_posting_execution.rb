@@ -75,6 +75,7 @@ module TellerPostingExecution
 
     def posting_params
       params.permit(
+        :authenticity_token,
         :request_id,
         :transaction_type,
         :amount_cents,

@@ -1,25 +1,19 @@
 <div class="posting-workspace">
-  <% fixed_flow = !local_assigns.fetch(:show_transaction_type, true) %>
   <% flow_type = local_assigns.fetch(:default_transaction_type, "deposit").presence || "deposit" %>
-  <% show_counterparty = fixed_flow && flow_type == "transfer" %>
-  <% show_cash_account = local_assigns.fetch(:show_transaction_type, true) %>
-  <% show_checks = flow_type == "deposit" || flow_type == "draft" || flow_type == "check_cashing" %>
-  <% show_vault_transfer = fixed_flow && flow_type == "vault_transfer" %>
-  <% show_draft = fixed_flow && flow_type == "draft" %>
-  <% show_check_cashing = fixed_flow && flow_type == "check_cashing" %>
+  <% workflow_form_controller = local_assigns.fetch(:workflow_form_controller, "#{flow_type.tr('_', '-')}-form") %>
   <% cash_account_reference_value = teller_session.cash_location.present? ? "cash:#{teller_session.cash_location.code}" : "" %>
   <% cash_locations = Array(local_assigns.fetch(:cash_locations, [])).compact %>
 
-  <%= form_with url: local_assigns.fetch(:form_url, teller_posting_path), method: :post, html: { id: "posting-form", data: { action: "submit->posting-form#submit" } } do |form| %>
-    <p class="alert alert-info hidden" data-posting-form-target="message" aria-live="polite" hidden></p>
+  <%= form_with url: local_assigns.fetch(:form_url, teller_posting_path), method: :post, html: { id: "posting-form", data: { turbo: false, action: "submit->#{workflow_form_controller}#submit" } } do |form| %>
+    <p class="alert alert-info hidden" data-<%= workflow_form_controller %>-target="message" aria-live="polite" hidden></p>
 
-    <div class="mb-4" data-posting-form-target="advisoriesSection" data-reference-panel-target="advisoriesContainer">
-      <p class="text-xs opacity-70" data-posting-form-target="advisoriesPlaceholder">Select an account to view advisories.</p>
-      <div data-posting-form-target="advisoriesList" class="space-y-2 mt-2" hidden></div>
-      <a data-posting-form-target="advisoriesViewAllLink" href="#" class="text-xs link link-hover mt-2 block" hidden>View all advisories</a>
+    <div class="mb-4" data-reference-panel-target="advisoriesContainer">
+      <p class="text-xs opacity-70">Select an account to view advisories.</p>
+      <div class="space-y-2 mt-2" hidden></div>
+      <a href="#" class="text-xs link link-hover mt-2 block" hidden>View all advisories</a>
     </div>
 
-    <div class="mb-4" data-posting-form-target="readinessStrip">
+    <div class="mb-4">
       <%= render "teller/shared/posting_readiness_strip" %>
     </div>
 
@@ -27,505 +21,51 @@
       <div class="lg:col-span-8 space-y-4">
       <section aria-label="Entry Panel" class="card bg-base-100 border border-base-300">
         <div class="card-body">
-          <% if local_assigns.fetch(:show_transaction_type, true) %>
-            <p class="form-control">
-              <%= form.label :transaction_type, "Transaction Type", class: "text-xs font-medium text-slate-700" %><br>
-              <%= form.select :transaction_type,
-                options_for_select([["Deposit", "deposit"], ["Withdrawal", "withdrawal"], ["Transfer", "transfer"], ["Vault Transfer", "vault_transfer"], ["Bank Draft", "draft"], ["Check Cashing", "check_cashing"]]),
-                {},
-                { data: { posting_form_target: "transactionType", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-            </p>
+          <% case flow_type %>
+          <% when "deposit" %>
+            <%= render "teller/forms/deposit_form",
+              form: form,
+              cash_account_reference_value: cash_account_reference_value,
+              workflow_form_controller: workflow_form_controller %>
+          <% when "withdrawal" %>
+            <%= render "teller/forms/withdrawal_form",
+              form: form,
+              cash_account_reference_value: cash_account_reference_value,
+              workflow_form_controller: workflow_form_controller %>
+          <% when "transfer" %>
+            <%= render "teller/forms/transfer_form",
+              form: form,
+              cash_account_reference_value: cash_account_reference_value,
+              workflow_form_controller: workflow_form_controller %>
+          <% when "check_cashing" %>
+            <%= render "teller/forms/check_cashing_form",
+              form: form,
+              selected_party: selected_party,
+              cash_account_reference_value: cash_account_reference_value,
+              workflow_form_controller: workflow_form_controller %>
+          <% when "draft" %>
+            <%= render "teller/forms/draft_form",
+              form: form,
+              cash_account_reference_value: cash_account_reference_value,
+              workflow_form_controller: workflow_form_controller %>
+          <% when "vault_transfer" %>
+            <%= render "teller/forms/vault_transfer_form",
+              form: form,
+              cash_locations: cash_locations,
+              workflow_form_controller: workflow_form_controller %>
           <% else %>
-            <%= hidden_field_tag :transaction_type,
-              flow_type,
-              data: { posting_form_target: "transactionType" } %>
-            <!-- <p class="text-xs font-medium text-slate-700">Transaction Type: <%= flow_type.titleize %></p> -->
-          <% end %>         
-
-          <div class="flex flex-col md:flex-row gap-3">
-            <div class="form-control overflow-visible flex-1 min-w-0" data-posting-form-target="primaryAccountRow" <%= "hidden" if flow_type == "check_cashing" || flow_type == "vault_transfer" %>>
-              <%= form.label :primary_account_reference, "Primary Account", class: "text-xs font-medium text-slate-700 block" %>
-              <div class="relative overflow-visible" data-controller="primary-account-search"
-                   data-primary-account-search-search-url-value="<%= teller_transaction_search_path %>"
-                   data-primary-account-search-party-accounts-url-template-value="<%= accounts_teller_party_path('__ID__') %>">
-                <%= form.text_field :primary_account_reference,
-                  data: {
-                    posting_form_target: "primaryAccountReference",
-                    primary_account_search_target: "searchInput",
-                    action: "input->posting-form#recalculate input->primary-account-search#search input->primary-account-search#onInputFreeTyping"
-                  },
-                  required: true,
-                  class: "input input-bordered w-full",
-                  placeholder: "Search party or account #, or type account number",
-                  autocomplete: "off" %>
-                <div data-primary-account-search-target="resultsList"
-                     class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
-                     hidden>
-                </div>
-                <div data-primary-account-search-target="partyAccountsRow" class="mt-2" hidden>
-                  <label class="text-xs font-medium text-slate-700">Select account for <span data-primary-account-search-target="partyName"></span></label>
-                  <select data-primary-account-search-target="accountSelect"
-                          data-action="change->primary-account-search#selectAccountFromDropdown"
-                          class="select select-bordered w-full mt-1">
-                  </select>
-                </div>
-              </div>
-              <!-- <span class="text-xs text-slate-600 mt-1 block">Search by name or account #, or enter account number directly.</span><-->
-            </div>
-
-            <% unless flow_type == "check_cashing" %>
-              <div class="form-control flex-1 min-w-[8rem] md:max-w-[12rem]" data-posting-form-target="cashAmountRow">
-                <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700 block" %>
-                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                  <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents", currency_input_target: "hiddenInput" } %>
-                  <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
-                </div>
-              </div>
-            <% end %>
-          </div>
-          <% if flow_type == "check_cashing" %>
-            <%= form.hidden_field :amount_cents, value: 0, data: { posting_form_target: "amountCents" } %>
+            <%= render "teller/forms/deposit_form",
+              form: form,
+              cash_account_reference_value: cash_account_reference_value,
+              workflow_form_controller: workflow_form_controller %>
           <% end %>
 
-          <p class="form-control" data-posting-form-target="counterpartyRow" <%= "hidden" unless show_counterparty %>>
-            <%= form.label :counterparty_account_reference, "Counterparty Account Reference", class: "text-xs font-medium text-slate-700" %><br>
-            <%= form.text_field :counterparty_account_reference, data: { posting_form_target: "counterpartyAccountReference", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
-          </p>
-
-          <% if show_cash_account %>
-            <p class="form-control" data-posting-form-target="cashAccountRow" hidden>
-              <%= form.label :cash_account_reference, "Cash Account Reference" %><br>
-              <%= form.text_field :cash_account_reference,
-                value: cash_account_reference_value,
-                data: { posting_form_target: "cashAccountReference", action: "input->posting-form#recalculate" },
-                class: "input input-bordered" %>
-            </p>
-          <% else %>
-            <%= form.hidden_field :cash_account_reference,
-              value: cash_account_reference_value,
-              data: { posting_form_target: "cashAccountReference" } %>
-          <% end %>
-
-          <section data-posting-form-target="transferSection">
-            <div class="divider my-3"></div>
-            <div class="font-medium">Transfer Details</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-              <p class="form-control">
-                <%= form.label :transfer_fee_cents, "Fee", class: "text-xs font-medium text-slate-700" %><br>
-                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                  <%= form.hidden_field :transfer_fee_cents, value: 0, data: { posting_form_target: "transferFeeCents", currency_input_target: "hiddenInput" } %>
-                  <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Transfer Fee" id="<%= form.field_id(:transfer_fee_cents) %>" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" />
-                </div>
-              </p>
-            </div>
-            <%= form.hidden_field :transfer_fee_income_account_reference,
-              value: "income:transfer_fee",
-              data: { posting_form_target: "transferFeeIncomeAccountReference" } %>
-          </section>
-
-          <!-- THIS IS WHERE THE FUN BEGINS -->
-
-          <section data-posting-form-target="checkSection" <%= "hidden" unless show_checks %>>
-            <div class="divider my-3"></div>
-
-            <div class="flex items-center justify-between">
-              <div class="font-medium">Checks In</div>
-              <button type="button" class="btn btn-sm btn-outline" data-action="line-items#addCheckRow">+ Add Check</button>
-            </div>
-
-            <%# Header row (desktop) %>
-            <div class="mt-3 hidden md:grid text-xs font-semibold text-slate-600"
-                style="grid-template-columns: 2.5rem 7rem 8.5rem 6rem 1fr 5rem 5rem;">
-              <div class="px-2 py-[0.25rem]">#</div>
-              <div class="px-2 py-[0.25rem]">Routing</div>
-              <div class="px-2 py-[0.25rem]">Account</div>
-              <div class="px-2 py-[0.25rem]">Check #</div>
-              <div class="px-2 py-[0.25rem]">Amount / Type</div>
-              <div class="px-2 py-[0.25rem] text-center"></div>
-              <div class="px-2 py-[0.25rem] text-right"></div>
-            </div>
-
-            <%# Rows container (JS appends rows here) %>
-            <div class="mt-1 space-y-2"
-                data-posting-form-target="checkRows"
-                data-line-items-target="checkRows"></div>
-
-            <template data-posting-form-target="checkTemplate" data-line-items-target="checkTemplate">
-              <div data-check-row
-                  class="rounded-md border border-base-300 bg-base-100 p-2 md:p-0 md:border-0 md:rounded-none">
-
-                <%# Desktop grid row %>
-                <div class="hidden md:grid items-center"
-                    style="grid-template-columns: 2.5rem 7rem 8.5rem 6rem 1fr 5rem 5rem;">
-
-                  <%# index %>
-                  <div class="mono text-xs text-slate-600 px-2" data-check-index>01</div>
-
-                  <%# routing %>
-                  <div class="px-2">
-                    <input type="text"
-                          class="input input-bordered h-9 px-1 text-sm w-full"
-                          placeholder="123456789"
-                          data-check-field="routing"
-                          data-action="input->posting-form#recalculate">
-                  </div>
-
-                  <%# account %>
-                  <div class="px-2">
-                    <input type="text"
-                          class="input input-bordered h-9 px-1 text-sm w-full"
-                          placeholder="000123456789"
-                          data-check-field="account"
-                          data-action="input->posting-form#recalculate">
-                  </div>
-
-                  <%# check number %>
-                  <div class="px-2">
-                    <input type="text"
-                          class="input input-bordered h-9 px-1 text-sm w-full"
-                          placeholder="1042"
-                          data-check-field="number"
-                          data-action="input->posting-form#recalculate">
-                  </div>
-
-                  <%# amount + type %>
-                  <div class="px-2">
-                    <div class="flex items-center gap-2 min-w-0">
-                      <div class="w-[7.5rem] shrink-0"
-                          data-controller="currency-input"
-                          data-action="input->posting-form#recalculate">
-                        <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
-                        <input type="text"
-                              class="input input-bordered h-9 px-2 text-sm w-full text-right tabular-nums"
-                              inputmode="decimal"
-                              placeholder="$0.00"
-                              aria-label="Check amount"
-                              data-currency-input-target="displayInput"
-                              data-action="input->currency-input#input blur->currency-input#blur">
-                      </div>
-
-                      <select class="select select-bordered h-9 min-h-0 py-1 text-sm w-[6rem] shrink-0"
-                              data-check-field="checkType"
-                              data-action="change->posting-form#recalculate"
-                              aria-label="Check type">
-                        <option value="transit">Transit</option>
-                        <option value="on_us">On us</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <%# hold %>
-                  <div class="px-2 text-center">
-                    <input type="hidden" data-check-field="holdReason" value="">
-                    <input type="hidden" data-check-field="holdUntil" value="">
-
-                    <button type="button"
-                            class="btn btn-ghost btn-sm h-9 w-full hold-button"
-                            data-action="click->hold-modal#openFromButton"
-                            title="Add or edit hold">
-                      Hold
-                    </button>
-                  </div>
-
-                  <%# remove %>
-                  <div class="px-2 text-right">
-                    <button type="button"
-                            class="btn btn-ghost btn-sm h-9"
-                            data-action="line-items#removeCheckRow">
-                      Remove
-                    </button>
-                  </div>
-                </div>
-
-                <%# Mobile stacked layout (no horizontal scroll) %>
-                <div class="md:hidden space-y-2">
-                  <div class="flex items-center justify-between">
-                    <div class="mono text-xs text-slate-600" data-check-index>01</div>
-                    <button type="button"
-                            class="btn btn-ghost btn-sm h-9"
-                            data-action="line-items#removeCheckRow">
-                      Remove
-                    </button>
-                  </div>
-
-                  <div class="grid grid-cols-1 gap-2">
-                    <div class="form-control">
-                      <label class="text-xs font-medium text-slate-700">Routing</label>
-                      <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm w-full"
-                            placeholder="123456789"
-                            data-check-field="routing"
-                            data-action="input->posting-form#recalculate">
-                    </div>
-
-                    <div class="form-control">
-                      <label class="text-xs font-medium text-slate-700">Account</label>
-                      <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm w-full"
-                            placeholder="000123456789"
-                            data-check-field="account"
-                            data-action="input->posting-form#recalculate">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                      <div class="form-control">
-                        <label class="text-xs font-medium text-slate-700">Check #</label>
-                        <input type="text" class="input input-bordered h-9 px-2 py-1 text-sm w-full"
-                              placeholder="1042"
-                              data-check-field="number"
-                              data-action="input->posting-form#recalculate">
-                      </div>
-
-                      <div class="form-control">
-                        <label class="text-xs font-medium text-slate-700">Type</label>
-                        <select class="select select-bordered h-9 min-h-0 py-1 text-sm w-[5rem] shrink-0"
-                                data-check-field="checkType"
-                                data-action="change->posting-form#recalculate"
-                                aria-label="Check type">
-                          <option value="transit">Tran</option>
-                          <option value="on_us">On us</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div class="form-control" data-controller="currency-input" data-action="input->posting-form#recalculate">
-                      <label class="text-xs font-medium text-slate-700">Amount</label>
-                      <input type="hidden" value="0" data-check-field="amount" data-currency-input-target="hiddenInput">
-                      <input type="text"
-                            class="input input-bordered h-9 px-2 py-1 text-sm text-right tabular-nums w-full"
-                            inputmode="decimal"
-                            placeholder="$0.00"
-                            data-currency-input-target="displayInput"
-                            data-action="input->currency-input#input blur->currency-input#blur">
-                    </div>
-
-                    <div class="form-control">
-                      <label class="text-xs font-medium text-slate-700">Hold</label>
-                      <input type="hidden" data-check-field="holdReason" value="">
-                      <input type="hidden" data-check-field="holdUntil" value="">
-                      <button type="button"
-                              class="btn btn-outline btn-sm h-9 w-full"
-                              data-action="click->hold-modal#openFromButton">
-                        Hold
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </template>
-          </section>
-
-          <!-- THIS IS WHERE THE FUN ENDS -->
-
-          <% if flow_type == "deposit" || local_assigns.fetch(:show_transaction_type, true) %>
-          <p class="form-control" data-posting-form-target="cashBackRow" <%= "hidden" unless flow_type == "deposit" %>>
-            <%= form.label :cash_back_cents, "Cash Back", class: "text-xs font-medium text-slate-700" %><br>
-            <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-              <%= form.hidden_field :cash_back_cents, value: 0, data: { posting_form_target: "cashBackCents", currency_input_target: "hiddenInput" } %>
-              <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Cash Back" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" />
-            </div>
-            <!-- <span class="text-xs text-slate-600 mt-1 block">Credit drawer, deduct from deposit. Max: total deposit (cash + checks).</span> -->
-          </p>
-          <% end %>
-
-          <div class="mt-4 rounded-lg border border-base-300 bg-base-200 p-3">
-            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div>
-                <div class="font-medium text-sm mb-2">Computed</div>
-                <dl class="space-y-1">
-                  <div class="ui-kv-row">
-                    <dt class="ui-kv-key text-xs">Cash</dt>
-                    <dd class="ui-kv-value text-sm mono" data-posting-form-target="computedCashSubtotal">$0.00</dd>
-                  </div>
-                  <div class="ui-kv-row">
-                    <dt class="ui-kv-key text-xs">Checks</dt>
-                    <dd class="ui-kv-value text-sm mono" data-posting-form-target="computedCheckSubtotal">$0.00</dd>
-                  </div>
-                  <div class="ui-kv-row" data-posting-form-target="computedCashBackRow" hidden>
-                    <dt class="ui-kv-key text-xs">Cash Back</dt>
-                    <dd class="ui-kv-value text-sm mono" data-posting-form-target="computedCashBackSubtotal">$0.00</dd>
-                  </div>
-                  <div class="ui-kv-row">
-                    <dt class="ui-kv-key text-xs">Fee</dt>
-                    <dd class="ui-kv-value text-sm mono" data-posting-form-target="computedFeeSubtotal">$0.00</dd>
-                  </div>
-                </dl>
-              </div>
-              <div class="md:text-right">
-                <div class="font-medium text-sm mb-2">Net total</div>
-                <div class="text-lg font-semibold">
-                  <span class="ui-money" data-posting-form-target="computedNetTotal">$0.00</span>
-                </div>
-                <p class="text-xs text-slate-600 mt-1">Posted to customer account upon submit.</p>
-              </div>
-            </div>
-          </div>
-
-          <% if show_check_cashing %>
-          <section data-posting-form-target="checkCashingSection">
-            <div class="divider my-3"></div>
-            <div class="font-medium">Check Cashing Details</div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-              <div class="form-control" data-controller="party-search" data-party-search-search-url-value="<%= search_teller_parties_path %>">
-                <%= form.label :party_id, "Party", class: "text-xs font-medium text-slate-700 block" %>
-                <div class="relative">
-                  <%= form.hidden_field :party_id, value: params[:party_id], data: { posting_form_target: "partyId", party_search_target: "hiddenInput" } %>
-                  <input type="text"
-                    class="input input-bordered w-full"
-                    placeholder="Search by name or phone"
-                    autocomplete="off"
-                    data-party-search-target="searchInput"
-                    data-action="input->party-search#search"
-                    value="<%= local_assigns[:selected_party]&.display_name || "" %>" />
-                  <div data-party-search-target="resultsList"
-                    class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
-                    hidden>
-                  </div>
-                </div>
-                <span class="text-xs text-slate-600 mt-1 block">Individual presenting the check(s).</span>
-                <%= link_to "Add new party", new_teller_party_path(party_kind: "individual", return_to: request.original_url), class: "link link-hover text-xs mt-1 inline-block" %>
-              </div>
-              <div class="form-control">
-                <%= form.label :fee_cents, "Fee", class: "text-xs font-medium text-slate-700 block" %>
-                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                  <%= form.hidden_field :fee_cents, value: 0, data: { posting_form_target: "feeCents", currency_input_target: "hiddenInput" } %>
-                  <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:fee_cents) %>" />
-                </div>
-                <span class="text-xs text-slate-600 mt-1 block">Optional fee withheld from payout.</span>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3" data-posting-form-target="checkCashingIdRow">
-              <p class="form-control">
-                <%= form.label :id_type, "ID Type", class: "text-xs font-medium text-slate-700" %><br>
-                <%= form.select :id_type,
-                  options_for_select([["Driver's License", "drivers_license"], ["Passport", "passport"], ["State ID", "state_id"], ["Other", "other"]], ""),
-                  { include_blank: "Select type" },
-                  { data: { posting_form_target: "idType", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control">
-                <%= form.label :id_number, "ID Number", class: "text-xs font-medium text-slate-700" %><br>
-                <%= form.text_field :id_number, data: { posting_form_target: "idNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered", placeholder: "Required when no party selected" %>
-              </p>
-            </div>
-
-            <%= form.hidden_field :fee_income_account_reference,
-              value: "income:check_cashing_fee",
-              data: { posting_form_target: "feeIncomeAccountReference" } %>
-          </section>
-          <% end %>
-
-          <section data-posting-form-target="draftSection" <%= "hidden" unless show_draft %>>
-            <div class="divider my-3"></div>
-            <div class="font-medium">Bank Draft Details</div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-              <div class="form-control">
-                <%= form.label :draft_amount_cents, "Draft Amount", class: "text-xs font-medium text-slate-700 block" %>
-                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                  <%= form.hidden_field :draft_amount_cents, value: 0, data: { posting_form_target: "draftAmountCents", currency_input_target: "hiddenInput" } %>
-                  <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Draft Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_amount_cents) %>" />
-                </div>
-              </div>
-              <div class="form-control">
-                <%= form.label :draft_fee_cents, "Fee", class: "text-xs font-medium text-slate-700 block" %>
-                <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                  <%= form.hidden_field :draft_fee_cents, value: 0, data: { posting_form_target: "draftFeeCents", currency_input_target: "hiddenInput" } %>
-                  <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Draft Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_fee_cents) %>" />
-                </div>
-              </div>
-              <div class="form-control md:col-span-2">
-                <%= form.label :draft_payee_name, "Payee", class: "text-xs font-medium text-slate-700 block" %>
-                <%= form.text_field :draft_payee_name, data: { posting_form_target: "draftPayeeName", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
-              </div>
-              <div class="form-control">
-                <%= form.label :draft_instrument_number, "Instrument Number", class: "text-xs font-medium text-slate-700 block" %>
-                <%= form.text_field :draft_instrument_number, data: { posting_form_target: "draftInstrumentNumber", action: "input->posting-form#recalculate" }, class: "input input-bordered w-full" %>
-              </div>
-            </div>
-
-            <div class="mt-3">
-              <div class="font-medium text-sm mb-2">Payment (cash + checks + account = total due)</div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div class="form-control">
-                  <%= form.label :draft_cash_cents, "Cash", class: "text-xs font-medium text-slate-700 block" %>
-                  <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                    <%= form.hidden_field :draft_cash_cents, value: 0, data: { posting_form_target: "draftCashCents", currency_input_target: "hiddenInput" } %>
-                    <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_cash_cents) %>" />
-                  </div>
-                </div>
-                <div class="form-control">
-                  <span class="text-xs font-medium text-slate-700 block">Checks</span>
-                  <p class="text-sm mono py-2" data-posting-form-target="draftCheckSubtotal">$0.00</p>
-                  <span class="text-xs text-slate-600">From check rows above</span>
-                </div>
-                <div class="form-control">
-                  <%= form.label :draft_account_cents, "Account Transfer", class: "text-xs font-medium text-slate-700 block" %>
-                  <div data-controller="currency-input" data-action="input->posting-form#recalculate">
-                    <%= form.hidden_field :draft_account_cents, value: 0, data: { posting_form_target: "draftAccountCents", currency_input_target: "hiddenInput" } %>
-                    <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Account payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_account_cents) %>" />
-                  </div>
-                </div>
-              </div>
-              <div class="mt-2 text-sm">
-                <span data-posting-form-target="draftTotalDue">Total due: $0.00</span>
-                <span class="ml-3" data-posting-form-target="draftBalance">Balance: $0.00</span>
-              </div>
-            </div>
-
-            <%= form.hidden_field :draft_liability_account_reference,
-              value: "official_check:outstanding",
-              data: { posting_form_target: "draftLiabilityAccountReference" } %>
-            <%= form.hidden_field :draft_fee_income_account_reference,
-              value: "income:draft_fee",
-              data: { posting_form_target: "draftFeeIncomeAccountReference" } %>
-          </section>
-
-          <section data-posting-form-target="vaultTransferSection" <%= "hidden" unless show_vault_transfer %>>
-            <div class="divider my-3"></div>
-            <div class="font-medium">Vault Transfer Details</div>
-            <p class="text-sm opacity-80 mt-1">Amount above = Cash Out from Transfer From, Cash In to Transfer To.</p>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-              <p class="form-control">
-                <%= form.label :vault_transfer_from_reference, "Transfer From" %><br>
-                <%= form.select :vault_transfer_from_reference,
-                  options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
-                  { include_blank: "Select source" },
-                  { data: { posting_form_target: "vaultTransferFromReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control">
-                <%= form.label :vault_transfer_to_reference, "Transfer To" %><br>
-                <%= form.select :vault_transfer_to_reference,
-                  options_for_select(cash_locations.map { |location| ["#{location.name} (#{location.code})", "cash:#{location.code}"] }),
-                  { include_blank: "Select destination" },
-                  { data: { posting_form_target: "vaultTransferToReference", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control">
-                <%= form.label :vault_transfer_reason_code, "Reason" %><br>
-                <%= form.select :vault_transfer_reason_code,
-                  options_for_select([
-                    ["Excess cash", "excess_cash"],
-                    ["Replenish drawer", "replenish_drawer"],
-                    ["End-of-day adjustment", "end_of_day_adjustment"],
-                    ["Other", "other"]
-                  ]),
-                  { include_blank: "Select reason" },
-                  { data: { posting_form_target: "vaultTransferReasonCode", action: "change->posting-form#recalculate" }, class: "select select-bordered w-full" } %>
-              </p>
-              <p class="form-control md:col-span-2">
-                <%= form.label :vault_transfer_memo, "Remarks" %><br>
-                <%= form.text_field :vault_transfer_memo, data: { posting_form_target: "vaultTransferMemo", action: "input->posting-form#recalculate" }, class: "input input-bordered" %>
-              </p>
-            </div>
-          </section>
-
-          <%= form.hidden_field :request_id, value: "", data: { posting_form_target: "requestId" } %>
-          <%= form.hidden_field :approval_token, value: "", data: { posting_form_target: "approvalToken" } %>
+          <%= form.hidden_field :request_id, value: "", "data-#{workflow_form_controller}-target" => "requestId", "data-posting-form-target" => "requestId" %>
+          <%= form.hidden_field :approval_token, value: "", "data-#{workflow_form_controller}-target" => "approvalToken", "data-posting-form-target" => "approvalToken" %>
         </div>
       </section>
 
-      <section aria-label="Posting Preview" class="card bg-base-100 border border-base-300" data-posting-form-target="postingPreviewSection">
+      <section aria-label="Posting Preview" class="card bg-base-100 border border-base-300" data-<%= workflow_form_controller %>-target="postingPreviewSection">
         <div class="card-body">
           <div class="flex items-start justify-between gap-3">
             <div>
@@ -545,43 +85,44 @@
                   <th class="py-2 text-right">Credit</th>
                 </tr>
               </thead>
-              <tbody data-posting-form-target="postingPreviewBody"></tbody>
+              <tbody data-<%= workflow_form_controller %>-target="postingPreviewBody"></tbody>
             </table>
           </div>
-          <p class="mt-3 text-xs text-slate-600" data-posting-form-target="postingPreviewEmpty">Enter amounts to see posting preview.</p>
+          <p class="mt-3 text-xs text-slate-600" data-<%= workflow_form_controller %>-target="postingPreviewEmpty">Enter amounts to see posting preview.</p>
         </div>
       </section>
       </div>
 
       <aside class="lg:col-span-4 space-y-4">
+        <%= render "teller/shared/reference_panel" %>
         <%= render "teller/shared/live_account_panel" %>
-        <%= render "teller/shared/funds_availability_panel" %>
+        <%= render "teller/shared/funds_availability_panel", workflow_form_controller: workflow_form_controller %>
         <%# %= render "teller/shared/posting_readiness_panel" %>
         <%# drawer_totals removed from transaction screen; partial kept at teller/shared/_drawer_totals.html.erb %>
       </aside>
     </div>
 
-    <%= render "teller/shared/approval_modal" %>
-    <%= render "teller/shared/advisory_modal" %>
-    <%= render "teller/shared/post_success_modal" %>
-    <%= render "teller/shared/check_hold_modal" %>
-
-    <section aria-label="Receipt Confirmation" data-posting-form-target="receiptPanel" class="card bg-base-100 border border-base-300" hidden>
+    <section aria-label="Receipt Confirmation" data-<%= workflow_form_controller %>-target="receiptPanel" class="card bg-base-100 border border-base-300" hidden>
       <div class="card-body">
         <h2 class="card-title text-lg">Receipt Confirmation</h2>
-        <p>Posting Batch ID: <strong data-posting-form-target="receiptBatchId">N/A</strong></p>
-        <p>Teller Transaction ID: <strong data-posting-form-target="receiptTransactionId">N/A</strong></p>
-        <p>Request ID: <strong data-posting-form-target="receiptRequestId">N/A</strong></p>
-        <p>Posted At: <strong data-posting-form-target="receiptPostedAt">N/A</strong></p>
+        <p>Posting Batch ID: <strong data-<%= workflow_form_controller %>-target="receiptBatchId">N/A</strong></p>
+        <p>Teller Transaction ID: <strong data-<%= workflow_form_controller %>-target="receiptTransactionId">N/A</strong></p>
+        <p>Request ID: <strong data-<%= workflow_form_controller %>-target="receiptRequestId">N/A</strong></p>
+        <p>Posted At: <strong data-<%= workflow_form_controller %>-target="receiptPostedAt">N/A</strong></p>
         <p>
-          <a class="btn btn-outline btn-sm" data-posting-form-target="receiptLink" href="#" hidden>View Receipt / Audit</a>
-          <button type="button" class="btn btn-primary btn-sm ml-2" data-posting-form-target="receiptNewButton" data-action="posting-form#startNewTransaction" hidden>New Transaction</button>
+          <a class="btn btn-outline btn-sm" data-<%= workflow_form_controller %>-target="receiptLink" href="#" hidden>View Receipt / Audit</a>
+          <button type="button" class="btn btn-primary btn-sm ml-2" data-<%= workflow_form_controller %>-target="receiptNewButton" data-action="<%= workflow_form_controller %>#startNewTransaction" hidden>New Transaction</button>
         </p>
       </div>
     </section>
 
     <section aria-label="Primary Action">
-      <%= form.submit "Post Transaction", data: { posting_form_target: "submitButton" }, style: "display:none;" %>
+      <%= form.submit "Post Transaction", data: { "#{workflow_form_controller}_target": "submitButton" }, style: "display:none;" %>
     </section>
   <% end %>
+
+  <%= render "teller/shared/approval_modal" %>
+  <%= render "teller/shared/advisory_modal" %>
+  <%= render "teller/shared/post_success_modal", workflow_form_controller: workflow_form_controller %>
+  <%= render "teller/shared/check_hold_modal" %>
 </div>

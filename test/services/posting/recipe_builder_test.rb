@@ -50,8 +50,12 @@ module Posting
 
       entries = builder.normalized_entries
       assert_equal 2, entries.size
-      assert_equal({ side: "debit", account_reference: "cash:V01", amount_cents: 5_000 }, entries[0])
-      assert_equal({ side: "credit", account_reference: "cash:D01", amount_cents: 5_000 }, entries[1])
+      assert_equal "cash_location", entries[0][:reference_type]
+      assert_equal "V01", entries[0][:reference_identifier]
+      assert_equal({ side: "debit", account_reference: "cash:V01", amount_cents: 5_000 }, entries[0].slice(:side, :account_reference, :amount_cents))
+      assert_equal "cash_location", entries[1][:reference_type]
+      assert_equal "D01", entries[1][:reference_identifier]
+      assert_equal({ side: "credit", account_reference: "cash:D01", amount_cents: 5_000 }, entries[1].slice(:side, :account_reference, :amount_cents))
     end
 
     test "builds deposit metadata with cash_back_cents" do
@@ -85,7 +89,9 @@ module Posting
       entries = builder.normalized_entries
       assert_equal "cash:D01", entries[0][:account_reference]
       assert_equal "check:111:222:333", entries[1][:account_reference]
-      assert_equal({ side: "credit", account_reference: "acct:customer", amount_cents: 7_000 }, entries.last)
+      assert_equal "customer_account", entries.last[:reference_type]
+      assert_equal "customer", entries.last[:reference_identifier]
+      assert_equal({ side: "credit", account_reference: "acct:customer", amount_cents: 7_000 }, entries.last.slice(:side, :account_reference, :amount_cents))
     end
   end
 end

@@ -19,7 +19,7 @@
             <td><%= leg.posting_batch&.committed_at&.strftime('%Y-%m-%d %H:%M') %></td>
             <td><%= leg.posting_batch_id %></td>
             <td><%= leg.id %></td>
-            <td><%= leg.account_reference %></td>
+            <td><%= leg_display_label(leg, branch: leg.posting_batch&.teller_transaction&.branch) %></td>
             <td><%= leg.side %></td>
             <td class="ui-money"><%= number_to_currency(leg.amount_cents.to_f / 100) %></td>
             <td><%= leg.posting_batch&.request_id %></td>
