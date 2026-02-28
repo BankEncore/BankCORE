@@ -33,12 +33,19 @@ export default class extends PostingFormBase {
     const entryProfile = getEntryProfile(transactionType, this.workflowSchema)
     const amountCents = parseInt((this.hasAmountCentsTarget ? this.amountCentsTarget.value : "0") || "0", 10)
 
+    const rawCashRef = (this.hasCashAccountReferenceTarget ? this.cashAccountReferenceTarget.value : "").trim()
+    const drawerRef = (this.hasDrawerReferenceValue && this.drawerReferenceValue ? this.drawerReferenceValue : "").trim()
+    const cashAccountReference = rawCashRef || drawerRef
+    if (cashAccountReference && this.hasCashAccountReferenceTarget && !rawCashRef) {
+      this.cashAccountReferenceTarget.value = cashAccountReference
+    }
+
     return {
       transactionType,
       entryProfile,
       primaryAccountReference: this.hasPrimaryAccountReferenceTarget ? this.primaryAccountReferenceTarget.value : "",
       counterpartyAccountReference: "",
-      cashAccountReference: this.hasCashAccountReferenceTarget ? this.cashAccountReferenceTarget.value : "",
+      cashAccountReference,
       amountCents,
       cashBackCents: 0,
       effectiveAmountCents: Math.max(amountCents, 0),

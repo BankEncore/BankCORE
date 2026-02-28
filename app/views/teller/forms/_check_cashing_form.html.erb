@@ -23,7 +23,7 @@
           placeholder="Search by name or phone"
           autocomplete="off"
           data-party-search-target="searchInput"
-          data-action="input->party-search#search"
+          data-action="input->party-search#search blur->party-search#hideResultsOnBlur"
           value="<%= selected_party&.display_name || "" %>" />
         <div data-party-search-target="resultsList"
           class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"

@@ -1,0 +1,3 @@
+{"sessionId":"9fc879","location":"approval_panel:request","message":"approval request_id sent","data":{"requestIdSent":"ui-1772306810823-wsbe4daz"},"timestamp":1772306870679}
+{"sessionId":"9fc879","runId":"post-fix","location":"posting_form_base:submit","message":"request_id decision","data":{"hasApprovalToken":true,"submittedRequestId":"ui-1772306810823-wsbe4daz","branch":"preserve"},"timestamp":1772306873046}
+{"sessionId":"9fc879","location":"teller_posting_execution:execute_posting","message":"approval token vs request_id","data":{"token_request_id":"ui-1772306810823-wsbe4daz","params_request_id":"ui-1772306810823-wsbe4daz","match":true},"timestamp":1772306873320}
