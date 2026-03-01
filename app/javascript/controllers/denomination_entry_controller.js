@@ -212,9 +212,9 @@ export default class extends Controller {
     }
 
     const renderRow = (d, line) => `
-      <div class="grid grid-cols-[4rem_1fr_5rem] gap-2 items-center text-sm" data-row-idx="${d.idx}">
+      <div class="grid grid-cols-[5rem_minmax(6rem,1fr)_6rem] gap-2 items-center text-sm" data-row-idx="${d.idx}">
         <span class="text-slate-700">${escapeHtml(d.display_label)}</span>
-        <input type="number" min="0" step="1" inputmode="numeric" placeholder="0" class="input input-bordered input-sm" data-field="qty" data-row-idx="${d.idx}" value="${line.qty || ""}" aria-label="Qty ${escapeHtml(d.display_label)}" />
+        <input type="number" min="0" step="1" inputmode="numeric" placeholder="0" class="input input-bordered input-sm w-full min-w-0" data-field="qty" data-row-idx="${d.idx}" value="${line.qty || ""}" aria-label="Qty ${escapeHtml(d.display_label)}" />
         <span class="tabular-nums text-right mono text-slate-600" data-amount-display="">${this.formatCents(line.amount_cents || 0)}</span>
       </div>
     `
