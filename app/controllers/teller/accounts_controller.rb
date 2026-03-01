@@ -117,8 +117,14 @@ module Teller
 
         date_from = params[:date_from].presence || 30.days.ago.to_date
         date_to = params[:date_to].presence || Date.current
-        scope = scope.where("DATE(teller_transactions.posted_at) >= ?", date_from) if date_from.present?
-        scope = scope.where("DATE(teller_transactions.posted_at) <= ?", date_to) if date_to.present?
+        if date_from.present?
+          range_begin = Time.zone.parse("#{date_from.to_s} 00:00:00")
+          scope = scope.where("teller_transactions.posted_at >= ?", range_begin)
+        end
+        if date_to.present?
+          range_end = Time.zone.parse("#{date_to.to_s} 23:59:59.999999")
+          scope = scope.where("teller_transactions.posted_at <= ?", range_end)
+        end
 
         scope = scope.where("account_transactions.amount_cents >= ?", (params[:amount_min].to_f * 100).round) if params[:amount_min].present?
         scope = scope.where("account_transactions.amount_cents <= ?", (params[:amount_max].to_f * 100).round) if params[:amount_max].present?
