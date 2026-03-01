@@ -5,10 +5,15 @@ import { Controller } from "@hotwired/stimulus"
  * total and lines to parent via denomination:change.
  */
 export default class extends Controller {
-  static targets = ["dialog", "denominationEntry"]
+  static targets = ["dialog", "denominationEntry", "applyError"]
 
   open() {
     if (!this.hasDialogTarget) return
+    if (this.hasApplyErrorTarget) this.applyErrorTarget.classList.add("hidden")
+    const expectedCents = parseInt(this.element.dataset.expectedCents || "0", 10) || 0
+    if (expectedCents > 0 && this.denominationEntryController) {
+      this.denominationEntryController.setExpectedCents(expectedCents)
+    }
     if (typeof this.dialogTarget.showModal === "function") {
       this.dialogTarget.showModal()
     } else {
@@ -30,6 +35,13 @@ export default class extends Controller {
     if (!denom) return
 
     denom.recalculate()
+    const { totalCents } = denom.getState()
+    const expectedCents = denom.expectedCents || 0
+    if (expectedCents > 0 && totalCents !== expectedCents) {
+      if (this.hasApplyErrorTarget) this.applyErrorTarget.classList.remove("hidden")
+      return
+    }
+    if (this.hasApplyErrorTarget) this.applyErrorTarget.classList.add("hidden")
     this.close()
   }
 

@@ -65,21 +65,22 @@
               <dd class="ui-kv-value mono font-medium" data-denomination-entry-target="grandTotal">$0.00</dd>
             </div>
           </div>
-          <% if expected_cents.to_i.positive? %>
-            <div class="mt-2 text-xs">
-              <span class="text-slate-600">Difference:</span>
-              <span data-denomination-entry-target="differenceDisplay" class="tabular-nums"></span>
-            </div>
-          <% end %>
+          <div class="mt-2 text-xs">
+            <span class="text-slate-600">Difference:</span>
+            <span data-denomination-entry-target="differenceDisplay" class="tabular-nums"></span>
+          </div>
           <% if use_hidden_fields %>
             <div data-denomination-entry-target="hiddenFieldsContainer" class="hidden-fields-container"></div>
           <% end %>
         </div>
       </div>
 
-      <div class="modal-action flex-shrink-0 p-5 pt-0 border-t border-base-200 mt-0">
-        <button type="button" class="btn btn-ghost" data-action="click->cash-count-modal#cancel">Cancel</button>
-        <button type="button" class="btn btn-primary" data-action="click->cash-count-modal#apply">Apply</button>
+      <div class="modal-action flex-shrink-0 p-5 pt-0 border-t border-base-200 mt-0 flex-col items-end gap-2">
+        <p class="text-error text-sm w-full text-right hidden" data-cash-count-modal-target="applyError" role="alert">Count must match expected payout.</p>
+        <div class="flex gap-2 w-full justify-end">
+          <button type="button" class="btn btn-ghost" data-action="click->cash-count-modal#cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" data-action="click->cash-count-modal#apply">Apply</button>
+        </div>
       </div>
     </div>
     <form method="dialog" class="modal-backdrop">

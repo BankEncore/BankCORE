@@ -21,6 +21,7 @@ export default class extends PostingFormBase {
     "feeCents",
     "feeIncomeAccountReference",
     "cashPayoutSubtotal",
+    "cashCountModalWrapper",
     "computedCashSubtotal",
     "computedCheckSubtotal",
     "computedCashBackRow",
@@ -134,6 +135,9 @@ export default class extends PostingFormBase {
 
     if (this.hasCashPayoutSubtotalTarget) this.cashPayoutSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
     if (this.hasComputedCashSubtotalTarget) this.computedCashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
+    if (this.hasCashCountModalWrapperTarget) {
+      this.cashCountModalWrapperTarget.dataset.expectedCents = String(displayedCashAmount)
+    }
     if (this.hasComputedCheckSubtotalTarget) this.computedCheckSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
     if (this.hasComputedFeeSubtotalTarget) {
       const feeCents = checkCashingAmounts.feeCents ?? 0

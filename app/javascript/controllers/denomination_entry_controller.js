@@ -45,6 +45,11 @@ export default class extends Controller {
     this.rowsContainerTarget?.removeEventListener("change", this.handleChange.bind(this))
   }
 
+  setExpectedCents(cents) {
+    this.expectedCents = Math.max(0, parseInt(cents, 10) || 0)
+    this.recalculate()
+  }
+
   handleInput(event) {
     const input = event.target
     if (input.dataset.rowIdx == null) return
