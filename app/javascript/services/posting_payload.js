@@ -20,7 +20,7 @@ export function appendEntriesAndTypePayload(formData, transactionType, state, sc
   if (transactionType === "deposit") {
     formData.set("cash_back_cents", String(state.cashBackCents ?? 0))
   }
-  if (["deposit", "withdrawal", "transfer", "draft", "check_cashing", "misc_receipt"].includes(transactionType)) {
+  if (["deposit", "withdrawal", "transfer", "draft", "check_cashing", "misc_receipt", "bill_payment"].includes(transactionType)) {
     appendServedPartyPayload(formData, state)
   }
   if (transactionType === "check_cashing") {
@@ -38,6 +38,22 @@ export function appendEntriesAndTypePayload(formData, transactionType, state, sc
   if (transactionType === "transfer") {
     appendTransferPayload(formData, state)
   }
+  if (transactionType === "bill_payment") {
+    appendBillPaymentPayload(formData, state)
+  }
+}
+
+function appendBillPaymentPayload(formData, state) {
+  const bp = state.billPaymentAmounts ?? {}
+  formData.set("payee_id", (state.payeeId ?? "").trim())
+  formData.set("payee_reference", (state.payeeReference ?? "").trim())
+  formData.set("payment_cents", String(bp.paymentCents ?? 0))
+  formData.set("fee_cents", String(bp.feeCents ?? 0))
+  formData.set("amount_cents", String(bp.totalDueCents ?? 0))
+  formData.set("liability_account_reference", (state.liabilityAccountReference ?? "").trim())
+  formData.set("memo", (state.memo ?? "").trim())
+  formData.set("bill_payment_cash_cents", String(bp.billPaymentCashCents ?? 0))
+  formData.set("bill_payment_account_cents", String(bp.billPaymentAccountCents ?? 0))
 }
 
 function appendCheckItems(formData, state) {
