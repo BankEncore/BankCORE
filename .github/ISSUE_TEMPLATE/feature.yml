@@ -1,0 +1,49 @@
+name: Feature
+description: New feature or enhancement
+title: "[FEATURE] <short description>"
+labels: ["feature"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What are we building?
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Business Need
+      description: What operational or compliance issue does this solve?
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: In-scope vs out-of-scope
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Functional Requirements
+      description: Structured bullet requirements
+
+  - type: textarea
+    id: controls
+    attributes:
+      label: Control & Audit Impact
+      description: Posting integrity, approvals, segregation of duties, audit logs, etc.
+
+  - type: textarea
+    id: data
+    attributes:
+      label: Data Model Impact
+      description: Tables, migrations, constraints
+
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk Level
+      options:
+        - Low
+        - Moderate
+        - High

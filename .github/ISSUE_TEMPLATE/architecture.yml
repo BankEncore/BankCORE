@@ -1,0 +1,24 @@
+name: Architecture
+description: Refactor, internal improvement, or structural change
+title: "[ARCH] <short description>"
+labels: ["architecture"]
+body:
+  - type: textarea
+    id: context
+      label: Context
+
+  - type: textarea
+    id: current_state
+      label: Current Implementation
+
+  - type: textarea
+    id: proposed
+      label: Proposed Change
+
+  - type: textarea
+    id: migration
+      label: Migration / Backwards Compatibility Plan
+
+  - type: textarea
+    id: risks
+      label: Risks

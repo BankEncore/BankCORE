@@ -1,0 +1,34 @@
+name: Bug
+description: Something broken or incorrect
+title: "[BUG] <short description>"
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+      label: Summary
+
+  - type: textarea
+    id: reproduction
+      label: Steps to Reproduce
+
+  - type: textarea
+    id: expected
+      label: Expected Behavior
+
+  - type: textarea
+    id: actual
+      label: Actual Behavior
+
+  - type: textarea
+    id: financial_impact
+      label: Financial / Posting Impact
+      description: Does this affect balances, GL, or audit integrity?
+
+  - type: dropdown
+    id: severity
+      label: Severity
+      options:
+        - Cosmetic
+        - Workflow issue
+        - Posting error
+        - Ledger integrity risk

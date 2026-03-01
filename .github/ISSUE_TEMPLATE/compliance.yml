@@ -1,0 +1,24 @@
+name: Compliance Review
+description: Control gap, audit finding, regulatory alignment
+title: "[CONTROL] <short description>"
+labels: ["control"]
+body:
+  - type: textarea
+    id: finding
+      label: Control Gap / Finding
+
+  - type: textarea
+    id: regulation
+      label: Regulation / Standard Reference
+
+  - type: textarea
+    id: remediation
+      label: Proposed Remediation
+
+  - type: dropdown
+    id: urgency
+      label: Urgency
+      options:
+        - Advisory
+        - Required before production
+        - Critical
