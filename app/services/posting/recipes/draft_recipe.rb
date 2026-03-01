@@ -21,6 +21,7 @@ module Posting
             liability_account_reference: draft_liability_account_reference,
             fee_income_account_reference: draft_fee_income_account_reference
           }
+        metadata.merge!(related_records_metadata)
         metadata[:check_items] = check_items.map do |item|
           {
             routing: item[:routing].to_s,

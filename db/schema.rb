@@ -10,13 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_045432) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
     t.boolean "is_primary", null: false
     t.bigint "party_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["account_id", "is_primary"], name: "index_account_owners_on_account_id_and_is_primary"
     t.index ["account_id", "party_id"], name: "index_account_owners_on_account_id_and_party_id", unique: true
     t.index ["account_id"], name: "index_account_owners_on_account_id"
     t.index ["party_id"], name: "index_account_owners_on_party_id"

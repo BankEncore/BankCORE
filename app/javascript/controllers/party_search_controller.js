@@ -4,15 +4,21 @@ export default class extends Controller {
   static targets = ["searchInput", "resultsList", "hiddenInput", "maskedIdDisplay"]
 
   static values = {
-    searchUrl: String
+    searchUrl: String,
+    partyAccountsUrlTemplate: String
   }
 
   connect() {
     this.searchTimeout = null
     this.blurHideTimeout = null
-    this.element.addEventListener("tx:form-reset", this.handleFormReset.bind(this))
+    this.boundHandleFormReset = this.handleFormReset.bind(this)
+    document.addEventListener("tx:form-reset", this.boundHandleFormReset)
     this.boundApplyPartyFromEvent = this.applyPartyFromEvent.bind(this)
     document.addEventListener("apply-last-party", this.boundApplyPartyFromEvent)
+    this.boundOnRelatedAccountSelectChange = this.onRelatedAccountSelectChange.bind(this)
+    const form = this.element.closest("form")
+    const selectEl = form?.querySelector("[data-party-account-select]")
+    if (selectEl) selectEl.addEventListener("change", this.boundOnRelatedAccountSelectChange)
     if (this.hasResultsListTarget) {
       this.resultsListTarget.addEventListener("mousedown", this.boundCancelBlurHide = () => this.cancelBlurHide())
     }
@@ -24,20 +30,16 @@ export default class extends Controller {
     const partyId = this.hiddenInputTarget.value?.trim()
     const partyName = this.searchInputTarget.value?.trim()
     if (partyId && partyName) {
-      requestAnimationFrame(() => {
-        document.dispatchEvent(
-          new CustomEvent("party-search:party-selected", {
-            bubbles: true,
-            detail: { partyId, partyName }
-          })
-        )
-      })
+      requestAnimationFrame(() => this.dispatchPartySelected(partyId, partyName))
     }
   }
 
   disconnect() {
-    this.element.removeEventListener("tx:form-reset", this.handleFormReset.bind(this))
+    document.removeEventListener("tx:form-reset", this.boundHandleFormReset)
     document.removeEventListener("apply-last-party", this.boundApplyPartyFromEvent)
+    const form = this.element.closest("form")
+    const selectEl = form?.querySelector("[data-party-account-select]")
+    if (selectEl && this.boundOnRelatedAccountSelectChange) selectEl.removeEventListener("change", this.boundOnRelatedAccountSelectChange)
     if (this.hasResultsListTarget && this.boundCancelBlurHide) {
       this.resultsListTarget.removeEventListener("mousedown", this.boundCancelBlurHide)
     }
@@ -147,13 +149,7 @@ export default class extends Controller {
     this.hideResults()
 
     this.updateMaskedIdDisplay(p)
-    document.dispatchEvent(
-      new CustomEvent("party-search:party-selected", {
-        bubbles: true,
-        detail: { partyId: String(p.id), partyName: p.display_name || `Party #${p.id}` }
-      })
-    )
-
+    this.dispatchPartySelected(String(p.id), p.display_name || `Party #${p.id}`)
     this.dispatchRecalculate()
   }
 
@@ -191,6 +187,94 @@ export default class extends Controller {
     return type
       .replace(/_/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase())
+  }
+
+  dispatchPartySelected(partyId, partyName) {
+    if (this.partyAccountsUrlTemplateValue) {
+      this.fetchAndShowPartyAccounts(partyId, partyName)
+    }
+    window.dispatchEvent(
+      new CustomEvent("party-search:party-selected", {
+        bubbles: true,
+        detail: { partyId, partyName }
+      })
+    )
+  }
+
+  async fetchAndShowPartyAccounts(partyId, partyName) {
+    const form = this.element.closest("form")
+    const row = form?.querySelector("[data-party-accounts-row]")
+    const nameEl = form?.querySelector("[data-party-name]")
+    const selectEl = form?.querySelector("[data-party-account-select]")
+    if (!row || !selectEl || !this.partyAccountsUrlTemplateValue) return
+    try {
+      const url = this.partyAccountsUrlTemplateValue.replace("__ID__", String(partyId))
+      const response = await fetch(url, { headers: { Accept: "application/json" }, credentials: "same-origin" })
+      if (!response.ok) return
+      const accounts = await response.json()
+      if (nameEl) nameEl.textContent = partyName || `Party #${partyId}`
+      selectEl.innerHTML = ""
+      const blank = document.createElement("option")
+      blank.value = ""
+      blank.textContent = "Select account"
+      selectEl.appendChild(blank)
+      accounts.forEach((a) => {
+        const opt = document.createElement("option")
+        opt.value = a.account_number
+        opt.dataset.accountId = a.id
+        const relLabel = a.relationship_type ? ` — ${a.relationship_type}` : ""
+        opt.textContent = `${a.account_number} (${a.account_type}${a.branch_code ? ` · ${a.branch_code}` : ""})${relLabel}`
+        selectEl.appendChild(opt)
+      })
+      row.hidden = false
+    } catch (_) {}
+  }
+
+  async onRelatedAccountSelectChange(event) {
+    const opt = event.target?.selectedOptions?.[0]
+    const value = event.target?.value
+    const accountId = opt?.dataset?.accountId ? parseInt(opt.dataset.accountId, 10) : null
+    if (!value) return
+    const form = event.target?.closest("form")
+    if (!form) return
+    const primaryInput = form.querySelector('[data-primary-account-search-target="searchInput"]')
+    const row = form.querySelector("[data-party-accounts-row]")
+    const initiatingInput = form.querySelector('[name="initiating_lookup"]')
+    if (primaryInput) primaryInput.value = value
+    if (row) row.hidden = true
+    if (initiatingInput) initiatingInput.value = "account_first"
+    if (accountId) {
+      const primarySearchEl = form.querySelector("#primary-account-search")
+      const urlTemplate = primarySearchEl?.dataset?.primaryAccountSearchRelatedPartiesUrlTemplateValue
+      if (urlTemplate) {
+        try {
+          const url = urlTemplate.replace("__ID__", String(accountId))
+          const response = await fetch(url, { headers: { Accept: "application/json" }, credentials: "same-origin" })
+          if (response.ok) {
+            const parties = await response.json()
+            const partiesRow = form.querySelector('[data-primary-account-search-target="relatedPartiesRow"]')
+            const partiesList = form.querySelector('[data-primary-account-search-target="relatedPartiesList"]')
+            if (partiesRow && partiesList && Array.isArray(parties) && parties.length > 0) {
+              partiesList.innerHTML = ""
+              parties.forEach((p) => {
+                const btn = document.createElement("button")
+                btn.type = "button"
+                btn.className = "block w-full text-left px-2 py-1.5 text-sm hover:bg-base-200 rounded"
+                btn.textContent = `${p.display_name || `Party #${p.id}`}${p.relationship_type ? ` — ${p.relationship_type}` : ""}`
+                btn.dataset.partyId = p.id
+                btn.dataset.partyDisplayName = p.display_name
+                btn.addEventListener("click", () => {
+                  document.dispatchEvent(new CustomEvent("apply-last-party", { bubbles: true, detail: { id: p.id, display_name: p.display_name } }))
+                })
+                partiesList.appendChild(btn)
+              })
+              partiesRow.hidden = false
+            }
+          }
+        } catch (_) {}
+      }
+    }
+    this.dispatchRecalculate()
   }
 
   dispatchPartyCleared() {

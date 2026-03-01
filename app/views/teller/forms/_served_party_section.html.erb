@@ -7,6 +7,7 @@
 <% wfc = local_assigns.fetch(:workflow_form_controller, "form") %>
 <% selected_party = local_assigns[:selected_party] %>
 <% hint = local_assigns.fetch(:hint, "Now serving (customer or non-customer).") %>
+<% party_accounts_url_template = local_assigns[:party_accounts_url_template] %>
 <% masked_id_text = nil %>
 <% if selected_party&.party_individual&.govt_id.present? %>
   <% pi = selected_party.party_individual %>
@@ -18,7 +19,7 @@
 <section data-<%= wfc %>-target="servedPartySection" class="served-party-section">
   <div class="font-medium mb-2">Now Serving</div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <div class="form-control" data-controller="party-search" data-party-search-search-url-value="<%= search_teller_parties_path %>">
+    <div class="form-control" data-controller="party-search" data-party-search-search-url-value="<%= search_teller_parties_path %>"<% if party_accounts_url_template %> data-party-search-party-accounts-url-template-value="<%= party_accounts_url_template %>"<% end %>>
       <%= form.label :party_id, "Party", class: "text-xs font-medium text-slate-700 block" %>
       <div class="relative">
         <%= form.hidden_field :party_id, value: selected_party&.id || params[:party_id], data: { "#{wfc}_target": "partyId", party_search_target: "hiddenInput" } %>

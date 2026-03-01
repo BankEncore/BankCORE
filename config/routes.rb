@@ -14,6 +14,9 @@ Rails.application.routes.draw do
       resources :advisories, only: [ :index, :new, :create, :edit, :update ], controller: "advisories", path: "advisories"
     end
     resources :accounts, only: [ :index, :show, :new, :create, :edit, :update ] do
+      member do
+        get :related_parties
+      end
       resources :account_owners, only: [ :create, :destroy, :update ], path: "owners"
       resources :advisories, only: [ :index, :new, :create, :edit, :update ], controller: "advisories", path: "advisories"
     end

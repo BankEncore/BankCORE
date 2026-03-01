@@ -26,6 +26,10 @@ module Teller
       update?
     end
 
+    def related_parties?
+      show?
+    end
+
     def destroy?
       false
     end

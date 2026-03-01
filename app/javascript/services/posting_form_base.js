@@ -406,7 +406,7 @@ export default class extends Controller {
     this.postedLocked = false
     this.transactionTypeTarget.value = this.defaultTransactionTypeValue || "deposit"
     this.element.dispatchEvent(new CustomEvent("tx:form-reset", { bubbles: true }))
-    this.approvalTokenTarget.value = ""
+    if (this.hasApprovalTokenTarget) this.approvalTokenTarget.value = ""
     this.resetFormFieldClearing()
     this.resetReceipt()
     this.clearMessage()

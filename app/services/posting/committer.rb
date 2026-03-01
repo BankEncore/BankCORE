@@ -17,6 +17,7 @@ module Posting
           teller_transaction: teller_transaction
         ).call
 
+        create_transaction_posted_audit_event!(teller_transaction, posting_batch)
         posting_batch
       end
     end
@@ -89,6 +90,29 @@ module Posting
             description: description
           )
         end
+      end
+
+      def create_transaction_posted_audit_event!(teller_transaction, posting_batch)
+        metadata = posting_batch.metadata || {}
+        audit_metadata = {
+          "teller_transaction_id" => teller_transaction.id,
+          "posting_batch_id" => posting_batch.id,
+          "request_id" => request.fetch(:request_id).to_s
+        }
+        audit_metadata["served_party"] = metadata["served_party"] if metadata["served_party"].present?
+        audit_metadata["primary_account_reference"] = metadata["primary_account_reference"].to_s if metadata["primary_account_reference"].present?
+        audit_metadata["initiating_lookup"] = metadata["initiating_lookup"].to_s if metadata["initiating_lookup"].present?
+
+        AuditEvent.create!(
+          event_type: "transaction.posted",
+          occurred_at: Time.current,
+          actor_user_id: request.fetch(:user).id,
+          branch_id: request.fetch(:branch).id,
+          workstation_id: request.fetch(:workstation).id,
+          teller_session_id: request.fetch(:teller_session).id,
+          auditable: teller_transaction,
+          metadata: audit_metadata
+        )
       end
   end
 end

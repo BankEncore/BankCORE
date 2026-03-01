@@ -2,7 +2,7 @@
 
 module Teller
   class AccountsController < BaseController
-    before_action :set_account, only: [ :show, :edit, :update ]
+    before_action :set_account, only: [ :show, :edit, :update, :related_parties ]
     before_action :set_branch_for_new, only: [ :new, :create ]
     before_action :ensure_authorized
 
@@ -45,6 +45,23 @@ module Teller
     def new
       @account = Account.new(branch: @branch, status: "open", opened_on: Date.current)
       @parties = Party.where(is_active: true, relationship_kind: "customer").order(:display_name).limit(50)
+    end
+
+    def related_parties
+      parties = @account.account_owners
+        .includes(:party)
+        .order(is_primary: :desc)
+        .limit(50)
+        .map do |ao|
+          p = ao.party
+          {
+            id: p.id,
+            display_name: p.display_name.presence || "Party ##{p.id}",
+            relationship_kind: p.relationship_kind,
+            relationship_type: ao.is_primary ? "Primary Owner" : "Owner"
+          }
+        end
+      render json: parties
     end
 
     def create

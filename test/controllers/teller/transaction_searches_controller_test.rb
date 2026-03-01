@@ -38,6 +38,7 @@ module Teller
       assert body.key?("accounts")
       assert body["parties"].any? { |p| p["display_name"].include?("Jane") }
       assert body["accounts"].any? { |a| a["account_number"] == @account.account_number }
+      body["accounts"].each { |a| assert a.key?("id"), "Account result should include id" }
     end
 
     test "returns empty accounts when query blank" do

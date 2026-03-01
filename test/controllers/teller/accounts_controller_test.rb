@@ -102,6 +102,40 @@ module Teller
       assert_equal "restricted", account.status
     end
 
+    test "related_parties returns related parties for account as json" do
+      account = Account.create!(account_number: "6666666666666666", account_type: "checking", branch: @branch, status: "open", opened_on: Date.current, last_activity_at: Time.current)
+      AccountOwner.create!(account: account, party: @party, is_primary: true)
+
+      get related_parties_teller_account_path(account)
+
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal 1, body.size
+      assert_equal @party.id, body[0]["id"]
+      assert_includes body[0]["display_name"], "Account"
+      assert_equal "Primary Owner", body[0]["relationship_type"]
+    end
+
+    test "related_parties requires authentication" do
+      account = Account.create!(account_number: "7777777777777777", account_type: "checking", branch: @branch, status: "open", opened_on: Date.current, last_activity_at: Time.current)
+      AccountOwner.create!(account: account, party: @party, is_primary: true)
+      sign_out
+
+      get related_parties_teller_account_path(account)
+
+      assert_redirected_to new_session_path
+    end
+
+    test "related_parties returns empty when account has no owners" do
+      account = Account.create!(account_number: "5555555555555555", account_type: "checking", branch: @branch, status: "open", opened_on: Date.current, last_activity_at: Time.current)
+
+      get related_parties_teller_account_path(account)
+
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal [], body
+    end
+
     test "update can change account_number" do
       account = Account.create!(account_number: "4444444444444444", account_type: "checking", branch: @branch, status: "open", opened_on: Date.current, last_activity_at: Time.current)
       AccountOwner.create!(account: account, party: @party, is_primary: true)

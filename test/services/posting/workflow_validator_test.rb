@@ -78,6 +78,20 @@ module Posting
       assert_empty errors
     end
 
+    test "returns no errors for transfer when served party is not owner of primary account" do
+      party = Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Third Party", is_active: true)
+      party.create_party_individual!(first_name: "Third", last_name: "Party")
+      errors = WorkflowValidator.errors({
+        transaction_type: "transfer",
+        amount_cents: 5_000,
+        party_id: party.id,
+        primary_account_reference: "acct:other_owners_account",
+        counterparty_account_reference: "acct:to"
+      })
+
+      assert_empty errors
+    end
+
     test "check_cashing returns errors when party_id is blank" do
       errors = WorkflowValidator.errors({
         transaction_type: "check_cashing",

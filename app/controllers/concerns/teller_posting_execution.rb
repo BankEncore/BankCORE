@@ -95,6 +95,7 @@ module TellerPostingExecution
         :fee_cents,
         :fee_income_account_reference,
         :party_id,
+        :initiating_lookup,
         :id_type,
         :id_number,
         :draft_amount_cents,
