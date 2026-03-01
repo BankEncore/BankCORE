@@ -30,6 +30,7 @@ export default class extends PostingFormBase {
     "memo",
     "miscCashCents",
     "miscAccountCents",
+    "cashCountModalWrapper",
     "miscCheckSubtotal",
     "miscTotalAmount",
     "miscBalance",
@@ -108,8 +109,18 @@ export default class extends PostingFormBase {
       memoRequired,
       miscReceiptTypeId: this.hasMiscReceiptTypeSelectTarget ? this.miscReceiptTypeSelectTarget.value : "",
       incomeAccountReference: this.hasIncomeAccountReferenceTarget ? this.incomeAccountReferenceTarget.value : "",
-      memo: this.hasMemoTarget ? this.memoTarget.value : ""
+      memo: this.hasMemoTarget ? this.memoTarget.value : "",
+      denominationLines: this.denominationLines || []
     }
+  }
+
+  onDenominationChange(event) {
+    const { totalCents = 0, lines = [] } = event.detail || {}
+    this.denominationLines = lines
+    if (this.hasMiscCashCentsTarget) {
+      this.setAmountCents(this.miscCashCentsTarget, totalCents)
+    }
+    if (typeof this.recalculate === "function") this.recalculate()
   }
 
   recalculate() {
@@ -134,6 +145,10 @@ export default class extends PostingFormBase {
     if (this.hasMemoRowTarget) {
       const lbl = this.memoRowTarget.querySelector("label")
       if (lbl) lbl.textContent = memoRequired ? "Memo" : "Memo (optional)"
+    }
+    if (this.hasCashCountModalWrapperTarget) {
+      const cashCents = miscAmounts.miscCashCents ?? 0
+      this.cashCountModalWrapperTarget.dataset.expectedCents = String(cashCents)
     }
 
     const totalAmountCents = state.effectiveAmountCents
@@ -332,6 +347,7 @@ export default class extends PostingFormBase {
     if (this.hasAmountCentsTarget) this.setAmountCents(this.amountCentsTarget, 0)
     if (this.hasUnitAmountCentsTarget) this.setAmountCents(this.unitAmountCentsTarget, 0)
     if (this.hasQuantityTarget) this.quantityTarget.value = "1"
+    this.denominationLines = []
     if (this.hasMiscCashCentsTarget) this.setAmountCents(this.miscCashCentsTarget, 0)
     if (this.hasMiscAccountCentsTarget) this.setAmountCents(this.miscAccountCentsTarget, 0)
     if (this.hasMemoTarget) {
