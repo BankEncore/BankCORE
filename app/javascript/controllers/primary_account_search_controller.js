@@ -44,6 +44,9 @@ export default class extends Controller {
   }
 
   onNowServingPartySelected(event) {
+    const form = this.element.closest("form")
+    const ilInput = form?.querySelector('[name="initiating_lookup"]')
+    if (ilInput?.value === "account_first") return
     const { partyId, partyName } = event.detail || {}
     if (partyId && this.partyAccountsUrlTemplateValue) {
       this.selectParty(partyId, partyName || `Party #${partyId}`)
