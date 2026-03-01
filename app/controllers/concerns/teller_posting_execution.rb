@@ -49,6 +49,14 @@ module TellerPostingExecution
         end
       end
 
+      metadata = posting_metadata(request_params).dup
+      denom_lines = Array(request_params[:denomination_lines])
+        .map { |l| l.to_h.symbolize_keys }
+        .select { |l| (l[:amount_cents] || 0).to_i.positive? }
+      if denom_lines.any?
+        metadata["denomination_lines"] = denom_lines.map { |l| l.slice(:cash_denomination_id, :qty, :amount_cents) }
+      end
+
       posting_batch = Posting::Engine.new(
         user: Current.user,
         teller_session: current_teller_session,
@@ -58,7 +66,7 @@ module TellerPostingExecution
         transaction_type: request_params[:transaction_type],
         amount_cents: request_params[:amount_cents],
         entries: normalized_entries(request_params),
-        metadata: posting_metadata(request_params),
+        metadata: metadata,
         currency: request_params[:currency].presence || "USD",
         approved_by_user_id: approved_by_user_id
       ).call
@@ -123,7 +131,8 @@ module TellerPostingExecution
         :bill_payment_account_cents,
         acknowledged_advisory_ids: [],
         check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :check_type, :hold_reason, :hold_until ],
-        entries: [ :side, :account_reference, :amount_cents ]
+        entries: [ :side, :account_reference, :amount_cents ],
+        denomination_lines: [ :cash_denomination_id, :qty, :amount_cents ]
       )
     end
 

@@ -3,6 +3,7 @@ require "test_helper"
 module Teller
   class TransactionsControllerTest < ActionDispatch::IntegrationTest
     setup do
+      ensure_cash_denominations
       @user = User.take
       @branch = Branch.create!(code: "501", name: "Validation Branch")
       @workstation = Workstation.create!(branch: @branch, code: "VW1", name: "Validation WS")
@@ -119,7 +120,8 @@ module Teller
         vault_transfer_source_cash_account_reference: "cash:VLT1",
         vault_transfer_destination_cash_account_reference: "cash:VLT2",
         vault_transfer_reason_code: "end_of_day_adjustment",
-        vault_transfer_memo: "Shift balancing"
+        vault_transfer_memo: "Shift balancing",
+        denomination_lines: denomination_lines_for(20_000)
       }
 
       assert_response :success
@@ -131,6 +133,29 @@ module Teller
     end
 
     private
+      def ensure_cash_denominations
+        return if CashDenomination.enabled.exists?
+
+        [ 2_000, 1_000, 500 ].each_with_index do |face_value, i|
+          CashDenomination.create!(
+            code: "USD_BILL_#{face_value}_test",
+            kind: "bill",
+            face_value_cents: face_value,
+            display_label: "$#{face_value / 100}",
+            sort_order: 30 + i,
+            enabled: true
+          )
+        end
+      end
+
+      def denomination_lines_for(amount_cents)
+        denom = CashDenomination.enabled.to_a.find { |d| amount_cents % d.unit_value_cents == 0 }
+        return [] if denom.blank?
+
+        qty = amount_cents / denom.unit_value_cents
+        [ { cash_denomination_id: denom.id, qty: qty, amount_cents: amount_cents } ]
+      end
+
       def grant_permissions(user, branch, workstation)
         [ "teller.dashboard.view", "transactions.deposit.create", "sessions.open" ].each do |permission_key|
           permission = Permission.find_or_create_by!(key: permission_key) do |record|

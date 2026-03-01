@@ -83,7 +83,8 @@ module Teller
           :bill_payment_cash_cents,
           :bill_payment_account_cents,
           check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :check_type, :hold_reason, :hold_until ],
-          entries: [ :side, :account_reference, :amount_cents ]
+          entries: [ :side, :account_reference, :amount_cents ],
+          denomination_lines: [ :cash_denomination_id, :qty, :amount_cents ]
         )
       end
 

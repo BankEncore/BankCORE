@@ -13,6 +13,7 @@ class TellerTransaction < ApplicationRecord
   has_one :posting_batch, dependent: :destroy
   has_many :cash_movements, dependent: :destroy
   has_many :account_transactions, dependent: :destroy
+  has_one :denomination_set, as: :denominationable, dependent: :destroy
 
   scope :reversible, -> { where(transaction_type: TRANSACTION_TYPES - NON_REVERSIBLE_TYPES).where(reversed_by_teller_transaction_id: nil) }
 

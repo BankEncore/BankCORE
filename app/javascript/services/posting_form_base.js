@@ -19,6 +19,7 @@ import { appendEntriesAndTypePayload } from "services/posting_payload"
 
 export default class extends Controller {
   static targets = [
+    "amountCents",
     "transactionType",
     "requestId",
     "approvalToken",
@@ -63,6 +64,7 @@ export default class extends Controller {
     this.postedLocked = false
     this.workflowSchema = null
     this.defaultCashAccountReference = ""
+    this.denominationLines = []
     if (this.hasDefaultTransactionTypeValue && this.defaultTransactionTypeValue) {
       this.transactionTypeTarget.value = this.defaultTransactionTypeValue
     }
@@ -105,6 +107,16 @@ export default class extends Controller {
   }
 
   resetFormFieldClearing(_isAfterPost = false) {
+  }
+
+  onDenominationChange(event) {
+    const { totalCents = 0, lines = [] } = event.detail || {}
+    this.denominationLines = lines
+    if (this.hasAmountCentsTarget) {
+      this.amountCentsTarget.value = String(totalCents)
+      this.amountCentsTarget.dispatchEvent(new Event("input", { bubbles: true }))
+    }
+    if (typeof this.recalculate === "function") this.recalculate()
   }
 
   focusFirstField() {
@@ -177,7 +189,8 @@ export default class extends Controller {
     const formData = new FormData(form)
     formData.set("request_id", submittedRequestId)
     const state = this.getState()
-    formData.set("amount_cents", this.effectiveAmountCents().toString())
+    const effAmt = this.effectiveAmountCents()
+    formData.set("amount_cents", effAmt.toString())
     if (state.transactionType === "draft") {
       const draftAccountCents = state.draftAmounts?.draftAccountCents ?? 0
       let primaryRef = state.primaryAccountReference?.trim() ?? ""

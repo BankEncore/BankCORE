@@ -41,6 +41,19 @@ export function appendEntriesAndTypePayload(formData, transactionType, state, sc
   if (transactionType === "bill_payment") {
     appendBillPaymentPayload(formData, state)
   }
+  appendDenominationLines(formData, state)
+}
+
+function appendDenominationLines(formData, state) {
+  const lines = state.denominationLines ?? []
+  if (lines.length === 0) return
+
+  lines.forEach((line) => {
+    if ((line.amount_cents ?? 0) <= 0) return
+    formData.append("denomination_lines[][cash_denomination_id]", String(line.cash_denomination_id ?? ""))
+    formData.append("denomination_lines[][qty]", String(line.qty ?? 0))
+    formData.append("denomination_lines[][amount_cents]", String(line.amount_cents ?? 0))
+  })
 }
 
 function appendBillPaymentPayload(formData, state) {

@@ -17,7 +17,9 @@ module Posting
           teller_transaction: teller_transaction
         ).call
 
-        create_transaction_posted_audit_event!(teller_transaction, posting_batch)
+        denom_set = persist_denomination_breakdown!(teller_transaction) if denomination_lines_from_metadata.any?
+
+        create_transaction_posted_audit_event!(teller_transaction, posting_batch, denomination_set: denom_set)
         posting_batch
       end
     end
@@ -92,7 +94,24 @@ module Posting
         end
       end
 
-      def create_transaction_posted_audit_event!(teller_transaction, posting_batch)
+      def denomination_lines_from_metadata
+        raw = request.fetch(:metadata, {})["denomination_lines"] || request.fetch(:metadata, {})[:denomination_lines]
+        Array(raw).map { |l| l.to_h.symbolize_keys }
+      end
+
+      def persist_denomination_breakdown!(teller_transaction)
+        raw = denomination_lines_from_metadata
+        return nil if raw.blank?
+
+        catalog = CashDenomination.enabled.to_a
+        svc = DenominationBreakdownService.new
+        lines = svc.parse_and_validate(raw, catalog)
+        return nil if svc.errors.any? # validation failed; rely on WorkflowValidator to have caught
+
+        svc.persist!(teller_transaction, lines)
+      end
+
+      def create_transaction_posted_audit_event!(teller_transaction, posting_batch, denomination_set: nil)
         metadata = posting_batch.metadata || {}
         audit_metadata = {
           "teller_transaction_id" => teller_transaction.id,
@@ -102,6 +121,11 @@ module Posting
         audit_metadata["served_party"] = metadata["served_party"] if metadata["served_party"].present?
         audit_metadata["primary_account_reference"] = metadata["primary_account_reference"].to_s if metadata["primary_account_reference"].present?
         audit_metadata["initiating_lookup"] = metadata["initiating_lookup"].to_s if metadata["initiating_lookup"].present?
+        if denomination_set.present?
+          audit_metadata["denomination_set_id"] = denomination_set.id
+          audit_metadata["denomination_lines_count"] = denomination_set.denomination_lines.count
+          audit_metadata["denomination_total_cents"] = denomination_set.total_cents
+        end
 
         AuditEvent.create!(
           event_type: "transaction.posted",

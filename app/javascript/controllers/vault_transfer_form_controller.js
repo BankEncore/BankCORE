@@ -65,7 +65,8 @@ export default class extends PostingFormBase {
       presenterType: "",
       idType: "",
       idNumber: "",
-      partyId: ""
+      partyId: "",
+      denominationLines: this.denominationLines || []
     }
   }
 

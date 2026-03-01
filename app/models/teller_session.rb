@@ -9,6 +9,7 @@ class TellerSession < ApplicationRecord
   has_many :audit_events, dependent: :nullify
   has_many :teller_transactions, dependent: :destroy
   has_many :cash_movements, dependent: :destroy
+  has_many :denomination_sets, as: :denominationable, dependent: :destroy
 
   validates :status, inclusion: { in: STATUSES }
   validates :opening_cash_cents, numericality: { greater_than_or_equal_to: 0 }

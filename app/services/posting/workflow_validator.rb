@@ -60,6 +60,8 @@ module Posting
           validate_vault_transfer(errors, params)
         end
 
+        validate_denomination_breakdown!(errors, params, transaction_type)
+
         errors
       end
 
@@ -183,6 +185,42 @@ module Posting
           if source_reference.present? && destination_reference.present? && source_reference == destination_reference
             errors << "Source and destination cash account references must differ"
           end
+        end
+
+        def validate_denomination_breakdown!(errors, params, transaction_type)
+          workflow = Teller::WorkflowRegistry.fetch(transaction_type)
+          mode = workflow&.dig(:denomination_breakdown_mode)
+          return unless mode.to_s == "required"
+
+          amount_cents = params[:amount_cents].to_i
+          return if amount_cents.zero?
+
+          denom_total = denomination_total_from_params(params)
+          if denom_total.zero?
+            errors << "Denomination breakdown is required"
+          elsif denom_total != amount_cents
+            errors << "Denomination total must equal amount"
+          end
+        end
+
+        def denomination_total_from_params(params)
+          raw = Array(params[:denomination_lines])
+          catalog = CashDenomination.enabled.index_by(&:id)
+          total = 0
+          raw.each do |line|
+            line = line.to_h.symbolize_keys
+            id = line[:cash_denomination_id].to_s.strip.presence&.to_i
+            next if id.blank? || catalog[id].nil?
+
+            amt = line[:amount_cents].to_i
+            qty = line[:qty].to_s.strip.presence&.to_i
+            if qty.present? && qty >= 0
+              denom = catalog[id]
+              amt = qty * denom.unit_value_cents if denom
+            end
+            total += amt
+          end
+          total
         end
     end
   end
