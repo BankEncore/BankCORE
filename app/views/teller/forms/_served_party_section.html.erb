@@ -16,10 +16,11 @@
   <% masked_id_text = "ID: #{id_type_label} #{masked}" %>
 <% end %>
 
+<% right_column = local_assigns[:right_column] %>
 <section data-<%= wfc %>-target="servedPartySection" class="served-party-section">
   <div class="font-medium mb-2">Now Serving</div>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <div class="form-control" data-controller="party-search" data-party-search-search-url-value="<%= search_teller_parties_path %>"<% if party_accounts_url_template %> data-party-search-party-accounts-url-template-value="<%= party_accounts_url_template %>"<% end %>>
+  <div class="grid grid-cols-1 <%= right_column ? 'md:grid-cols-2 items-start' : '' %> gap-3">
+    <div class="form-control md:row-start-1 md:col-start-1" data-controller="party-search" data-party-search-search-url-value="<%= search_teller_parties_path %>"<% if party_accounts_url_template %> data-party-search-party-accounts-url-template-value="<%= party_accounts_url_template %>"<% end %>>
       <%= form.label :party_id, "Party", class: "text-xs font-medium text-slate-700 block" %>
       <div class="relative">
         <%= form.hidden_field :party_id, value: selected_party&.id || params[:party_id], data: { "#{wfc}_target": "partyId", party_search_target: "hiddenInput" } %>
@@ -35,9 +36,14 @@
           hidden>
         </div>
       </div>
-      <span class="text-xs text-slate-600 mt-1 block"><%= hint %></span>
       <p class="text-xs text-slate-600 mt-1" data-party-search-target="maskedIdDisplay" <%= "hidden" unless masked_id_text %>><%= masked_id_text %></p>
-      <%= link_to "Add new non-customer", new_teller_party_path(party_kind: "individual", relationship_kind: "non_customer", return_to: request.original_url), class: "link link-hover text-xs mt-1 inline-block" %>
     </div>
+    <% if right_column.present? %>
+      <%= right_column %>
+    <% end %>
+  </div>
+  <div class="text-xs text-slate-600 mt-2">
+    <%= hint %>
+    <%= link_to "Add new non-customer", new_teller_party_path(party_kind: "individual", relationship_kind: "non_customer", return_to: request.original_url), class: "link link-hover ml-2" %>
   </div>
 </section>

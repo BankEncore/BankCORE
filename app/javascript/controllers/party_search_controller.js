@@ -253,20 +253,20 @@ export default class extends Controller {
           if (response.ok) {
             const parties = await response.json()
             const partiesRow = form.querySelector('[data-primary-account-search-target="relatedPartiesRow"]')
-            const partiesList = form.querySelector('[data-primary-account-search-target="relatedPartiesList"]')
-            if (partiesRow && partiesList && Array.isArray(parties) && parties.length > 0) {
-              partiesList.innerHTML = ""
+            const partiesSelect = form.querySelector('[data-primary-account-search-target="relatedPartiesSelect"]')
+            if (partiesRow && partiesSelect && Array.isArray(parties) && parties.length > 0) {
+              partiesSelect.innerHTML = ""
+              const blank = document.createElement("option")
+              blank.value = ""
+              blank.textContent = "Select party"
+              partiesSelect.appendChild(blank)
               parties.forEach((p) => {
-                const btn = document.createElement("button")
-                btn.type = "button"
-                btn.className = "block w-full text-left px-2 py-1.5 text-sm hover:bg-base-200 rounded"
-                btn.textContent = `${p.display_name || `Party #${p.id}`}${p.relationship_type ? ` — ${p.relationship_type}` : ""}`
-                btn.dataset.partyId = p.id
-                btn.dataset.partyDisplayName = p.display_name
-                btn.addEventListener("click", () => {
-                  document.dispatchEvent(new CustomEvent("apply-last-party", { bubbles: true, detail: { id: p.id, display_name: p.display_name } }))
-                })
-                partiesList.appendChild(btn)
+                const opt = document.createElement("option")
+                opt.value = p.id
+                opt.dataset.partyId = p.id
+                opt.dataset.partyDisplayName = p.display_name || `Party #${p.id}`
+                opt.textContent = `${p.display_name || `Party #${p.id}`}${p.relationship_type ? ` — ${p.relationship_type}` : ""}`
+                partiesSelect.appendChild(opt)
               })
               partiesRow.hidden = false
             }

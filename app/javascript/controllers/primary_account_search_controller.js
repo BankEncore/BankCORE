@@ -8,7 +8,7 @@ export default class extends Controller {
     "partyName",
     "accountSelect",
     "relatedPartiesRow",
-    "relatedPartiesList"
+    "relatedPartiesSelect"
   ]
 
   static values = {
@@ -77,6 +77,10 @@ export default class extends Controller {
     if (this.hasAccountSelectTarget) {
       this.accountSelectTarget.innerHTML = ""
       this.accountSelectTarget.value = ""
+    }
+    if (this.hasRelatedPartiesSelectTarget) {
+      this.relatedPartiesSelectTarget.innerHTML = ""
+      this.relatedPartiesSelectTarget.value = ""
     }
   }
 
@@ -267,19 +271,30 @@ export default class extends Controller {
   }
 
   renderRelatedParties() {
-    if (!this.hasRelatedPartiesListTarget) return
-    const list = this.relatedPartiesListTarget
-    list.innerHTML = ""
+    if (!this.hasRelatedPartiesSelectTarget) return
+    const select = this.relatedPartiesSelectTarget
+    select.innerHTML = ""
+    const blank = document.createElement("option")
+    blank.value = ""
+    blank.textContent = "Select party"
+    select.appendChild(blank)
     this.relatedParties.forEach((p) => {
-      const btn = document.createElement("button")
-      btn.type = "button"
-      btn.className = "block w-full text-left px-2 py-1.5 text-sm hover:bg-base-200 rounded"
-      btn.textContent = `${p.display_name}${p.relationship_type ? ` — ${p.relationship_type}` : ""}`
-      btn.dataset.partyId = p.id
-      btn.dataset.partyDisplayName = p.display_name
-      btn.addEventListener("click", () => this.applyRelatedParty(p))
-      list.appendChild(btn)
+      const opt = document.createElement("option")
+      opt.value = p.id
+      opt.dataset.partyId = p.id
+      opt.dataset.partyDisplayName = p.display_name
+      opt.textContent = `${p.display_name}${p.relationship_type ? ` — ${p.relationship_type}` : ""}`
+      select.appendChild(opt)
     })
+  }
+
+  selectRelatedPartyFromDropdown(event) {
+    const opt = event.target.selectedOptions?.[0]
+    const value = event.target.value
+    if (!value) return
+    const partyId = opt?.dataset?.partyId
+    const displayName = opt?.dataset?.partyDisplayName || opt?.textContent
+    if (partyId) this.applyRelatedParty({ id: parseInt(partyId, 10), display_name: displayName })
   }
 
   applyRelatedParty(p) {
@@ -300,7 +315,10 @@ export default class extends Controller {
     this.relatedParties = []
     this.selectedAccountId = null
     if (this.hasRelatedPartiesRowTarget) this.relatedPartiesRowTarget.hidden = true
-    if (this.hasRelatedPartiesListTarget) this.relatedPartiesListTarget.innerHTML = ""
+    if (this.hasRelatedPartiesSelectTarget) {
+      this.relatedPartiesSelectTarget.innerHTML = ""
+      this.relatedPartiesSelectTarget.value = ""
+    }
   }
 
   async onPrimaryAccountBlur() {
