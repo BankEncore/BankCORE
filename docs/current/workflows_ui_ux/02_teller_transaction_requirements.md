@@ -177,6 +177,35 @@ Implementation references:
 
 ---
 
+## Bill payment
+
+**Purpose:** Accept payment from a customer (CIF Party) on behalf of a third-party payee. Supports payment by cash, account debit, and/or checks. Credits payee liability and optional fee income.
+
+**Required (server):**
+
+- `served_party` — person being served: either `party_id` or `id_type` + `id_number`
+- `payee_id` — active BillPayee record
+- `payee_reference` — payee account or reference number
+- `payment_cents` > 0 — amount to credit payee liability
+- `amount_cents` — total due (payment + fee); must equal `payment_cents + fee_cents`
+- `entries` — balanced legs (debits = funding: cash + account + checks; credit = liability for payment; credit = fee income when fee > 0)
+
+**Conditional:**
+
+- `fee_cents` >= 0 (optional fee)
+- `memo` — required when payee has `memo_required?` set
+- `cash_account_reference` — required when `bill_payment_cash_cents` > 0
+- `primary_account_reference` — required when `bill_payment_account_cents` > 0
+- Funding must sum to total due: `bill_payment_cash_cents + bill_payment_account_cents + check_total_cents == amount_cents`
+
+**Optional (stored in metadata):**
+
+- `fee_cents`, `memo`, `check_items[]` (routing, account, number, amount, etc.)
+
+**Posting:** Debit cash account, primary account (account-funded portion), and/or check account refs; credit payee liability for `payment_cents`; credit fee income for `fee_cents` when > 0. Total debits = total credits = amount.
+
+---
+
 ## Summary table (required by server)
 
 | Type           | Required fields (min to pass validation / build entries) |
@@ -187,6 +216,7 @@ Implementation references:
 | Check cashing  | check_amount_cents > 0, settlement_account_reference, id_type, id_number, amount_cents = net payout > 0, entries |
 | Draft          | draft_amount_cents > 0, draft_payee_name, draft_instrument_number, draft_liability_account_reference; + (cash_account_reference if funding=cash) or primary_account_reference; entries |
 | Misc receipt   | misc_receipt_type_id or income_account_reference, amount_cents > 0, memo if type requires, payment components sum to amount; entries; cash/primary refs when those components > 0 |
+| Bill payment   | payee_id, payee_reference, payment_cents > 0, amount_cents = payment + fee, memo if payee requires, funding components sum to total; entries; cash/primary refs when those components > 0 |
 | Vault transfer | vault_transfer_direction, vault_transfer_reason_code, memo if reason=other, source/dest refs by direction, amount_cents > 0, entries |
 
 ---
@@ -269,6 +299,13 @@ Use this section to record gaps between the requirements above and the current f
 - **Form submits:** misc_receipt_type_id, income_account_reference, amount_cents, unit_amount_cents, quantity, memo, misc_cash_cents, misc_account_cents, primary_account_reference, cash_account_reference, check_items, entries.
 - **UI blocks on:** misc receipt type missing, amount <= 0, memo missing when type requires it, payment components not summing to amount; missing cash/primary ref when those components > 0; unbalanced.
 - **Gaps:** None; required fields and payment-sum validation align with WorkflowValidator and MiscReceiptRecipe.
+
+### Bill payment
+
+- **Form exposes:** Payee select, payee reference, payment amount, optional fee, memo; payment section (cash, account, checks) with amounts that must sum to total due.
+- **Form submits:** payee_id, payee_reference, payment_cents, fee_cents, amount_cents, liability_account_reference, memo, bill_payment_cash_cents, bill_payment_account_cents, primary_account_reference, cash_account_reference, check_items, entries.
+- **UI blocks on:** payee missing, payee reference missing, payment <= 0, memo missing when payee requires it, funding components not summing to total due; missing cash/primary ref when those components > 0; unbalanced.
+- **Gaps:** None; required fields and funding-sum validation align with WorkflowValidator and BillPaymentRecipe.
 
 ---
 

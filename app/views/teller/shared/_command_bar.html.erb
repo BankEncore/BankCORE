@@ -17,7 +17,7 @@
         <ul class="absolute left-0 z-10 mt-2 w-48 rounded-lg border border-base-300 bg-base-100 p-2 shadow-lg">
           <li><%= link_to "Check Cashing", new_teller_check_cashing_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
           <li><%= link_to "Bank Draft", new_teller_draft_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
-          <li><span class="block rounded px-3 py-2 text-base-content/50 cursor-not-allowed">Bill Payment</span></li>
+          <li><%= link_to "Bill Payment", teller_bill_payment_transaction_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
           <li><%= link_to "Misc Receipt", teller_misc_receipt_transaction_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
         </ul>
       </details>

@@ -1,3 +1,69 @@
-<div class="receipt-type-details text-sm text-slate-500">
-  <p>Bill payment receipt — not yet implemented.</p>
+<% meta = posting_batch.metadata || {} %>
+<% meta = meta.with_indifferent_access if meta.respond_to?(:with_indifferent_access) %>
+<% bp = meta["bill_payment"] || meta[:bill_payment] || {} %>
+<% bp = bp.with_indifferent_access if bp.respond_to?(:with_indifferent_access) %>
+<% funding = bp["funding"] || bp[:funding] || {} %>
+<% funding = funding.with_indifferent_access if funding.respond_to?(:with_indifferent_access) %>
+<% payment_cents = (bp["payment_cents"] || bp[:payment_cents] || 0).to_i %>
+<% fee_cents = (bp["fee_cents"] || bp[:fee_cents] || 0).to_i %>
+<% total_cents = (bp["total_cents"] || bp[:total_cents] || 0).to_i %>
+<% payee_code = (bp["payee_code"] || bp[:payee_code]).to_s %>
+<% payee_name = (bp["payee_name"] || bp[:payee_name]).to_s %>
+<% payee_reference = (bp["payee_reference"] || bp[:payee_reference]).to_s %>
+<% memo = (bp["memo"] || bp[:memo]).to_s %>
+<% cash_cents = (funding["cash_cents"] || funding[:cash_cents] || 0).to_i %>
+<% account_cents = (funding["account_cents"] || funding[:account_cents] || 0).to_i %>
+<% check_total_cents = (funding["check_total_cents"] || funding[:check_total_cents] || 0).to_i %>
+<% user = teller_transaction.user %>
+
+<div class="receipt-type-details text-sm">
+  <table class="table table-sm text-sm w-full">
+    <%= render "teller/receipts/receipt_served_party", posting_batch: posting_batch %>
+    <tr>
+      <td>Payee:</td>
+      <td class="text-right"><%= payee_name.presence || payee_code || "—" %><%= " (#{payee_code})" if payee_code.present? && payee_name != payee_code %></td>
+    </tr>
+    <tr>
+      <td>Payee Reference:</td>
+      <td class="text-right"><%= payee_reference.presence || "—" %></td>
+    </tr>
+    <% if memo.present? %>
+    <tr>
+      <td>Memo:</td>
+      <td class="text-right"><%= memo %></td>
+    </tr>
+    <% end %>
+    <tr>
+      <td>Payment Amount:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(payment_cents) %></td>
+    </tr>
+    <% if fee_cents > 0 %>
+    <tr>
+      <td>Fee:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(fee_cents) %></td>
+    </tr>
+    <% end %>
+    <tr>
+      <td>Total:</td>
+      <td class="tabular-nums text-right font-medium"><%= receipt_money(total_cents) %></td>
+    </tr>
+    <tr>
+      <td>Cash:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(cash_cents) %></td>
+    </tr>
+    <tr>
+      <td>Checks:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(check_total_cents) %></td>
+    </tr>
+    <tr>
+      <td>Account Transfer:</td>
+      <td class="tabular-nums text-right"><%= receipt_money(account_cents) %></td>
+    </tr>
+  </table>
+</div>
+
+<%= render "teller/receipts/receipt_account_info", posting_batch: posting_batch %>
+
+<div class="receipt-auth mt-3 text-sm">
+  <p>Auth: <%= user.teller_number.presence || teller_transaction.workstation&.code || "—" %> - <%= user.display_label %></p>
 </div>

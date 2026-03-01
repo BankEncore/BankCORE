@@ -104,6 +104,60 @@ module Posting
         end
       end
 
+      test "records cash in for bill_payment drawer debit" do
+        recorder = CashMovementRecorder.new(
+          request: base_request.merge(transaction_type: "bill_payment"),
+          legs: [
+            { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 5_000 },
+            { side: "credit", account_reference: "liability:payee_1", amount_cents: 5_000 }
+          ],
+          teller_transaction: @teller_transaction
+        )
+
+        assert_difference -> { CashMovement.count }, 1 do
+          recorder.call
+        end
+
+        movement = CashMovement.order(:id).last
+        assert_equal "in", movement.direction
+        assert_equal 5_000, movement.amount_cents
+      end
+
+      test "records cash out for reversal of bill_payment" do
+        reversal_tt = TellerTransaction.create!(
+          user: @user,
+          teller_session: @teller_session,
+          branch: @branch,
+          workstation: @workstation,
+          request_id: "ce-reversal-bp-1",
+          transaction_type: "reversal",
+          currency: "USD",
+          amount_cents: 5_000,
+          status: "posted",
+          posted_at: Time.current
+        )
+        request = base_request.merge(
+          transaction_type: "reversal",
+          metadata: { reversal: { original_transaction_type: "bill_payment" } }
+        )
+        recorder = CashMovementRecorder.new(
+          request: request,
+          legs: [
+            { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 5_000 },
+            { side: "debit", account_reference: "liability:payee_1", amount_cents: 5_000 }
+          ],
+          teller_transaction: reversal_tt
+        )
+
+        assert_difference -> { CashMovement.count }, 1 do
+          recorder.call
+        end
+
+        movement = CashMovement.order(:id).last
+        assert_equal "out", movement.direction
+        assert_equal 5_000, movement.amount_cents
+      end
+
       test "records cash out for reversal of deposit (inverted from original in)" do
         reversal_tt = TellerTransaction.create!(
           user: @user,

@@ -35,7 +35,7 @@ Use this as the authoritative crosswalk between workflow proposal IDs and the en
 | WS-220 Transfer | `/teller/transactions/transfer` | `GET /teller/transactions/transfer`, `GET /teller/transfers/new`, `POST /teller/transfers` | Implemented | Dedicated page + typed create endpoint both exist. |
 | WS-230 Check Cashing | `/teller/transactions/check_cashing` | `GET /teller/transactions/check_cashing`, `GET /teller/check_cashings/new`, `POST /teller/check_cashings` | Implemented | Dedicated page + typed create endpoint both exist. |
 | WS-240 Bank Draft | `/teller/transactions/bank_draft` | `GET /teller/transactions/draft`, `GET /teller/drafts/new`, `POST /teller/drafts` | Implemented (naming differs) | Workflow exists as `draft` in current routes/controllers. |
-| WS-250 Bill Payment | `/teller/transactions/bill_payment` | — | Planned | Not in routes/controllers yet. |
+| WS-250 Bill Payment | `/teller/transactions/bill_payment` | `GET /teller/transactions/bill_payment`, `GET /teller/bill_payments/new`, `POST /teller/bill_payments` | Implemented | Dedicated page + typed create endpoint both exist. |
 | WS-260 Misc Receipt | `/teller/transactions/misc_receipt` | `GET /teller/transactions/misc_receipt`, `GET /teller/misc_receipts/new`, `POST /teller/misc_receipts` | Implemented | Dedicated page + typed create endpoint both exist. |
 | WS-300 Vault Transfer | `/teller/vault_transfer` | `GET /teller/transactions/vault_transfer`, `GET /teller/vault_transfers/new`, `POST /teller/vault_transfers` | Implemented (path differs) | Workflow exists with `transactions/vault_transfer` page + typed resource routes. |
 

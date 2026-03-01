@@ -20,9 +20,11 @@ export function calculateCashImpact(transactionType, options = {}, schema = null
   const vaultDirection = options.vaultDirection ?? ""
   const profile = getCashImpactProfile(transactionType, schema)
 
+  const billPaymentCashCents = options.billPaymentCashCents ?? 0
   if (profile === "inflow") return amountCents
   if (profile === "draft_funding") return draftCashCents
   if (profile === "misc_funding") return miscCashCents
+  if (profile === "bill_payment_funding") return billPaymentCashCents
   if (profile === "vault_directional") {
     if (vaultDirection === "drawer_to_vault") return -amountCents
     if (vaultDirection === "vault_to_drawer") return amountCents
@@ -197,6 +199,48 @@ export function buildEntries(transactionType, state) {
     }
 
     entries.push({ side: "credit", account_reference: incomeAccountReference, amount_cents: miscAmountCents })
+    return entries
+  }
+
+  if (entryProfile === "bill_payment") {
+    const billPaymentAmounts = state.billPaymentAmounts ?? {}
+    const paymentCents = billPaymentAmounts.paymentCents ?? 0
+    const feeCents = billPaymentAmounts.feeCents ?? 0
+    const totalDueCents = paymentCents + feeCents
+    const billPaymentCashCents = billPaymentAmounts.billPaymentCashCents ?? 0
+    const billPaymentAccountCents = billPaymentAmounts.billPaymentAccountCents ?? 0
+    const checkCents = (state.checks ?? []).reduce((sum, c) => sum + (c.amount_cents ?? 0), 0)
+    const totalPaymentCents = billPaymentCashCents + billPaymentAccountCents + checkCents
+    const liabilityAccountReference = (state.liabilityAccountReference ?? "").trim()
+    if (paymentCents <= 0 || !liabilityAccountReference || totalPaymentCents !== totalDueCents) {
+      return []
+    }
+
+    const entries = []
+
+    if (billPaymentCashCents > 0 && cashAccountReference) {
+      entries.push({ side: "debit", account_reference: cashAccountReference, amount_cents: billPaymentCashCents })
+    }
+
+    checks
+      .filter((c) => (c.amount_cents ?? 0) > 0)
+      .forEach((check) => {
+        entries.push({ side: "debit", account_reference: check.account_reference ?? "", amount_cents: check.amount_cents })
+      })
+
+    const primaryUsed = primaryAccountReference &&
+      primaryAccountReference !== "0" &&
+      primaryAccountReference !== "acct:0"
+    if (billPaymentAccountCents > 0 && primaryUsed) {
+      entries.push({ side: "debit", account_reference: primaryAccountReference, amount_cents: billPaymentAccountCents })
+    }
+
+    entries.push({ side: "credit", account_reference: liabilityAccountReference, amount_cents: paymentCents })
+
+    if (feeCents > 0) {
+      entries.push({ side: "credit", account_reference: "income:bill_payment_fee", amount_cents: feeCents })
+    }
+
     return entries
   }
 

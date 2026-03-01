@@ -11,6 +11,7 @@ module Teller
         "transactions.draft.create",
         "transactions.check_cashing.create",
         "transactions.misc_receipt.create",
+        "transactions.bill_payment.create",
         "transactions.reversal.create"
       ].any? do |permission_key|
         user.has_permission?(permission_key, branch: Current.branch, workstation: Current.workstation)
@@ -39,6 +40,12 @@ module Teller
       return false unless user.present?
 
       user.has_permission?("transactions.misc_receipt.create", branch: Current.branch, workstation: Current.workstation)
+    end
+
+    def bill_payment_create?
+      return false unless user.present?
+
+      user.has_permission?("transactions.bill_payment.create", branch: Current.branch, workstation: Current.workstation)
     end
   end
 end

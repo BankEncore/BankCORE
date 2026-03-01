@@ -34,6 +34,10 @@ module Teller
       render_page(transaction_type: "misc_receipt", title: "Misc Receipt")
     end
 
+    def bill_payment
+      render_page(transaction_type: "bill_payment", title: "Bill Payment")
+    end
+
     private
       def ensure_authorized
         authorize([ :teller, :posting ], :create?)
@@ -44,7 +48,7 @@ module Teller
       end
 
       def requires_served_party?(transaction_type)
-        %w[deposit withdrawal transfer draft check_cashing misc_receipt].include?(transaction_type)
+        %w[deposit withdrawal transfer draft check_cashing misc_receipt bill_payment].include?(transaction_type)
       end
 
       def render_page(transaction_type:, title:)
@@ -71,6 +75,8 @@ module Teller
           teller_check_cashings_path
         when "misc_receipt"
           teller_misc_receipts_path
+        when "bill_payment"
+          teller_bill_payments_path
         else
           teller_posting_path
         end
@@ -79,6 +85,7 @@ module Teller
           @selected_party = Party.includes(:party_individual).find_by(id: params[:party_id]) if params[:party_id].present?
         end
         @misc_receipt_types = MiscReceiptType.active.ordered if transaction_type == "misc_receipt"
+        @bill_payees = BillPayee.active.ordered if transaction_type == "bill_payment"
         render :show
       end
   end

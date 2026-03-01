@@ -76,6 +76,12 @@ module Teller
           :misc_cash_cents,
           :misc_account_cents,
           :cash_back_cents,
+          :payee_id,
+          :payee_reference,
+          :payment_cents,
+          :liability_account_reference,
+          :bill_payment_cash_cents,
+          :bill_payment_account_cents,
           check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :check_type, :hold_reason, :hold_until ],
           entries: [ :side, :account_reference, :amount_cents ]
         )
