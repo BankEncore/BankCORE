@@ -1,0 +1,108 @@
+<% form = local_assigns.fetch(:form) %>
+<% cash_account_reference_value = local_assigns.fetch(:cash_account_reference_value, "") %>
+<% wfc = local_assigns.fetch(:workflow_form_controller, "bill-payment-form") %>
+<% selected_party = local_assigns[:selected_party] %>
+<% bill_payees = local_assigns.fetch(:bill_payees, []) %>
+
+<%= hidden_field_tag :transaction_type, "bill_payment", data: { "#{wfc}_target": "transactionType" } %>
+
+<%= render "teller/forms/served_party_section",
+  form: form,
+  workflow_form_controller: wfc,
+  selected_party: selected_party,
+  party_accounts_url_template: accounts_teller_party_path('__ID__'),
+  right_column: render("teller/forms/primary_account_search",
+    form: form,
+    workflow_form_controller: wfc,
+    primary_account_label: "Primary Account (optional)",
+    primary_account_required: false,
+    primary_account_placeholder: "Search party or account #, or leave blank") %>
+
+<%= form.hidden_field :cash_account_reference,
+  value: cash_account_reference_value,
+  data: { "#{wfc}_target": "cashAccountReference" } %>
+
+<section data-<%= wfc %>-target="billPaymentSection">
+  <div class="divider my-3"></div>
+  <div class="font-medium">Bill Payment Details</div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+    <div class="form-control">
+      <%= form.label :payee_id, "Payee", class: "text-xs font-medium text-slate-700 block" %>
+      <select name="payee_id" id="payee_id"
+              class="select select-bordered w-full"
+              data-<%= wfc %>-target="payeeSelect"
+              data-action="change-><%= wfc %>#onPayeeChange">
+        <option value="">Select payee...</option>
+        <% bill_payees.each do |bp| %>
+          <option value="<%= bp.id %>"
+                  data-liability-ref="<%= bp.liability_account_reference %>"
+                  data-default-fee-cents="<%= bp.default_fee_amount_cents || '' %>"
+                  data-memo-required="<%= bp.memo_required? ? '1' : '0' %>">
+            <%= bp.name %><%= " (#{bp.code})" %>
+          </option>
+        <% end %>
+      </select>
+    </div>
+    <div class="form-control">
+      <%= form.label :payee_reference, "Payee Account/Reference", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.text_field :payee_reference, data: { "#{wfc}_target": "payeeReference", action: "input->#{wfc}#recalculate" }, class: "input input-bordered w-full", placeholder: "Account or reference number" %>
+    </div>
+    <div class="form-control" data-<%= wfc %>-target="memoRow">
+      <%= form.label :memo, "Memo (optional)", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.text_field :memo, data: { "#{wfc}_target": "memo", action: "input->#{wfc}#recalculate" }, class: "input input-bordered w-full" %>
+    </div>
+    <div class="form-control">
+      <%= form.label :payment_cents, "Payment Amount", class: "text-xs font-medium text-slate-700 block" %>
+      <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+        <%= form.hidden_field :payment_cents, value: 0, data: { "#{wfc}_target": "paymentCents", currency_input_target: "hiddenInput" } %>
+        <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Payment amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="bill_payment_payment_cents_display" />
+      </div>
+    </div>
+    <div class="form-control">
+      <%= form.label :fee_cents, "Fee", class: "text-xs font-medium text-slate-700 block" %>
+      <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+        <%= form.hidden_field :fee_cents, value: 0, data: { "#{wfc}_target": "feeCents", currency_input_target: "hiddenInput" } %>
+        <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="bill_payment_fee_cents_display" />
+      </div>
+    </div>
+    <div class="form-control">
+      <span class="text-xs font-medium text-slate-700 block">Total Due</span>
+      <p class="text-sm mono py-2 font-medium" data-<%= wfc %>-target="totalDueDisplay">$0.00</p>
+    </div>
+  </div>
+
+  <%= form.hidden_field :amount_cents, value: 0, data: { "#{wfc}_target": "amountCents" } %>
+  <%= form.hidden_field :liability_account_reference, value: "", data: { "#{wfc}_target": "liabilityAccountReference" } %>
+
+  <%= render "teller/forms/check_section", workflow_form_controller: wfc %>
+
+  <div class="mt-3">
+    <div class="font-medium text-sm mb-2">Payment (cash + checks + account = total due)</div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div class="form-control">
+        <%= form.label :bill_payment_cash_cents, "Cash", class: "text-xs font-medium text-slate-700 block" %>
+        <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+          <%= form.hidden_field :bill_payment_cash_cents, value: 0, data: { "#{wfc}_target": "billPaymentCashCents", currency_input_target: "hiddenInput" } %>
+          <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:bill_payment_cash_cents) %>" />
+        </div>
+      </div>
+      <div class="form-control">
+        <span class="text-xs font-medium text-slate-700 block">Checks</span>
+        <p class="text-sm mono py-2" data-<%= wfc %>-target="checkSubtotal">$0.00</p>
+        <span class="text-xs text-slate-600">From check rows above</span>
+      </div>
+      <div class="form-control">
+        <%= form.label :bill_payment_account_cents, "Account Transfer", class: "text-xs font-medium text-slate-700 block" %>
+        <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
+          <%= form.hidden_field :bill_payment_account_cents, value: 0, data: { "#{wfc}_target": "billPaymentAccountCents", currency_input_target: "hiddenInput" } %>
+          <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Account payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:bill_payment_account_cents) %>" />
+        </div>
+      </div>
+    </div>
+    <div class="mt-2 text-sm">
+      <span data-<%= wfc %>-target="totalDueAmount">Total due: $0.00</span>
+      <span class="ml-3" data-<%= wfc %>-target="balance">Balance: $0.00</span>
+    </div>
+  </div>
+</section>

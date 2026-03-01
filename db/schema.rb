@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_01_045432) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_100000) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -110,6 +110,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_045432) do
     t.index ["teller_session_id"], name: "index_audit_events_on_teller_session_id"
     t.index ["workstation_id"], name: "index_audit_events_on_workstation_id"
     t.check_constraint "json_valid(`metadata`)", name: "metadata"
+  end
+
+  create_table "bill_payees", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.integer "default_fee_amount_cents"
+    t.integer "display_order", default: 0, null: false
+    t.boolean "is_active", default: true, null: false
+    t.string "liability_account_reference", null: false
+    t.boolean "memo_required", default: true, null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_bill_payees_on_code", unique: true
+    t.index ["is_active", "display_order"], name: "index_bill_payees_on_is_active_and_display_order"
   end
 
   create_table "branches", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|

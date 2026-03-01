@@ -9,7 +9,7 @@ module Posting
     end
 
     test "returns error when transaction type is unsupported" do
-      errors = WorkflowValidator.errors({ transaction_type: "bill_payment", amount_cents: 10_000 })
+      errors = WorkflowValidator.errors({ transaction_type: "unknown_type", amount_cents: 10_000 })
 
       assert_includes errors, "Transaction type is not supported"
     end
@@ -237,6 +237,106 @@ module Posting
         misc_cash_cents: 5_000,
         misc_account_cents: 0,
         cash_account_reference: "cash:D01",
+        check_items: []
+      }, mode: :validate)
+
+      assert_empty errors, errors.inspect
+    end
+
+    test "bill_payment returns errors when payee_id is blank" do
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "BP Party", is_active: true)
+      errors = WorkflowValidator.errors({
+        transaction_type: "bill_payment",
+        amount_cents: 10_000,
+        party_id: party.id,
+        payee_id: "",
+        payee_reference: "REF123",
+        payment_cents: 10_000,
+        fee_cents: 0,
+        bill_payment_cash_cents: 10_000,
+        bill_payment_account_cents: 0,
+        cash_account_reference: "cash:D01",
+        check_items: []
+      })
+
+      assert_includes errors, "Payee is required"
+    end
+
+    test "bill_payment returns errors when payee_reference is blank" do
+      payee = BillPayee.create!(code: "BP1", name: "Test Payee", liability_account_reference: "liability:BP1", memo_required: false, is_active: true)
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "BP Party", is_active: true)
+      errors = WorkflowValidator.errors({
+        transaction_type: "bill_payment",
+        amount_cents: 10_000,
+        party_id: party.id,
+        payee_id: payee.id,
+        payee_reference: "",
+        payment_cents: 10_000,
+        fee_cents: 0,
+        bill_payment_cash_cents: 10_000,
+        bill_payment_account_cents: 0,
+        cash_account_reference: "cash:D01",
+        check_items: []
+      })
+
+      assert_includes errors, "Payee reference is required"
+    end
+
+    test "bill_payment returns errors when payment is zero" do
+      payee = BillPayee.create!(code: "BP2", name: "Test Payee 2", liability_account_reference: "liability:BP2", memo_required: false, is_active: true)
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "BP Party 2", is_active: true)
+      errors = WorkflowValidator.errors({
+        transaction_type: "bill_payment",
+        amount_cents: 0,
+        party_id: party.id,
+        payee_id: payee.id,
+        payee_reference: "REF456",
+        payment_cents: 0,
+        fee_cents: 0,
+        bill_payment_cash_cents: 0,
+        bill_payment_account_cents: 0,
+        cash_account_reference: "cash:D01",
+        check_items: []
+      })
+
+      assert_includes errors, "Payment amount must be greater than zero"
+    end
+
+    test "bill_payment returns error when funding does not equal total due" do
+      payee = BillPayee.create!(code: "BP3", name: "Test Payee 3", liability_account_reference: "liability:BP3", memo_required: false, is_active: true)
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "BP Party 3", is_active: true)
+      errors = WorkflowValidator.errors({
+        transaction_type: "bill_payment",
+        amount_cents: 10_000,
+        party_id: party.id,
+        payee_id: payee.id,
+        payee_reference: "REF789",
+        payment_cents: 10_000,
+        fee_cents: 0,
+        bill_payment_cash_cents: 5_000,
+        bill_payment_account_cents: 0,
+        cash_account_reference: "cash:D01",
+        check_items: []
+      })
+
+      assert_includes errors, "Payment (cash + account + checks) must equal total due"
+    end
+
+    test "bill_payment returns no errors for valid params" do
+      payee = BillPayee.create!(code: "BP4", name: "Test Payee 4", liability_account_reference: "liability:BP4", memo_required: false, is_active: true)
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "BP Party 4", is_active: true)
+      errors = WorkflowValidator.errors({
+        transaction_type: "bill_payment",
+        amount_cents: 10_000,
+        party_id: party.id,
+        payee_id: payee.id,
+        payee_reference: "REF999",
+        payment_cents: 10_000,
+        fee_cents: 0,
+        bill_payment_cash_cents: 10_000,
+        bill_payment_account_cents: 0,
+        cash_account_reference: "cash:D01",
+        liability_account_reference: payee.liability_account_reference,
         check_items: []
       }, mode: :validate)
 

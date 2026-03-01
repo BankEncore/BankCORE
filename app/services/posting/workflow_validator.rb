@@ -53,6 +53,9 @@ module Posting
         when "misc_receipt"
           add_served_party_errors!(errors, params)
           validate_misc_receipt(errors, params, mode: mode)
+        when "bill_payment"
+          add_served_party_errors!(errors, params)
+          validate_bill_payment(errors, params, mode: mode)
         when "vault_transfer"
           validate_vault_transfer(errors, params)
         end
@@ -116,6 +119,42 @@ module Posting
           end
           errors << "Cash account reference is required" if misc_cash_cents.positive? && params[:cash_account_reference].blank?
           errors << "Primary account reference is required" if misc_account_cents.positive? && params[:primary_account_reference].blank?
+        end
+
+        def validate_bill_payment(errors, params, mode:)
+          payee_id = params[:payee_id].to_s.presence
+          errors << "Payee is required" if payee_id.blank?
+          errors << "Payee reference is required" if params[:payee_reference].to_s.strip.blank?
+
+          payment_cents = params[:payment_cents].to_i
+          fee_cents = params[:fee_cents].to_i
+          total_due_cents = payment_cents + fee_cents
+          amount_cents = params[:amount_cents].to_i
+
+          errors << "Payment amount must be greater than zero" unless payment_cents.positive?
+          errors << "Fee cannot be negative" if fee_cents.negative?
+          errors << "Amount must equal payment plus fee" unless amount_cents == total_due_cents
+
+          bill_payment_cash_cents = params[:bill_payment_cash_cents].to_i
+          bill_payment_account_cents = params[:bill_payment_account_cents].to_i
+          check_items = Array(params[:check_items]).map { |item| item.to_h.symbolize_keys }
+          check_total_cents = check_items.sum { |item| item[:amount_cents].to_i }
+          total_payment_cents = bill_payment_cash_cents + bill_payment_account_cents + check_total_cents
+          errors << "Payment (cash + account + checks) must equal total due" unless total_payment_cents == total_due_cents
+
+          payee = BillPayee.find_by(id: payee_id) if payee_id.present?
+          memo_required = payee&.memo_required?
+          errors << "Memo is required" if memo_required && params[:memo].to_s.strip.blank?
+
+          return unless mode == :validate
+
+          if payee_id.present? && payee.nil?
+            errors << "Invalid payee"
+          elsif payee_id.present? && !payee.is_active
+            errors << "Payee is not active"
+          end
+          errors << "Cash account reference is required" if bill_payment_cash_cents.positive? && params[:cash_account_reference].blank?
+          errors << "Primary account reference is required" if bill_payment_account_cents.positive? && params[:primary_account_reference].blank?
         end
 
         def validate_vault_transfer(errors, params)

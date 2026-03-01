@@ -1,0 +1,48 @@
+<% if f.object.errors.any? %>
+  <div class="alert alert-error">
+    <ul>
+      <% f.object.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<div class="form-control">
+  <%= f.label :code, class: "label" %>
+  <%= f.text_field :code, class: "input input-bordered", required: true, placeholder: "e.g. UTILITY_A" %>
+</div>
+
+<div class="form-control">
+  <%= f.label :name, class: "label" %>
+  <%= f.text_field :name, class: "input input-bordered", required: true, placeholder: "e.g. Acme Utility Co." %>
+</div>
+
+<div class="form-control">
+  <%= f.label :liability_account_reference, class: "label" %>
+  <%= f.text_field :liability_account_reference, class: "input input-bordered", required: true, placeholder: "e.g. liability:payee_UTILITY_A" %>
+</div>
+
+<div class="form-control">
+  <%= f.label :default_fee_amount_cents, "Default Fee (cents, optional)", class: "label" %>
+  <%= f.number_field :default_fee_amount_cents, class: "input input-bordered", min: 0, step: 1, placeholder: "Leave blank for no default fee" %>
+</div>
+
+<div class="form-control">
+  <%= f.label :display_order, class: "label" %>
+  <%= f.number_field :display_order, class: "input input-bordered", min: 0, value: f.object.display_order || 0 %>
+</div>
+
+<div class="form-control">
+  <label class="label cursor-pointer justify-start gap-2">
+    <%= f.check_box :memo_required, class: "checkbox" %>
+    <span class="label-text">Memo required</span>
+  </label>
+</div>
+
+<div class="form-control">
+  <label class="label cursor-pointer justify-start gap-2">
+    <%= f.check_box :is_active, class: "checkbox" %>
+    <span class="label-text">Active</span>
+  </label>
+</div>

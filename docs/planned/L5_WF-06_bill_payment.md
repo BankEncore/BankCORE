@@ -1,12 +1,12 @@
 ---
-status: planned
-category: planned
+status: current
+category: current
 updated: 2026-03-01
 ---
 
 ## L5-WF-06 — Bill Payment (WS-250)
 
-**Status:** **Planned.** Bill Payment workflow/routes/controllers are not implemented.
+**Status:** **Implemented.** Bill Payment workflow, routes, controllers, admin BillPayees CRUD, and posting recipe are implemented.
 **Implementation:** See [00_page_endpoint_list.md](../current/workflows_ui_ux/00_page_endpoint_list.md) for route mapping.
 
 ---

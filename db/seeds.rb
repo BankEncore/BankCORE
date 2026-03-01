@@ -31,6 +31,7 @@ permissions = {
   "transactions.draft.create" => "Create draft issuances",
   "transactions.check_cashing.create" => "Create check cashing transactions",
   "transactions.misc_receipt.create" => "Create misc receipt transactions",
+  "transactions.bill_payment.create" => "Create bill payment transactions",
   "transactions.reversal.create" => "Initiate transaction reversals",
   "approvals.override.execute" => "Execute supervisor override",
   "accounts.branch.edit" => "Edit account branch (managers only)",
@@ -61,6 +62,7 @@ roles = {
       "transactions.draft.create",
       "transactions.check_cashing.create",
       "transactions.misc_receipt.create",
+      "transactions.bill_payment.create",
       "transactions.reversal.create",
       "advisories.view",
       "advisories.create",
@@ -81,6 +83,7 @@ roles = {
       "transactions.draft.create",
       "transactions.check_cashing.create",
       "transactions.misc_receipt.create",
+      "transactions.bill_payment.create",
       "transactions.reversal.create",
       "advisories.view",
       "advisories.create",
@@ -331,4 +334,24 @@ if File.exist?(indiv_path)
       AccountOwner.find_or_create_by!(account: account, party: party) { |ao| ao.is_primary = true }
     end
   end
+end
+
+# --- Example Bill Payees ---
+
+BillPayee.find_or_create_by!(code: "UTILITY_A") do |bp|
+  bp.name = "Acme Utility Co."
+  bp.liability_account_reference = "liability:payee_UTILITY_A"
+  bp.default_fee_amount_cents = 250
+  bp.memo_required = true
+  bp.is_active = true
+  bp.display_order = 0
+end
+
+BillPayee.find_or_create_by!(code: "MUNI_TAX") do |bp|
+  bp.name = "Municipal Tax Office"
+  bp.liability_account_reference = "liability:payee_MUNI_TAX"
+  bp.default_fee_amount_cents = 0
+  bp.memo_required = false
+  bp.is_active = true
+  bp.display_order = 1
 end

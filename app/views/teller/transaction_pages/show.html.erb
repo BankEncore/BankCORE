@@ -18,7 +18,7 @@
   data-reference-panel-account-history-url-value="<%= teller_account_history_path %>"
   data-reference-panel-advisories-url-value="<%= teller_advisories_for_entity_path %>"
   data-reference-panel-last-account-url-value="<%= teller_last_transaction_primary_account_path %>"
-  <% if %w[deposit withdrawal transfer draft check_cashing misc_receipt].include?(@transaction_type) %>
+  <% if %w[deposit withdrawal transfer draft check_cashing misc_receipt bill_payment].include?(@transaction_type) %>
   data-reference-panel-last-served-party-url-value="<%= teller_last_transaction_served_party_path %>"
   <% end %>
   data-<%= workflow_form_controller %>-advisories-url-value="<%= teller_advisories_for_entity_path %>"
@@ -44,5 +44,6 @@
     show_transaction_type: false,
     parties: @parties || [],
     selected_party: @selected_party,
-    misc_receipt_types: @misc_receipt_types || [] %>
+    misc_receipt_types: @misc_receipt_types || [],
+    bill_payees: @bill_payees || [] %>
 </div>

@@ -19,12 +19,14 @@ const FALLBACK_CASH_IMPACT_PROFILES = {
   check_cashing: "outflow",
   draft: "draft_funding",
   misc_receipt: "misc_funding",
+  bill_payment: "bill_payment_funding",
   vault_transfer: "vault_directional"
 }
 
 const FALLBACK_PRIMARY_ACCOUNT_POLICY = {
   draft: "draft_account_only",
   misc_receipt: "misc_account_only",
+  bill_payment: "bill_payment_account_only",
   check_cashing: "never",
   vault_transfer: "never"
 }
@@ -33,13 +35,15 @@ const FALLBACK_CASH_ACCOUNT_POLICY = {
   transfer: "never",
   vault_transfer: "never",
   draft: "draft_cash_only",
-  misc_receipt: "misc_cash_only"
+  misc_receipt: "misc_cash_only",
+  bill_payment: "bill_payment_cash_only"
 }
 
 const FALLBACK_SECTIONS = {
   deposit: ["checks"],
   draft: ["draft", "checks"],
   misc_receipt: ["misc_receipt", "checks"],
+  bill_payment: ["bill_payment", "checks"],
   transfer: ["transfer"],
   vault_transfer: ["vault_transfer"],
   check_cashing: ["check_cashing"]
@@ -86,6 +90,10 @@ export function getRequiresPrimaryAccount(transactionType, schema, context = {})
     const miscAccountCents = context.miscAccountCents ?? 0
     return transactionType === "misc_receipt" && miscAccountCents > 0
   }
+  if (policy === "bill_payment_account_only") {
+    const billPaymentAccountCents = context.billPaymentAccountCents ?? 0
+    return transactionType === "bill_payment" && billPaymentAccountCents > 0
+  }
   return true
 }
 
@@ -110,6 +118,10 @@ export function getRequiresCashAccount(transactionType, schema, context = {}) {
   if (policy === "misc_cash_only") {
     const miscCashCents = context.miscCashCents ?? 0
     return transactionType === "misc_receipt" && miscCashCents > 0
+  }
+  if (policy === "bill_payment_cash_only") {
+    const billPaymentCashCents = context.billPaymentCashCents ?? 0
+    return transactionType === "bill_payment" && billPaymentCashCents > 0
   }
   return true
 }
@@ -194,6 +206,7 @@ export function blockedReason({
   hasInvalidCheckCashingFields,
   hasInvalidDraftFields,
   hasInvalidMiscReceiptFields,
+  hasInvalidBillPaymentFields,
   hasInvalidTransferFields,
   hasInvalidVaultTransferFields,
   balanced
@@ -210,6 +223,7 @@ export function blockedReason({
   if (requiresVaultTransferDetails && (!hasVaultDirection || !hasVaultReasonCode || !hasVaultMemo || !hasVaultEndpoints)) return "Complete vault transfer direction, locations, and reason details."
   if (hasInvalidDraftFields) return "Draft amount and fee values are invalid."
   if (hasInvalidMiscReceiptFields) return "Complete misc receipt type, amount, memo, and payment details."
+  if (hasInvalidBillPaymentFields) return "Complete payee, payee reference, payment amount, memo, and funding details."
   if (hasInvalidTransferFields) return "Transfer fee cannot exceed transfer amount."
   if (hasInvalidVaultTransferFields) return "Vault transfer details are invalid."
   if (!balanced) return "Entries are out of balance."

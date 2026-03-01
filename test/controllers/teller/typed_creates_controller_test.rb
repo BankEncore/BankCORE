@@ -207,6 +207,41 @@ module Teller
       assert_equal "OD-2001", metadata.dig("draft", "instrument_number")
     end
 
+    test "bill_payment create posts balanced legs and stores metadata" do
+      payee = BillPayee.create!(code: "BP_TYPED", name: "Typed Payee", liability_account_reference: "liability:BP_TYPED", memo_required: false, is_active: true)
+
+      post teller_bill_payments_path, params: {
+        request_id: "typed-bp-1",
+        transaction_type: "bill_payment",
+        amount_cents: 10_000,
+        party_id: @party.id,
+        payee_id: payee.id,
+        payee_reference: "REF001",
+        payment_cents: 10_000,
+        fee_cents: 0,
+        bill_payment_cash_cents: 10_000,
+        bill_payment_account_cents: 0,
+        cash_account_reference: "cash:#{@drawer.code}",
+        liability_account_reference: payee.liability_account_reference
+      }
+
+      assert_response :success
+      transaction = TellerTransaction.find_by!(request_id: "typed-bp-1")
+      assert_equal "bill_payment", transaction.transaction_type
+      assert_equal 10_000, transaction.amount_cents
+
+      posting_batch = transaction.posting_batch
+      assert_equal 2, posting_batch.posting_legs.count
+      assert_equal 10_000, posting_batch.posting_legs.find_by!(side: "debit", account_reference: "cash:#{@drawer.code}").amount_cents
+      assert_equal 10_000, posting_batch.posting_legs.find_by!(side: "credit", account_reference: "liability:BP_TYPED").amount_cents
+
+      metadata = posting_batch.metadata
+      assert_equal payee.id.to_s, metadata.dig("bill_payment", "payee_id")
+      assert_equal "BP_TYPED", metadata.dig("bill_payment", "payee_code")
+      assert_equal 10_000, metadata.dig("bill_payment", "payment_cents")
+      assert_equal 0, metadata.dig("bill_payment", "fee_cents")
+    end
+
     test "draft create with cash funding records cash movement in" do
       post teller_drafts_path, params: {
         request_id: "typed-dr-3",
@@ -314,6 +349,7 @@ module Teller
         new_teller_transfer_path,
         new_teller_check_cashing_path,
         new_teller_draft_path,
+        new_teller_bill_payment_path,
         new_teller_vault_transfer_path
       ].each do |path|
         get path
@@ -323,7 +359,7 @@ module Teller
 
     private
       def grant_permissions(user, branch, workstation)
-        [ "teller.dashboard.view", "transactions.deposit.create", "transactions.check_cashing.create", "transactions.draft.create", "transactions.vault_transfer.create", "sessions.open" ].each do |permission_key|
+        [ "teller.dashboard.view", "transactions.deposit.create", "transactions.check_cashing.create", "transactions.draft.create", "transactions.bill_payment.create", "transactions.vault_transfer.create", "sessions.open" ].each do |permission_key|
           permission = Permission.find_or_create_by!(key: permission_key) do |record|
             record.description = permission_key.humanize
           end

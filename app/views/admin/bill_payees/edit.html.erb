@@ -1,0 +1,15 @@
+<%= render "admin/shared/page_header",
+  title: "Edit Bill Payee",
+  description: "Update bill payee details.",
+  secondary_button_path: admin_bill_payees_path,
+  secondary_button_label: "Back" %>
+
+<%= form_with model: @bill_payee, url: admin_bill_payee_path(@bill_payee), method: :patch, class: "card bg-base-100 border border-base-300" do |f| %>
+  <div class="card-body">
+    <%= render "admin/bill_payees/form", f: f %>
+
+    <div class="form-control mt-4">
+      <%= f.submit "Update Bill Payee", class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>
