@@ -3,7 +3,7 @@
 ## Ground rules
 
 - Treat implemented behavior in `app/`, `config/`, and `db/` as source of truth.
-- Treat `docs/*_concept.md` as target architecture direction unless implemented.
+- Treat `docs/considering/` and `docs/planned/` as target/planned direction; `docs/current/` as implemented spec.
 - Keep PRs small and focused; avoid unrelated refactors.
 
 ## Branch & PR flow

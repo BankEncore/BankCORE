@@ -12,7 +12,7 @@ Implemented (Phase 1 in progress):
 - Supervisor approval interrupt and approval token validation for threshold-triggered transactions
 - Receipt/audit views and audit event capture
 
-Planned direction is documented in `docs/*_concept.md`. Implemented behavior is in `app/`, `config/`, and `db/`.
+Planned direction is in `docs/planned/` and `docs/considering/`. Implemented behavior is in `app/`, `config/`, and `db/`; see `docs/current/`.
 
 ## Tech stack
 
@@ -104,17 +104,18 @@ This project includes container + deploy scaffolding:
 
 ## Documentation map
 
-- System charter: `docs/00_system_charter_concept.md`
-- Teller architecture direction: `docs/03_teller_focused_architecture_concept.md`
-- Phase 1 specification: `docs/10_phase1_spec.md`
-- Phase 1 implementation status: `docs/10_phase1_status.md`
+- Doc index: `docs/README.md`
+- System charter: `docs/current/architecture/00_system_charter.md`
+- Teller architecture: `docs/current/architecture/03_teller_architecture.md`
+- Phase 1 specification: `docs/current/10_phase1_spec.md`
+- Phase 1 implementation status: `docs/current/10_phase1_status.md`
 
 ## Contributing notes
 
 - Prefer Rails-native primitives already in this codebase.
 - Keep implemented-vs-planned language explicit in PRs.
 - Preserve health check contract on `/up`.
-- Use the contribution workflow in `CONTRIBUTING.md`.
+- Use the contribution workflow in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

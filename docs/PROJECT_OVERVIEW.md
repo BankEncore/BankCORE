@@ -184,13 +184,13 @@ Health check: `GET /up`
 
 | Purpose | Path |
 |---------|------|
-| Phase 1 spec | `docs/10_phase1_spec.md` |
-| Phase 1 status | `docs/10_phase1_status.md` |
+| Phase 1 spec | `docs/current/10_phase1_spec.md` |
+| Phase 1 status | `docs/current/10_phase1_status.md` |
 | Posting engine | `app/services/posting/engine.rb` |
 | Teller routes | `config/routes.rb` (namespace :teller) |
 | Workflow registry | `app/services/teller/workflow_registry.rb` |
-| UI theme | `docs/workflows_ui_ux/ui_css_docs/01_daisy_ui_theme.md` |
-| UI contract | `docs/workflows_ui_ux/ui_css_docs/02_ui_contract.md` |
+| UI theme | `docs/current/workflows_ui_ux/ui_css_docs/01_daisy_ui_theme.md` |
+| UI contract | `docs/current/workflows_ui_ux/ui_css_docs/02_ui_contract.md` |
 
 ### 8.4 Required Checks Before PR
 
@@ -260,13 +260,14 @@ BankCORE establishes the operational and financial integrity foundation upon whi
 
 | Document | Purpose |
 |----------|---------|
-| `docs/00_system_charter_concept.md` | System charter and scope |
-| `docs/03_teller_focused_architecture_concept.md` | Domain boundaries and architecture |
-| `docs/10_phase1_spec.md` | **Authoritative** Phase 1 spec |
-| `docs/10_phase1_status.md` | Phase 1 implementation status |
-| `docs/30_posting_refactor_spec.md` | Posting decomposition spec |
-| `docs/workflows_ui_ux/` | Teller/ops UI contracts, workflow specs |
-| `docs/workflows_ui_ux/ui_css_docs/` | DaisyUI theme, UI contract |
+| [docs/README.md](README.md) | Doc index and category guide |
+| `docs/current/10_phase1_spec.md` | **Authoritative** Phase 1 spec |
+| `docs/current/10_phase1_status.md` | Phase 1 implementation status |
+| `docs/current/architecture/` | System charter, domain boundaries |
+| `docs/current/policies/` | Reversals, approvals |
+| `docs/current/workflows_ui_ux/` | Teller/ops UI contracts, workflow specs |
+| `docs/planned/30_posting_refactor_spec.md` | Posting decomposition spec |
+| `docs/current/workflows_ui_ux/ui_css_docs/` | DaisyUI theme, UI contract |
 | `CONTRIBUTING.md` | Contribution workflow |
 
 ---
@@ -275,5 +276,5 @@ BankCORE establishes the operational and financial integrity foundation upon whi
 
 1. Run `bin/setup`
 2. Run `bin/ci` before opening a PR
-3. Read `docs/10_phase1_spec.md` for scope
+3. Read `docs/current/10_phase1_spec.md` for scope
 4. Read `CONTRIBUTING.md` for workflow
