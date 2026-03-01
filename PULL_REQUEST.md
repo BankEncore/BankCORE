@@ -1,88 +1,63 @@
-# Check Hold Date & Funds Availability
+# Related Records (Now Serving + Lookup Guidance)
 
 ## Summary
 
-- **What does this change do?** Adds check hold/on-transit handling, editable hold reason and hold-until date, a funds availability panel on deposit workflows, and deposit receipt availability tables. Also improves receipt styling (font size, margins) and includes non-CIF account numbers on receipts.
-- **Why is it needed?** Tellers need to set and display check holds and transit status. Customers need clear visibility into when deposited funds become available. Receipts should show accurate account references and be easier to read when printed.
+Streamlines teller workflow by allowing transactions to begin from either an **Account** or a **Party (CIF record)**. The system guides tellers toward likely related records while preserving independence between Served Party and Primary Account contexts.
 
-## Scope
+## Features
 
-- [x] Backend (Rails models/controllers/services)
-- [x] Frontend (Hotwire/Stimulus/views)
-- [ ] Database (migrations/schema)
-- [ ] Docs
-- [ ] CI/DevEx
+### Entry Paths
+
+- **Account-first flow:** Enter or select an account → related parties dropdown appears → optionally select served party
+- **Party-first flow:** Select a party → related accounts dropdown appears → optionally select primary account
+
+### Context Independence
+
+- Served Party and Primary Account are independently editable
+- No ownership or relationship validation at initiation (third-party transactions supported)
+- Changing one context does not clear the other
+
+### UI Layout
+
+- **Row 1:** Party search/entry | Related parties select (when account chosen)
+- **Row 2:** Primary Account search/entry | Related accounts select (when party chosen)
+- Primary Account always on the second row; related dropdowns appear as optional select lists next to their corresponding fields
+- Helper text ("Now serving...", "Add new non-customer") moved below the grid
+
+### Audit & Metadata
+
+- `initiating_lookup` (`account_first` | `party_first`) persisted in `PostingBatch.metadata`
+- `AuditEvent` created on transaction post with `served_party`, `primary_account_reference`, `initiating_lookup`
+
+## API Changes
+
+- **NEW** `GET /teller/accounts/:id/related_parties` — returns parties linked to an account (Primary Owner, Owner)
+- **Enhanced** `GET /teller/parties/:id/accounts` — adds `relationship_type` per account
+- **Enhanced** Transaction search — accounts response includes `id` for related-parties lookup
+- Account reference endpoint used for typed-account resolution (account-first by ID)
+
+## Technical Changes
+
+- New `_primary_account_search.html.erb` partial shared across deposit, withdrawal, transfer, draft, misc_receipt forms
+- `_served_party_section.html.erb` accepts optional `right_column` for side-by-side layout
+- Stimulus: `primary_account_search_controller` — related parties fetch, dropdown select, `resolveTypedAccount` on blur
+- Stimulus: `party_search_controller` — fetches accounts on party select; `onRelatedAccountSelectChange` updates Primary Account and fetches related parties
+- DB index: `account_owners(account_id, is_primary)` for query performance
+
+## Testing
+
+- Request tests for `related_parties` endpoint (auth, content, empty)
+- Regression: deposit page renders Now Serving with Party, Primary Account, and both related selects
+- Posting metadata test for `initiating_lookup`
+- Committer test for `AuditEvent` with served party and initiating lookup
+- Workflow validator: third-party (non-owner) transactions permitted
+- System test locators updated to "Primary Account" (label change)
 
 ## Checklist
 
-- [x] I ran focused tests for this change
-- [x] I ran `bin/rubocop` on changed Ruby files
-- [ ] I ran security checks relevant to this change (`brakeman`, `bundler-audit`, `importmap audit`)
-- [ ] I updated docs/status where applicable
-- [x] I did not include unrelated refactors
-
-## Test Evidence
-
-Commands run:
-
-```bash
-bundle exec rails test test/helpers/teller/receipts_helper_test.rb test/services/posting/recipe_builder_test.rb test/controllers/teller/postings_controller_test.rb
-bin/rubocop app/helpers/teller/receipts_helper.rb app/services/posting/recipe_builder.rb
-```
-
-Results:
-
-```text
-# Tests
-14 runs, 42 assertions, 0 failures, 0 errors, 0 skips
-
-# Rubocop (branch Ruby files)
-No offenses detected in changed Ruby files
-```
-
-## Risk & Rollback
-
-- **Risk level:** Low
-- **Potential impact:** New UI elements (hold modal, funds availability panel) and receipt changes. Existing posting flows remain compatible; new fields are additive.
-- **Rollback plan:** Revert the branch. No migrations; all changes are in application code.
-
-## Related
-
-- Closes #51109
-- Related docs/specs: (add links if applicable)
-
----
-
-## Implementation Details
-
-### Features
-
-| Feature | Description |
-|---------|-------------|
-| **Check Transit/On Us + Hold** | `check_type` (transit/on_us), editable `hold_reason` and `hold_until`, Type/Hold columns in posting workspace, hold modal with fixed reasons, default 5 business days |
-| **Deposit receipt availability** | `add_business_days`, `deposit_availability_rows`: cash immediate, non-held checks first $250 next biz day, remainder 2 biz days, held checks by `hold_until` |
-| **Receipt print styling** | `text-xs` for body, `@page { margin: 0 }`, no print border |
-| **Account numbers on receipts** | `customer_account_reference?`, `account_summaries_by_account` groups by `account_reference`, includes non-existing accounts |
-| **Funds availability panel** | Dynamic panel below Drawer Totals on deposit screens |
-| **Check amount alignment** | `mono` class on amount column in receipt check details |
-
-### Files changed
-
-| File | Change |
-|------|--------|
-| `app/helpers/teller/receipts_helper.rb` | `HOLD_REASONS`, `customer_account_reference?`, `account_summaries_by_account`, `add_business_days`, `deposit_availability_rows`, `check_hold_indicator` |
-| `app/services/posting/recipe_builder.rb` | Check type, hold reason, hold until |
-| `app/controllers/concerns/teller_posting_execution.rb` | Pass hold fields to recipe |
-| `app/controllers/teller/transactions_controller.rb` | Hold-related params |
-| `app/javascript/controllers/posting_form_controller.js` | Funds availability panel targets, `renderFundsAvailability` |
-| `app/javascript/controllers/hold_modal_controller.js` | Hold modal behavior |
-| `app/javascript/services/posting_payload.js` | Hold fields in payload |
-| `app/views/teller/shared/_check_hold_modal.html.erb` | Hold modal partial |
-| `app/views/teller/shared/_funds_availability_panel.html.erb` | Availability panel partial |
-| `app/views/teller/dashboard/_posting_workspace.html.erb` | Hold modal, funds panel, Type/Hold columns |
-| `app/views/teller/receipts/_deposit.html.erb` | Availability table |
-| `app/views/teller/receipts/_receipt_account_info.html.erb` | Handles nil account, non-CIF reference |
-| `app/views/teller/receipts/_receipt_check_details.html.erb` | `mono` class on amount |
-| `app/views/teller/receipts/*.erb` | Account info partial usage |
-| `app/assets/tailwind/application.css` | Print styles |
-| `test/*` | Helper, recipe, controller tests |
+- [x] Account-first: related parties shown when account selected or typed
+- [x] Party-first: related accounts shown when party selected
+- [x] Selecting from related dropdowns populates Primary Account / Served Party correctly
+- [x] Cancel clears both Party and Primary Account
+- [x] Selecting related party does not clear Primary Account
+- [x] Audit and metadata capture
