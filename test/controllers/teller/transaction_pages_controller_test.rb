@@ -41,6 +41,24 @@ module Teller
       assert_select "div", /Open a teller session before continuing\./i
     end
 
+    test "deposit page renders Now Serving section with Party and Primary Account on separate rows" do
+      grant_posting_access(@user, @branch, @workstation)
+      sign_in_as(@user)
+      patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }
+      post teller_teller_session_path, params: { opening_cash_cents: 10_000, cash_location_id: @drawer.id }
+
+      get teller_deposit_transaction_path
+      assert_response :success
+      assert_select "section.served-party-section", 1, "Deposit should have Now Serving section"
+      assert_select "[data-party-search-target='searchInput']", 1, "Should have Party search field"
+      assert_select "#primary-account-search", 1, "Should have Primary Account search container"
+      assert_select "[data-primary-account-search-target='searchInput']", 1, "Should have Primary Account input"
+      assert_select "[data-primary-account-search-target='relatedPartiesRow']", 1, "Should have Related parties row (may be hidden)"
+      assert_select "[data-primary-account-search-target='partyAccountsRow']", 1, "Should have Related accounts row (may be hidden)"
+      assert_select "[data-primary-account-search-target='relatedPartiesSelect']", 1, "Related parties should be a select"
+      assert_select "[data-party-account-select]", 1, "Related accounts should be a select"
+    end
+
     test "renders split flow pages with fixed transaction type" do
       grant_posting_access(@user, @branch, @workstation)
       sign_in_as(@user)

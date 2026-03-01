@@ -1,4 +1,5 @@
 class AuditEvent < ApplicationRecord
+  serialize :metadata, coder: JSON
   belongs_to :actor_user, class_name: "User", optional: true
   belongs_to :branch, optional: true
   belongs_to :workstation, optional: true

@@ -15,6 +15,7 @@ module Posting
         metadata[:served_party] = served_party_metadata if served_party_metadata.any?
         type_id = posting_params[:misc_receipt_type_id].to_s.presence
         type = MiscReceiptType.find_by(id: type_id) if type_id.present?
+        metadata.merge!(related_records_metadata)
         metadata[:misc_receipt] = {
           misc_receipt_type_id: type_id,
           type_label: type&.label.to_s,

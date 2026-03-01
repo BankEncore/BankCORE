@@ -131,6 +131,30 @@ module Teller
       assert_equal 1, body.size
       assert_equal account.account_number, body[0]["account_number"]
       assert_equal "checking", body[0]["account_type"]
+      assert_equal "Primary Owner", body[0]["relationship_type"]
+    end
+
+    test "accounts returns relationship_type Owner for non-primary owner in joint account" do
+      party1 = Party.create!(party_kind: "individual", relationship_kind: "customer")
+      party1.create_party_individual!(first_name: "Primary", last_name: "Owner")
+      party2 = Party.create!(party_kind: "individual", relationship_kind: "customer")
+      party2.create_party_individual!(first_name: "Joint", last_name: "Owner")
+      account = Account.create!(
+        branch: @branch,
+        account_number: "8000000000008001",
+        account_type: "checking",
+        status: "open",
+        opened_on: Date.current
+      )
+      AccountOwner.create!(account: account, party: party1, is_primary: true)
+      AccountOwner.create!(account: account, party: party2, is_primary: false)
+
+      get accounts_teller_party_path(party2)
+
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal 1, body.size
+      assert_equal "Owner", body[0]["relationship_type"]
     end
 
     private

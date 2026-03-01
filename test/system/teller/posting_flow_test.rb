@@ -23,7 +23,7 @@ module Teller
 
       visit teller_deposit_transaction_path
 
-      fill_in "Primary Account Reference", with: "acct:deposit"
+      fill_in "Primary Account", with: "acct:deposit"
       fill_in "Cash Amount", with: "100"
       click_button "Post Transaction"
 
@@ -37,7 +37,7 @@ module Teller
 
       visit teller_deposit_transaction_path
 
-      fill_in "Primary Account Reference", with: "acct:deposit"
+      fill_in "Primary Account", with: "acct:deposit"
       fill_in "Cash Amount", with: "100.50"
       click_button "Post Transaction"
 
@@ -51,12 +51,12 @@ module Teller
 
       visit teller_deposit_transaction_path
 
-      fill_in "Primary Account Reference", with: "acct:deposit"
+      fill_in "Primary Account", with: "acct:deposit"
       fill_in "Cash Amount", with: "50"
       click_button "Cancel"
       assert_field "Cash Amount", with: "$0.00"
 
-      fill_in "Primary Account Reference", with: "acct:deposit-two"
+      fill_in "Primary Account", with: "acct:deposit-two"
       fill_in "Cash Amount", with: "25"
       click_button "Post Transaction"
 
@@ -70,7 +70,7 @@ module Teller
 
       visit teller_deposit_transaction_path
 
-      assert page.has_content?("Primary Account Reference"), "Deposit should show primary account field"
+      assert page.has_content?("Primary Account"), "Deposit should show primary account field"
       assert page.has_content?("Cash Amount"), "Deposit should show cash amount field"
       assert post_button_disabled?, "Post should be blocked when required fields are empty"
     end
@@ -82,7 +82,7 @@ module Teller
 
       visit teller_withdrawal_transaction_path
 
-      assert page.has_content?("Primary Account Reference"), "Withdrawal should show primary account field"
+      assert page.has_content?("Primary Account"), "Withdrawal should show primary account field"
       assert page.has_content?("Cash Amount"), "Withdrawal should show cash amount field"
       assert post_button_disabled?, "Post should be blocked when required fields are empty"
     end
@@ -94,7 +94,7 @@ module Teller
 
       visit teller_transfer_transaction_path
 
-      assert page.has_content?("Primary Account Reference"), "Transfer should show primary account field"
+      assert page.has_content?("Primary Account"), "Transfer should show primary account field"
       assert page.has_content?("Counterparty Account Reference"), "Transfer should show counterparty field"
       assert page.has_content?("Cash Amount"), "Transfer should show amount field"
       assert post_button_disabled?, "Post should be blocked when required fields are empty"

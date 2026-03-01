@@ -2,7 +2,7 @@
 
 module Teller
   class AccountsController < BaseController
-    before_action :set_account, only: [ :show, :edit, :update ]
+    before_action :set_account, only: [ :show, :edit, :update, :related_parties ]
     before_action :set_branch_for_new, only: [ :new, :create ]
     before_action :ensure_authorized
 
@@ -45,6 +45,23 @@ module Teller
     def new
       @account = Account.new(branch: @branch, status: "open", opened_on: Date.current)
       @parties = Party.where(is_active: true, relationship_kind: "customer").order(:display_name).limit(50)
+    end
+
+    def related_parties
+      parties = @account.account_owners
+        .includes(:party)
+        .order(is_primary: :desc)
+        .limit(50)
+        .map do |ao|
+          p = ao.party
+          {
+            id: p.id,
+            display_name: p.display_name.presence || "Party ##{p.id}",
+            relationship_kind: p.relationship_kind,
+            relationship_type: ao.is_primary ? "Primary Owner" : "Owner"
+          }
+        end
+      render json: parties
     end
 
     def create
@@ -118,11 +135,11 @@ module Teller
         date_from = params[:date_from].presence || 30.days.ago.to_date
         date_to = params[:date_to].presence || Date.current
         if date_from.present?
-          range_begin = Time.zone.parse("#{date_from.to_s} 00:00:00")
+          range_begin = Time.zone.parse("#{date_from} 00:00:00")
           scope = scope.where("teller_transactions.posted_at >= ?", range_begin)
         end
         if date_to.present?
-          range_end = Time.zone.parse("#{date_to.to_s} 23:59:59.999999")
+          range_end = Time.zone.parse("#{date_to} 23:59:59.999999")
           scope = scope.where("teller_transactions.posted_at <= ?", range_end)
         end
 

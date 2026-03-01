@@ -112,11 +112,11 @@ module Csr
         date_from = params[:date_from].presence || 30.days.ago.to_date
         date_to = params[:date_to].presence || Date.current
         if date_from.present?
-          range_begin = Time.zone.parse("#{date_from.to_s} 00:00:00")
+          range_begin = Time.zone.parse("#{date_from} 00:00:00")
           scope = scope.where("teller_transactions.posted_at >= ?", range_begin)
         end
         if date_to.present?
-          range_end = Time.zone.parse("#{date_to.to_s} 23:59:59.999999")
+          range_end = Time.zone.parse("#{date_to} 23:59:59.999999")
           scope = scope.where("teller_transactions.posted_at <= ?", range_end)
         end
 

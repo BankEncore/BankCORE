@@ -127,6 +127,16 @@ module Teller
       assert_equal 1, TellerTransaction.where(request_id: body["request_id"]).count
     end
 
+    test "persists initiating_lookup into posting batch metadata" do
+      post teller_posting_path, params: valid_posting_payload(request_id: "http-post-il-1").merge(
+        initiating_lookup: "account_first"
+      )
+
+      assert_response :success
+      posting_batch = PostingBatch.find_by!(request_id: "http-post-il-1")
+      assert_equal "account_first", posting_batch.metadata["initiating_lookup"]
+    end
+
     test "persists check hold metadata into posting batch metadata" do
       post teller_posting_path, params: valid_posting_payload(
         request_id: "http-post-hold-1",

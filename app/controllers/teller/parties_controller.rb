@@ -88,12 +88,17 @@ module Teller
     end
 
     def accounts
-      accounts = @party.accounts.includes(:branch).map do |account|
+      account_owners = @party.account_owners
+        .includes(account: :branch)
+        .order("account_owners.is_primary DESC", "accounts.account_number ASC")
+      accounts = account_owners.map do |ao|
+        account = ao.account
         {
           id: account.id,
           account_number: account.account_number,
           account_type: account.account_type,
-          branch_code: account.branch&.code
+          branch_code: account.branch&.code,
+          relationship_type: ao.is_primary ? "Primary Owner" : "Owner"
         }
       end
       render json: accounts

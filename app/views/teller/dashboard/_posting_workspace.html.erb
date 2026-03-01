@@ -74,6 +74,7 @@
 
           <%= form.hidden_field :request_id, value: "", "data-#{workflow_form_controller}-target" => "requestId", "data-posting-form-target" => "requestId" %>
           <%= form.hidden_field :approval_token, value: "", "data-#{workflow_form_controller}-target" => "approvalToken", "data-posting-form-target" => "approvalToken" %>
+          <%= form.hidden_field :initiating_lookup, value: "" %>
         </div>
       </section>
 

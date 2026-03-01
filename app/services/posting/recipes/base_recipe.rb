@@ -29,6 +29,15 @@ module Posting
         }.compact
       end
 
+      def related_records_metadata
+        h = {}
+        il = posting_params[:initiating_lookup].to_s.strip.presence
+        h[:initiating_lookup] = il if il.present?
+        pr = posting_params[:primary_account_reference].to_s.strip.presence
+        h[:primary_account_reference] = pr if pr.present?
+        h
+      end
+
       private
 
       attr_reader :posting_params, :default_cash_account_reference

@@ -129,5 +129,39 @@ module Posting
       assert_equal "Transfer to xxxx0987", debit_tx.description
       assert_equal "Transfer from xxxx0123", credit_tx.description
     end
+
+    test "creates AuditEvent transaction.posted with served_party primary_account initiating_lookup in metadata" do
+      party = Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Audit Party", is_active: true)
+      party.create_party_individual!(first_name: "Audit", last_name: "Party")
+      request = {
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: "commit-req-audit",
+        transaction_type: "deposit",
+        amount_cents: 10_000,
+        metadata: {
+          "served_party" => { "party_id" => party.id, "id_type" => "drivers_license", "id_number" => "D123" },
+          "primary_account_reference" => "acct:audit-deposit",
+          "initiating_lookup" => "party_first"
+        },
+        currency: "USD"
+      }
+      legs = [
+        { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 10_000, position: 0 },
+        { side: "credit", account_reference: "acct:audit-deposit", amount_cents: 10_000, position: 1 }
+      ]
+
+      posting_batch = Committer.new(request: request, legs: legs).call
+
+      event = AuditEvent.find_by(event_type: "transaction.posted", auditable: posting_batch.teller_transaction)
+      assert event.present?
+      assert_equal @user.id, event.actor_user_id
+      assert_equal @branch.id, event.branch_id
+      assert_equal "party_first", event.metadata["initiating_lookup"]
+      assert_equal "acct:audit-deposit", event.metadata["primary_account_reference"]
+      assert_equal party.id, event.metadata["served_party"]["party_id"]
+    end
   end
 end

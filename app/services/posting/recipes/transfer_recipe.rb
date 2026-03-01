@@ -14,6 +14,7 @@ module Posting
           metadata[:fee_cents] = fee_cents
           metadata[:fee_income_account_reference] = transfer_fee_income_account_reference
         end
+        metadata.merge!(related_records_metadata)
         metadata.presence || {}
       end
 

@@ -9,38 +9,14 @@
 <%= render "teller/forms/served_party_section",
   form: form,
   workflow_form_controller: wfc,
-  selected_party: selected_party %>
-
-<div class="flex flex-col md:flex-row gap-3 mt-4">
-  <div class="form-control overflow-visible flex-1 min-w-0" data-<%= wfc %>-target="primaryAccountRow">
-    <%= form.label :primary_account_reference, "Primary Account (optional)", class: "text-xs font-medium text-slate-700 block" %>
-    <div class="relative overflow-visible" data-controller="primary-account-search"
-         data-primary-account-search-search-url-value="<%= teller_transaction_search_path %>"
-         data-primary-account-search-party-accounts-url-template-value="<%= accounts_teller_party_path('__ID__') %>">
-      <%= form.text_field :primary_account_reference,
-        data: {
-          "#{wfc}_target": "primaryAccountReference",
-          primary_account_search_target: "searchInput",
-          action: "input->#{wfc}#recalculate input->primary-account-search#search input->primary-account-search#onInputFreeTyping"
-        },
-        required: false,
-        class: "input input-bordered w-full",
-        placeholder: "Search party or account #, or leave blank",
-        autocomplete: "off" %>
-      <div data-primary-account-search-target="resultsList"
-           class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
-           hidden>
-      </div>
-      <div data-primary-account-search-target="partyAccountsRow" class="mt-2" hidden>
-        <label class="text-xs font-medium text-slate-700">Select account for <span data-primary-account-search-target="partyName"></span></label>
-        <select data-primary-account-search-target="accountSelect"
-                data-action="change->primary-account-search#selectAccountFromDropdown"
-                class="select select-bordered w-full mt-1">
-        </select>
-      </div>
-    </div>
-  </div>
-</div>
+  selected_party: selected_party,
+  party_accounts_url_template: accounts_teller_party_path('__ID__'),
+  right_column: render("teller/forms/primary_account_search",
+    form: form,
+    workflow_form_controller: wfc,
+    primary_account_label: "Primary Account (optional)",
+    primary_account_required: false,
+    primary_account_placeholder: "Search party or account #, or leave blank") %>
 
 <%= form.hidden_field :cash_account_reference,
   value: cash_account_reference_value,

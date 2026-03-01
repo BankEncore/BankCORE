@@ -15,6 +15,7 @@ module Posting
 
         metadata = {}
         metadata[:served_party] = served_party_metadata if served_party_metadata.any?
+        metadata.merge!(related_records_metadata)
         sp = served_party_metadata
         metadata[:check_cashing] = {
           check_items: check_items.map do |item|
