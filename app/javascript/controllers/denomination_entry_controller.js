@@ -206,27 +206,59 @@ export default class extends Controller {
       return div.innerHTML
     }
 
-    const renderGroup = (label, items) => {
-      if (items.length === 0) return ""
-      let h = `<div class="font-medium text-xs text-slate-600 mb-1 mt-2">${escapeHtml(label)}</div><div class="space-y-1">`
-      items.forEach((d) => {
-        const line = this.lines[d.idx] || {}
-        h += `
-          <div class="grid grid-cols-[4rem_1fr_5rem] gap-2 items-center text-sm" data-row-idx="${d.idx}">
-            <span class="text-slate-700">${escapeHtml(d.display_label)}</span>
-            <input type="number" min="0" step="1" inputmode="numeric" placeholder="0" class="input input-bordered input-sm" data-field="qty" data-row-idx="${d.idx}" value="${line.qty || ""}" aria-label="Qty ${escapeHtml(d.display_label)}" />
-            <span class="tabular-nums text-right mono text-slate-600" data-amount-display="">${this.formatCents(line.amount_cents || 0)}</span>
-          </div>
-        `
+    const renderRow = (d, line) => `
+      <div class="grid grid-cols-[4rem_1fr_5rem] gap-2 items-center text-sm" data-row-idx="${d.idx}">
+        <span class="text-slate-700">${escapeHtml(d.display_label)}</span>
+        <input type="number" min="0" step="1" inputmode="numeric" placeholder="0" class="input input-bordered input-sm" data-field="qty" data-row-idx="${d.idx}" value="${line.qty || ""}" aria-label="Qty ${escapeHtml(d.display_label)}" />
+        <span class="tabular-nums text-right mono text-slate-600" data-amount-display="">${this.formatCents(line.amount_cents || 0)}</span>
+      </div>
+    `
+
+    const renderBills = () => {
+      if (groups.bill.length === 0) return ""
+      const mid = Math.ceil(groups.bill.length / 2)
+      const left = groups.bill.slice(0, mid)
+      const right = groups.bill.slice(mid)
+      let h = `<div class="font-medium text-xs text-slate-600 mb-1 mt-2">Bills</div>`
+      h += `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">`
+      h += `<div class="space-y-1">`
+      left.forEach((d) => {
+        h += renderRow(d, this.lines[d.idx] || {})
       })
-      h += "</div>"
+      h += `</div><div class="space-y-1">`
+      right.forEach((d) => {
+        h += renderRow(d, this.lines[d.idx] || {})
+      })
+      h += `</div></div>`
       return h
     }
 
+    const looseByFace = {}
+    const rolledByFace = {}
+    groups.coin_loose.forEach((d) => { looseByFace[d.face_value_cents ?? d.faceValueCents ?? 0] = d })
+    groups.coin_roll.forEach((d) => { rolledByFace[d.face_value_cents ?? d.faceValueCents ?? 0] = d })
+
+    const renderCoins = () => {
+      const faces = [ ...new Set([ ...Object.keys(looseByFace).map(Number), ...Object.keys(rolledByFace).map(Number) ]) ].sort((a, b) => a - b)
+      if (faces.length === 0) return ""
+      let h = `<div class="font-medium text-xs text-slate-600 mb-1 mt-3">Loose Coin</div>`
+      h += `<div class="font-medium text-xs text-slate-600 mb-1 mt-3 md:mt-0">Rolled Coin</div>`
+      faces.forEach((face) => {
+        const loose = looseByFace[face]
+        const rolled = rolledByFace[face]
+        if (loose) h += `<div class="space-y-1">${renderRow(loose, this.lines[loose.idx] || {})}</div>`
+        else h += `<div class="h-9"></div>`
+        if (rolled) h += `<div class="space-y-1">${renderRow(rolled, this.lines[rolled.idx] || {})}</div>`
+        else h += `<div class="h-9"></div>`
+      })
+      return `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 mt-2">${h}</div>`
+    }
+
     let html = ""
-    html += renderGroup("Bills", groups.bill)
-    html += renderGroup("Loose coin", groups.coin_loose)
-    html += renderGroup("Rolled coin", groups.coin_roll)
+    html += renderBills()
+    if (groups.coin_loose.length > 0 || groups.coin_roll.length > 0) {
+      html += renderCoins()
+    }
 
     this.rowsContainerTarget.innerHTML = html
 
