@@ -1,82 +1,74 @@
-# Teller Bill Payment Transaction
+# Denomination-Based Cash Entry
 
 ## Summary
 
-Implements the Bill Payment workflow (L5-WF-06): tellers can accept payment from a customer to remit to a biller/payee, with funding via account debit, cash, or mixed. Produces balanced posting batches, receipt blocks, and audit metadata.
+Adds optional cash denomination breakdown to teller workflows: tellers can record cash by denomination (bills, loose coin, rolled coin) when processing deposits, withdrawals, check cashing, bill payments, misc receipts, vault transfers, and session open/close. Breakdowns are stored as audit metadata and support drawer reconciliation.
 
 ## Features
 
-### Transaction Flow
+### Cash Count Modal
 
-- **Payee selection** — Choose from configured Bill Payees (admin-managed) with liability account and default fee
-- **Payee reference** — Required account or reference number with the payee
-- **Payment amount & fee** — Payment amount > 0; fee optional with payee default
-- **Funding methods** — Cash, Account transfer, or Mixed (cash + checks + account = total due)
+- **Count button** — Opens a modal to enter quantities by denomination
+- **Denomination types** — Bills (two-column layout), Loose Coin, Rolled Coin (paired by face value)
+- **Auto-totals** — Bills, Loose, Rolled subtotals; grand total; optional Difference vs. expected amount
+- **Validation** — For check cashing (computed payout): Apply blocked until count matches expected
 
-### Entry Form
+### Workflow Integration
 
-- Now Serving (Party) and Primary Account (optional for account-funded payments)
-- Payee dropdown, payee reference, memo (required when payee mandates)
-- Payment amount and fee inputs (currency-input)
-- Cash, Check, and Account transfer split — must balance to total due
+| Workflow        | Cash field                         | Count placement          | Enforcement                         |
+|----------------|------------------------------------|--------------------------|-------------------------------------|
+| Deposit        | Cash Amount                        | Next to input            | Optional                            |
+| Withdrawal     | Cash Amount                        | Next to input            | Optional                            |
+| Check cashing  | Cash payout (computed)             | Dedicated row + Count    | Required to match net payout        |
+| Bill payment   | Cash (payment split)               | Next to input            | Optional (match entered amount)     |
+| Misc receipt   | Cash (payment split)               | Next to input            | Optional (match entered amount)     |
+| Vault transfer | Amount (computed from form)        | Next to amount display   | Optional                            |
+| Session open   | Opening cash                       | Next to amount           | Required                            |
+| Session close  | Closing cash                       | Next to amount           | Required                            |
 
-### Posting & Audit
+### UX
 
-- Balanced double-entry posting to payable liability and funding sources
-- Cash movement recorded when cash funding used
-- Receipt partial with payee, reference, amounts, funding breakdown
-- Idempotency via `request_id` prevents duplicate postings
-
-### Admin
-
-- Bill Payees CRUD: code, name, liability account reference, default fee, memo required flag
-
-## Bug Fixes (Payload & Validation)
-
-Two fixes address validation errors when posting:
-
-1. **`posting_payload.js`** — Bill payment was missing from `appendServedPartyPayload` and had no `appendBillPaymentPayload`. Added `bill_payment` to served-party list and implemented `appendBillPaymentPayload` so `party_id`, `payee_id`, `payee_reference`, `payment_cents`, `fee_cents`, `amount_cents`, `liability_account_reference`, `memo`, `bill_payment_cash_cents`, and `bill_payment_account_cents` are sent from form state.
-
-2. **`TransactionsController#validation_params`** — Pre-submit validation endpoint did not permit bill payment params, so they were filtered out before reaching `WorkflowValidator`. Added `payee_id`, `payee_reference`, `payment_cents`, `liability_account_reference`, `bill_payment_cash_cents`, `bill_payment_account_cents` to `validation_params`.
+- **Modal layout** — Wider (48rem), fixed subtotals row (Bills/Loose/Rolled/Total stay visible while scrolling), sticky Cancel/Apply
+- **Input sizing** — Minimum 6rem for qty inputs; grid prevents collapse when modal is narrow
 
 ## Technical Changes
 
 ### Backend
 
-- **Model:** `BillPayee` — code, name, liability_account_reference, default_fee_amount_cents, memo_required
-- **Recipe:** `BillPaymentRecipe` — builds legs for liability, funding (account/cash/checks), fee income
-- **Validator:** `WorkflowValidator` — `validate_bill_payment` checks payee, reference, amounts, balance
-- **Controller:** `BillPaymentsController` — new/create with `execute_posting(forced_transaction_type: "bill_payment")`
-- **Policy:** `PostingPolicy#bill_payment_create?`; `BillPayeePolicy` for admin
+- **Models:** `CashDenomination`, `DenominationSet`, `DenominationLine` — catalog of denominations, breakdown sets linked to transactions
+- **Service:** `DenominationBreakdownService` — persists breakdown from request metadata
+- **Committer:** Persists `denomination_lines` when `denomination_breakdown_mode` is :optional or :required
+- **Workflow registry:** `denomination_breakdown_mode` per workflow (:optional, :required, :hidden)
+- **Migrations:** `create_cash_denominations`, `create_denomination_sets_and_lines`
+- **Seeds:** Default US denominations (bills $1–$100; pennies through quarters loose + rolled; halves, dollars optional)
 
 ### Frontend
 
-- **Form:** `_bill_payment_form.html.erb` — served party, primary account, payee/reference, amounts, cash/check/account split
-- **Controller:** `bill_payment_form_controller.js` — `getState`, `billPaymentAmounts`, `recalculate`, balance validation
-- **Payload:** `appendBillPaymentPayload` in `posting_payload.js`; bill_payment in `appendServedPartyPayload` list
+- **Controllers:** `denomination_entry_controller.js` — renders rows, tracks lines, emits `denomination:change`
+- **Modal:** `cash_count_modal_controller.js` — opens/closes dialog, applies count, enforces expected amount when set
+- **Form controllers:** `onDenominationChange`, `denominationLines` in `getState`, reset on clear
+- **Payload:** `appendDenominationLines` appends `denomination_lines` from state for all workflows
 
-### Routes
+### Session Open/Close
 
-- `GET/POST /teller/bill_payments`
-- `GET /teller/transactions/bill_payment` (transaction page)
-- Admin: `/admin/bill_payees`
+- Native form submit with hidden denomination fields (session forms use `use_hidden_fields: true`)
+- Other workflows use JS FormData + `appendDenominationLines` to avoid duplicate lines
 
 ## Testing
 
-- `BillPayee` model validations
-- `WorkflowValidator` bill payment (payee, reference, amounts, balance)
-- `BillPaymentRecipe` and recipe builder
-- `CashMovementRecorder` bill payment + reversal
-- Admin Bill Payees CRUD
-- Teller typed creates (bill_payment)
+- Model validations (`CashDenomination`, `DenominationSet`, `DenominationLine`)
+- `DenominationBreakdownService` persistence
+- `Committer` with denomination metadata
+- `WorkflowValidator` denomination mode handling
+- Teller typed creates including denomination lines
 
 ## Checklist
 
-- [x] Bill Payee model and migration
-- [x] Posting recipe and workflow validator
-- [x] Bill payment form and Stimulus controller
-- [x] Payload and validation params include bill payment fields
-- [x] Receipt partial and cash movement recording
-- [x] Admin Bill Payees CRUD
-- [x] Seeds for bill payees
+- [x] Cash denomination models and migrations
+- [x] Denomination breakdown service and committer integration
+- [x] Cash count modal and denomination entry controller
+- [x] Count button on deposit, withdrawal, vault transfer, check cashing, bill payment, misc receipt
+- [x] Session open/close denomination entry
+- [x] Check cashing enforcement (count must match net payout)
+- [x] Modal layout (wider, fixed subtotals, usable inputs)
 - [x] Tests passing
