@@ -65,20 +65,32 @@
         <p class="form-control">
           <%= form.label :opening_cash_cents, "Opening cash", class: "block text-xs font-medium text-slate-700 mb-1" %>
           <p class="text-xs text-slate-500 mb-1" data-session-open-form-target="priorBalanceDisplay" data-session-open-form-prior-label="Previous closing: "></p>
-          <div data-controller="currency-input" data-session-open-form-target="openingWrapper">
-            <%= form.hidden_field :opening_cash_cents, value: 0, data: { currency_input_target: "hiddenInput", session_open_form_target: "openingInput" } %>
-            <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Opening cash" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" data-session-open-form-target="openingDisplay" required />
+          <div class="flex gap-2 items-center">
+            <div data-controller="currency-input" data-session-open-form-target="openingWrapper" class="flex-1 min-w-0">
+              <%= form.hidden_field :opening_cash_cents, value: 0, data: { currency_input_target: "hiddenInput", session_open_form_target: "openingInput" } %>
+              <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Opening cash" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" data-session-open-form-target="openingDisplay" required />
+            </div>
+            <div data-controller="cash-count-modal" data-action="denomination:change->session-open-form#onDenominationChange" class="self-end pb-0.5">
+              <button type="button" class="btn btn-outline btn-sm" data-action="click->cash-count-modal#open" aria-label="Count cash by denomination">Count</button>
+              <%= render "teller/forms/cash_count_modal", form: form, field_name: "teller_session[opening_cash_cents]", mode: "optional", expected_cents: 0, modal_id: "session-open-count", omit_amount_from_hidden: true, use_hidden_fields: true %>
+            </div>
           </div>
         </p>
         <%= form.submit "Open Teller Session", class: "btn btn-primary" %>
       <% end %>
     <% else %>
-      <%= form_with url: close_teller_teller_session_path, method: :patch do |form| %>
+      <%= form_with url: close_teller_teller_session_path, method: :patch, data: { controller: "session-close-form" } do |form| %>
         <p class="form-control">
           <%= form.label :closing_cash_cents, "Declared closing cash", class: "block text-xs font-medium text-slate-700 mb-1" %>
-          <div data-controller="currency-input">
-            <%= form.hidden_field :closing_cash_cents, value: 0, data: { currency_input_target: "hiddenInput" } %>
-            <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Declared closing cash" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:closing_cash_cents) %>" required />
+          <div class="flex gap-2 items-center">
+            <div data-controller="currency-input" data-session-close-form-target="closingCashWrapper" class="flex-1 min-w-0">
+              <%= form.hidden_field :closing_cash_cents, value: 0, data: { currency_input_target: "hiddenInput" } %>
+              <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Declared closing cash" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:closing_cash_cents) %>" required />
+            </div>
+            <div data-controller="cash-count-modal" data-action="denomination:change->session-close-form#onDenominationChange" class="self-end pb-0.5">
+              <button type="button" class="btn btn-outline btn-sm" data-action="click->cash-count-modal#open" aria-label="Count cash by denomination">Count</button>
+              <%= render "teller/forms/cash_count_modal", form: form, field_name: "closing_cash_cents", mode: "optional", expected_cents: teller_session.expected_cash_cents, modal_id: "session-close-count", omit_amount_from_hidden: true, use_hidden_fields: true %>
+            </div>
           </div>
         </p>
         <p class="form-control">

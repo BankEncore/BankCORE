@@ -31,6 +31,7 @@ export default class extends PostingFormBase {
     "billPaymentSection",
     "billPaymentCashCents",
     "billPaymentAccountCents",
+    "cashCountModalWrapper",
     "checkSubtotal",
     "totalDueAmount",
     "balance",
@@ -110,8 +111,18 @@ export default class extends PostingFormBase {
       payeeId: this.hasPayeeSelectTarget ? this.payeeSelectTarget.value : "",
       payeeReference: this.hasPayeeReferenceTarget ? this.payeeReferenceTarget.value : "",
       liabilityAccountReference: this.hasLiabilityAccountReferenceTarget ? this.liabilityAccountReferenceTarget.value : "",
-      memo: this.hasMemoTarget ? this.memoTarget.value : ""
+      memo: this.hasMemoTarget ? this.memoTarget.value : "",
+      denominationLines: this.denominationLines || []
     }
+  }
+
+  onDenominationChange(event) {
+    const { totalCents = 0, lines = [] } = event.detail || {}
+    this.denominationLines = lines
+    if (this.hasBillPaymentCashCentsTarget) {
+      this.setAmountCents(this.billPaymentCashCentsTarget, totalCents)
+    }
+    if (typeof this.recalculate === "function") this.recalculate()
   }
 
   recalculate() {
@@ -136,6 +147,10 @@ export default class extends PostingFormBase {
     if (this.hasMemoRowTarget) {
       const lbl = this.memoRowTarget.querySelector("label")
       if (lbl) lbl.textContent = memoRequired ? "Memo" : "Memo (optional)"
+    }
+    if (this.hasCashCountModalWrapperTarget) {
+      const cashCents = billPaymentAmounts.billPaymentCashCents ?? 0
+      this.cashCountModalWrapperTarget.dataset.expectedCents = String(cashCents)
     }
 
     const totalAmountCents = state.effectiveAmountCents
@@ -339,6 +354,7 @@ export default class extends PostingFormBase {
     if (this.hasAmountCentsTarget) this.setAmountCents(this.amountCentsTarget, 0)
     if (this.hasPaymentCentsTarget) this.setAmountCents(this.paymentCentsTarget, 0)
     if (this.hasFeeCentsTarget) this.setAmountCents(this.feeCentsTarget, 0)
+    this.denominationLines = []
     if (this.hasBillPaymentCashCentsTarget) this.setAmountCents(this.billPaymentCashCentsTarget, 0)
     if (this.hasBillPaymentAccountCentsTarget) this.setAmountCents(this.billPaymentAccountCentsTarget, 0)
     if (this.hasMemoTarget) {

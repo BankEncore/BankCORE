@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_01_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_110002) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -134,6 +134,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_100000) do
     t.index ["code"], name: "index_branches_on_code", unique: true
   end
 
+  create_table "cash_denominations", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.string "code", null: false
+    t.integer "coins_per_roll"
+    t.datetime "created_at", null: false
+    t.string "display_label", null: false
+    t.boolean "enabled", default: true, null: false
+    t.integer "face_value_cents", default: 0, null: false
+    t.string "kind", null: false
+    t.integer "roll_value_cents"
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_cash_denominations_on_code", unique: true
+    t.index ["kind", "sort_order"], name: "index_cash_denominations_on_kind_and_sort_order"
+  end
+
   create_table "cash_location_assignments", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.datetime "assigned_at", null: false
     t.bigint "cash_location_id", null: false
@@ -171,6 +186,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_100000) do
     t.index ["direction"], name: "index_cash_movements_on_direction"
     t.index ["teller_session_id"], name: "index_cash_movements_on_teller_session_id"
     t.index ["teller_transaction_id"], name: "index_cash_movements_on_teller_transaction_id"
+  end
+
+  create_table "denomination_lines", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.integer "amount_cents", default: 0, null: false
+    t.bigint "cash_denomination_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "denomination_set_id", null: false
+    t.integer "qty"
+    t.datetime "updated_at", null: false
+    t.index ["cash_denomination_id"], name: "index_denomination_lines_on_cash_denomination_id"
+    t.index ["denomination_set_id", "cash_denomination_id"], name: "index_denomination_lines_on_set_and_denomination", unique: true
+    t.index ["denomination_set_id"], name: "index_denomination_lines_on_denomination_set_id"
+  end
+
+  create_table "denomination_sets", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.string "context"
+    t.datetime "created_at", null: false
+    t.string "currency", default: "USD", null: false
+    t.bigint "denominationable_id", null: false
+    t.string "denominationable_type", null: false
+    t.integer "total_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["denominationable_type", "denominationable_id", "context"], name: "index_denomination_sets_on_denom_and_context"
+    t.index ["denominationable_type", "denominationable_id"], name: "index_denomination_sets_on_denominationable"
   end
 
   create_table "misc_receipt_types", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
@@ -408,6 +447,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_100000) do
   add_foreign_key "cash_movements", "cash_locations"
   add_foreign_key "cash_movements", "teller_sessions"
   add_foreign_key "cash_movements", "teller_transactions"
+  add_foreign_key "denomination_lines", "cash_denominations"
+  add_foreign_key "denomination_lines", "denomination_sets"
   add_foreign_key "party_individuals", "parties"
   add_foreign_key "party_organizations", "parties"
   add_foreign_key "posting_batches", "posting_batches", column: "reversal_of_posting_batch_id"

@@ -3,6 +3,7 @@ require "test_helper"
 module Teller
   class TypedCreatesControllerTest < ActionDispatch::IntegrationTest
     setup do
+      ensure_cash_denominations
       @user = User.take
       @branch = Branch.create!(code: "881", name: "Typed Branch")
       @workstation = Workstation.create!(branch: @branch, code: "TC1", name: "Typed WS")
@@ -274,7 +275,8 @@ module Teller
         vault_transfer_direction: "drawer_to_vault",
         vault_transfer_destination_cash_account_reference: "cash:#{@vault_a.code}",
         vault_transfer_reason_code: "excess_cash",
-        vault_transfer_memo: "Cash pull"
+        vault_transfer_memo: "Cash pull",
+        denomination_lines: denomination_lines_for(7_000)
       }
 
       assert_response :success
@@ -290,7 +292,8 @@ module Teller
         vault_transfer_direction: "drawer_to_vault",
         vault_transfer_destination_cash_account_reference: "cash:#{@vault_a.code}",
         vault_transfer_reason_code: "excess_cash",
-        vault_transfer_memo: "Midday rebalance"
+        vault_transfer_memo: "Midday rebalance",
+        denomination_lines: denomination_lines_for(4_000)
       }
 
       assert_response :success
@@ -315,7 +318,8 @@ module Teller
         vault_transfer_source_cash_account_reference: "cash:#{@vault_a.code}",
         vault_transfer_destination_cash_account_reference: "cash:#{@vault_b.code}",
         vault_transfer_reason_code: "end_of_day_adjustment",
-        vault_transfer_memo: "Vault balancing"
+        vault_transfer_memo: "Vault balancing",
+        denomination_lines: denomination_lines_for(3_500)
       }
 
       assert_response :success
@@ -358,6 +362,45 @@ module Teller
     end
 
     private
+      def ensure_cash_denominations
+        return if CashDenomination.enabled.exists?
+
+        CashDenomination.create!(
+          code: "USD_BILL_20",
+          kind: "bill",
+          face_value_cents: 2_000,
+          display_label: "$20",
+          sort_order: 50,
+          enabled: true
+        )
+        CashDenomination.create!(
+          code: "USD_BILL_10",
+          kind: "bill",
+          face_value_cents: 1_000,
+          display_label: "$10",
+          sort_order: 40,
+          enabled: true
+        )
+        CashDenomination.create!(
+          code: "USD_BILL_5",
+          kind: "bill",
+          face_value_cents: 500,
+          display_label: "$5",
+          sort_order: 30,
+          enabled: true
+        )
+      end
+
+      def denomination_lines_for(amount_cents)
+        denom = CashDenomination.enabled.to_a.find { |d| amount_cents % d.unit_value_cents == 0 }
+        return [] if denom.blank?
+
+        qty = amount_cents / denom.unit_value_cents
+        [
+          { cash_denomination_id: denom.id, qty: qty, amount_cents: amount_cents }
+        ]
+      end
+
       def grant_permissions(user, branch, workstation)
         [ "teller.dashboard.view", "transactions.deposit.create", "transactions.check_cashing.create", "transactions.draft.create", "transactions.bill_payment.create", "transactions.vault_transfer.create", "sessions.open" ].each do |permission_key|
           permission = Permission.find_or_create_by!(key: permission_key) do |record|

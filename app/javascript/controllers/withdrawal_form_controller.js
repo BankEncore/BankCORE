@@ -64,6 +64,7 @@ export default class extends PostingFormBase {
       transferFeeIncomeAccountReference: "income:transfer_fee",
       vaultTransferDetails: {},
       drawerReference: (this.hasDrawerReferenceValue && this.drawerReferenceValue) ? this.drawerReferenceValue : (this.hasCashAccountReferenceTarget ? this.cashAccountReferenceTarget.value : ""),
+      denominationLines: this.denominationLines || [],
       checkNumber: "",
       routingNumber: "",
       accountNumber: "",

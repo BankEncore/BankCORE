@@ -40,6 +40,14 @@ module Teller
 
       teller_session.cash_location_assignments.create!(cash_location: drawer, assigned_at: Time.current)
 
+      denom_lines = open_denomination_lines.select { |l| (l[:amount_cents] || 0).to_i.positive? }
+      if denom_lines.any?
+        svc = DenominationBreakdownService.new
+        catalog = CashDenomination.enabled.to_a
+        lines = svc.parse_and_validate(denom_lines.map { |l| l.transform_keys(&:to_s) }, catalog)
+        svc.persist!(teller_session, lines, context: "opening") if lines.any?
+      end
+
       if opening_cents != previous_closing
         Posting::SessionHandoffVarianceService.new(
           teller_session: teller_session,
@@ -80,7 +88,7 @@ module Teller
         return
       end
 
-      declared_cents = close_params[:closing_cash_cents].to_i
+      declared_cents = resolve_closing_cents(close_params)
       expected_cents = teller_session.expected_cash_cents
       variance_cents = declared_cents - expected_cents
 
@@ -101,6 +109,27 @@ module Teller
         expected_cents: expected_cents,
         variance_cents: variance_cents
       )
+
+      denom_set = nil
+      denom_lines = Array(close_params[:denomination_lines]).map { |l| l.to_h.symbolize_keys }.select { |l| (l[:amount_cents] || 0).to_i.positive? }
+      if denom_lines.any?
+        svc = DenominationBreakdownService.new
+        catalog = CashDenomination.enabled.to_a
+        lines = svc.parse_and_validate(denom_lines.map { |l| l.transform_keys(&:to_s) }, catalog)
+        denom_set = svc.persist!(teller_session, lines, context: "closing") if lines.any?
+      end
+
+      audit_metadata = {
+        closing_cash_cents: teller_session.closing_cash_cents,
+        expected_closing_cash_cents: teller_session.expected_closing_cash_cents,
+        cash_variance_cents: teller_session.cash_variance_cents,
+        cash_variance_reason: teller_session.cash_variance_reason,
+        cash_variance_notes: teller_session.cash_variance_notes
+      }
+      audit_metadata[:denomination_set_id] = denom_set.id if denom_set.present?
+      audit_metadata[:denomination_lines_count] = denom_set.denomination_lines.count if denom_set.present?
+      audit_metadata[:denomination_total_cents] = denom_set.total_cents if denom_set.present?
+
       AuditEvent.create!(
         event_type: "teller_session.closed",
         actor_user: Current.user,
@@ -108,13 +137,7 @@ module Teller
         workstation: teller_session.workstation,
         teller_session: teller_session,
         auditable: teller_session,
-        metadata: {
-          closing_cash_cents: teller_session.closing_cash_cents,
-          expected_closing_cash_cents: teller_session.expected_closing_cash_cents,
-          cash_variance_cents: teller_session.cash_variance_cents,
-          cash_variance_reason: teller_session.cash_variance_reason,
-          cash_variance_notes: teller_session.cash_variance_notes
-        }.to_json,
+        metadata: audit_metadata.to_json,
         occurred_at: Time.current
       )
 
@@ -128,8 +151,39 @@ module Teller
         p.permit(:opening_cash_cents, :cash_location_id)
       end
 
+      def open_denomination_lines
+        lines = params[:denomination_lines]
+        lines ||= params[:teller_session]&.dig(:denomination_lines)
+        Array(lines).map { |l| l.to_h.symbolize_keys }
+      end
+
       def close_params
-        params.permit(:closing_cash_cents, :cash_variance_reason, :cash_variance_notes)
+        params.permit(
+          :closing_cash_cents,
+          :cash_variance_reason,
+          :cash_variance_notes,
+          denomination_lines: [ :cash_denomination_id, :qty, :amount_cents ]
+        )
+      end
+
+      def resolve_closing_cents(close_params)
+        denom_lines = Array(close_params[:denomination_lines])
+        if denom_lines.any?
+          catalog = CashDenomination.enabled.index_by(&:id)
+          total = 0
+          denom_lines.each do |line|
+            line = line.to_h.symbolize_keys
+            id = line[:cash_denomination_id].to_s.strip.presence&.to_i
+            next if id.blank? || catalog[id].nil?
+
+            amt = line[:amount_cents].to_i
+            qty = line[:qty].to_s.strip.presence&.to_i
+            amt = qty * catalog[id].unit_value_cents if qty.present? && qty >= 0
+            total += amt
+          end
+          return total if total.positive?
+        end
+        close_params[:closing_cash_cents].to_i
       end
 
       def available_drawers

@@ -1,63 +1,74 @@
-# Related Records (Now Serving + Lookup Guidance)
+# Denomination-Based Cash Entry
 
 ## Summary
 
-Streamlines teller workflow by allowing transactions to begin from either an **Account** or a **Party (CIF record)**. The system guides tellers toward likely related records while preserving independence between Served Party and Primary Account contexts.
+Adds optional cash denomination breakdown to teller workflows: tellers can record cash by denomination (bills, loose coin, rolled coin) when processing deposits, withdrawals, check cashing, bill payments, misc receipts, vault transfers, and session open/close. Breakdowns are stored as audit metadata and support drawer reconciliation.
 
 ## Features
 
-### Entry Paths
+### Cash Count Modal
 
-- **Account-first flow:** Enter or select an account → related parties dropdown appears → optionally select served party
-- **Party-first flow:** Select a party → related accounts dropdown appears → optionally select primary account
+- **Count button** — Opens a modal to enter quantities by denomination
+- **Denomination types** — Bills (two-column layout), Loose Coin, Rolled Coin (paired by face value)
+- **Auto-totals** — Bills, Loose, Rolled subtotals; grand total; optional Difference vs. expected amount
+- **Validation** — For check cashing (computed payout): Apply blocked until count matches expected
 
-### Context Independence
+### Workflow Integration
 
-- Served Party and Primary Account are independently editable
-- No ownership or relationship validation at initiation (third-party transactions supported)
-- Changing one context does not clear the other
+| Workflow        | Cash field                         | Count placement          | Enforcement                         |
+|----------------|------------------------------------|--------------------------|-------------------------------------|
+| Deposit        | Cash Amount                        | Next to input            | Optional                            |
+| Withdrawal     | Cash Amount                        | Next to input            | Optional                            |
+| Check cashing  | Cash payout (computed)             | Dedicated row + Count    | Required to match net payout        |
+| Bill payment   | Cash (payment split)               | Next to input            | Optional (match entered amount)     |
+| Misc receipt   | Cash (payment split)               | Next to input            | Optional (match entered amount)     |
+| Vault transfer | Amount (computed from form)        | Next to amount display   | Optional                            |
+| Session open   | Opening cash                       | Next to amount           | Required                            |
+| Session close  | Closing cash                       | Next to amount           | Required                            |
 
-### UI Layout
+### UX
 
-- **Row 1:** Party search/entry | Related parties select (when account chosen)
-- **Row 2:** Primary Account search/entry | Related accounts select (when party chosen)
-- Primary Account always on the second row; related dropdowns appear as optional select lists next to their corresponding fields
-- Helper text ("Now serving...", "Add new non-customer") moved below the grid
-
-### Audit & Metadata
-
-- `initiating_lookup` (`account_first` | `party_first`) persisted in `PostingBatch.metadata`
-- `AuditEvent` created on transaction post with `served_party`, `primary_account_reference`, `initiating_lookup`
-
-## API Changes
-
-- **NEW** `GET /teller/accounts/:id/related_parties` — returns parties linked to an account (Primary Owner, Owner)
-- **Enhanced** `GET /teller/parties/:id/accounts` — adds `relationship_type` per account
-- **Enhanced** Transaction search — accounts response includes `id` for related-parties lookup
-- Account reference endpoint used for typed-account resolution (account-first by ID)
+- **Modal layout** — Wider (48rem), fixed subtotals row (Bills/Loose/Rolled/Total stay visible while scrolling), sticky Cancel/Apply
+- **Input sizing** — Minimum 6rem for qty inputs; grid prevents collapse when modal is narrow
 
 ## Technical Changes
 
-- New `_primary_account_search.html.erb` partial shared across deposit, withdrawal, transfer, draft, misc_receipt forms
-- `_served_party_section.html.erb` accepts optional `right_column` for side-by-side layout
-- Stimulus: `primary_account_search_controller` — related parties fetch, dropdown select, `resolveTypedAccount` on blur
-- Stimulus: `party_search_controller` — fetches accounts on party select; `onRelatedAccountSelectChange` updates Primary Account and fetches related parties
-- DB index: `account_owners(account_id, is_primary)` for query performance
+### Backend
+
+- **Models:** `CashDenomination`, `DenominationSet`, `DenominationLine` — catalog of denominations, breakdown sets linked to transactions
+- **Service:** `DenominationBreakdownService` — persists breakdown from request metadata
+- **Committer:** Persists `denomination_lines` when `denomination_breakdown_mode` is :optional or :required
+- **Workflow registry:** `denomination_breakdown_mode` per workflow (:optional, :required, :hidden)
+- **Migrations:** `create_cash_denominations`, `create_denomination_sets_and_lines`
+- **Seeds:** Default US denominations (bills $1–$100; pennies through quarters loose + rolled; halves, dollars optional)
+
+### Frontend
+
+- **Controllers:** `denomination_entry_controller.js` — renders rows, tracks lines, emits `denomination:change`
+- **Modal:** `cash_count_modal_controller.js` — opens/closes dialog, applies count, enforces expected amount when set
+- **Form controllers:** `onDenominationChange`, `denominationLines` in `getState`, reset on clear
+- **Payload:** `appendDenominationLines` appends `denomination_lines` from state for all workflows
+
+### Session Open/Close
+
+- Native form submit with hidden denomination fields (session forms use `use_hidden_fields: true`)
+- Other workflows use JS FormData + `appendDenominationLines` to avoid duplicate lines
 
 ## Testing
 
-- Request tests for `related_parties` endpoint (auth, content, empty)
-- Regression: deposit page renders Now Serving with Party, Primary Account, and both related selects
-- Posting metadata test for `initiating_lookup`
-- Committer test for `AuditEvent` with served party and initiating lookup
-- Workflow validator: third-party (non-owner) transactions permitted
-- System test locators updated to "Primary Account" (label change)
+- Model validations (`CashDenomination`, `DenominationSet`, `DenominationLine`)
+- `DenominationBreakdownService` persistence
+- `Committer` with denomination metadata
+- `WorkflowValidator` denomination mode handling
+- Teller typed creates including denomination lines
 
 ## Checklist
 
-- [x] Account-first: related parties shown when account selected or typed
-- [x] Party-first: related accounts shown when party selected
-- [x] Selecting from related dropdowns populates Primary Account / Served Party correctly
-- [x] Cancel clears both Party and Primary Account
-- [x] Selecting related party does not clear Primary Account
-- [x] Audit and metadata capture
+- [x] Cash denomination models and migrations
+- [x] Denomination breakdown service and committer integration
+- [x] Cash count modal and denomination entry controller
+- [x] Count button on deposit, withdrawal, vault transfer, check cashing, bill payment, misc receipt
+- [x] Session open/close denomination entry
+- [x] Check cashing enforcement (count must match net payout)
+- [x] Modal layout (wider, fixed subtotals, usable inputs)
+- [x] Tests passing

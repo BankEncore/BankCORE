@@ -1,5 +1,7 @@
 <% show_cash_back = local_assigns.fetch(:show_cash_back, false) %>
+<% show_cash_count = local_assigns.fetch(:show_cash_count, false) %>
 <% wfc = local_assigns.fetch(:workflow_form_controller, "posting-form") %>
+<% form = local_assigns[:form] %>
 <div class="mt-4 rounded-lg border border-base-300 bg-base-200 p-3">
   <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
     <div>
@@ -7,7 +9,15 @@
       <dl class="space-y-1">
         <div class="ui-kv-row">
           <dt class="ui-kv-key text-xs">Cash</dt>
-          <dd class="ui-kv-value text-sm mono" data-<%= wfc %>-target="computedCashSubtotal">$0.00</dd>
+          <dd class="ui-kv-value text-sm mono">
+            <span data-<%= wfc %>-target="computedCashSubtotal">$0.00</span>
+            <% if show_cash_count && form.present? %>
+            <div data-controller="cash-count-modal" data-action="denomination:change-><%= wfc %>#onDenominationChange" class="inline-block ml-2 align-middle">
+              <button type="button" class="btn btn-outline btn-sm" data-action="click->cash-count-modal#open" aria-label="Count cash by denomination">Count</button>
+              <%= render "teller/forms/cash_count_modal", form: form, field_name: "amount_cents", mode: "optional", expected_cents: 0, modal_id: "check-cashing-cash-count" %>
+            </div>
+            <% end %>
+          </dd>
         </div>
         <div class="ui-kv-row">
           <dt class="ui-kv-key text-xs">Checks</dt>

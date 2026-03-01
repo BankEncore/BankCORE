@@ -73,11 +73,17 @@
   <div class="mt-3">
     <div class="font-medium text-sm mb-2">Payment (cash + checks + account = amount)</div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-      <div class="form-control">
+      <div class="form-control" data-<%= wfc %>-target="miscCashRow">
         <%= form.label :misc_cash_cents, "Cash", class: "text-xs font-medium text-slate-700 block" %>
-        <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
-          <%= form.hidden_field :misc_cash_cents, value: 0, data: { "#{wfc}_target": "miscCashCents", currency_input_target: "hiddenInput" } %>
-          <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:misc_cash_cents) %>" />
+        <div class="flex gap-2 items-center">
+          <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate" class="flex-1 min-w-0">
+            <%= form.hidden_field :misc_cash_cents, value: 0, data: { "#{wfc}_target": "miscCashCents", currency_input_target: "hiddenInput" } %>
+            <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:misc_cash_cents) %>" />
+          </div>
+          <div data-controller="cash-count-modal" data-action="denomination:change-><%= wfc %>#onDenominationChange" data-<%= wfc %>-target="cashCountModalWrapper" class="self-end pb-0.5">
+            <button type="button" class="btn btn-outline btn-sm" data-action="click->cash-count-modal#open" aria-label="Count cash by denomination">Count</button>
+            <%= render "teller/forms/cash_count_modal", form: form, field_name: "misc_cash_cents", mode: "optional", expected_cents: 0, modal_id: "misc-receipt-cash-count" %>
+          </div>
         </div>
       </div>
       <div class="form-control">

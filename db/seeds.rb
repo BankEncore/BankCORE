@@ -355,3 +355,42 @@ BillPayee.find_or_create_by!(code: "MUNI_TAX") do |bp|
   bp.is_active = true
   bp.display_order = 1
 end
+
+# --- Cash Denominations (USD) ---
+
+cash_denominations = [
+  # Bills (face_value_cents; roll fields null)
+  { code: "USD_BILL_1", kind: "bill", face_value_cents: 100, display_label: "$1", sort_order: 10 },
+  { code: "USD_BILL_2", kind: "bill", face_value_cents: 200, display_label: "$2", sort_order: 20 },
+  { code: "USD_BILL_5", kind: "bill", face_value_cents: 500, display_label: "$5", sort_order: 30 },
+  { code: "USD_BILL_10", kind: "bill", face_value_cents: 1000, display_label: "$10", sort_order: 40 },
+  { code: "USD_BILL_20", kind: "bill", face_value_cents: 2000, display_label: "$20", sort_order: 50 },
+  { code: "USD_BILL_50", kind: "bill", face_value_cents: 5000, display_label: "$50", sort_order: 60 },
+  { code: "USD_BILL_100", kind: "bill", face_value_cents: 10_000, display_label: "$100", sort_order: 70 },
+  # Loose coin
+  { code: "USD_COIN_LOOSE_1C", kind: "coin_loose", face_value_cents: 1, display_label: "1¢", sort_order: 110 },
+  { code: "USD_COIN_LOOSE_5C", kind: "coin_loose", face_value_cents: 5, display_label: "5¢", sort_order: 120 },
+  { code: "USD_COIN_LOOSE_10C", kind: "coin_loose", face_value_cents: 10, display_label: "10¢", sort_order: 130 },
+  { code: "USD_COIN_LOOSE_25C", kind: "coin_loose", face_value_cents: 25, display_label: "25¢", sort_order: 140 },
+  { code: "USD_COIN_LOOSE_50C", kind: "coin_loose", face_value_cents: 50, display_label: "50¢", sort_order: 150 },
+  { code: "USD_COIN_LOOSE_100C", kind: "coin_loose", face_value_cents: 100, display_label: "$1", sort_order: 160 },
+  # Rolled coin (roll_value_cents, coins_per_roll)
+  { code: "USD_ROLL_PENNIES", kind: "coin_roll", face_value_cents: 1, roll_value_cents: 50, coins_per_roll: 50, display_label: "Pennies (roll)", sort_order: 210 },
+  { code: "USD_ROLL_NICKELS", kind: "coin_roll", face_value_cents: 5, roll_value_cents: 200, coins_per_roll: 40, display_label: "Nickels (roll)", sort_order: 220 },
+  { code: "USD_ROLL_DIMES", kind: "coin_roll", face_value_cents: 10, roll_value_cents: 500, coins_per_roll: 50, display_label: "Dimes (roll)", sort_order: 230 },
+  { code: "USD_ROLL_QUARTERS", kind: "coin_roll", face_value_cents: 25, roll_value_cents: 1000, coins_per_roll: 40, display_label: "Quarters (roll)", sort_order: 240 },
+  { code: "USD_ROLL_HALVES", kind: "coin_roll", face_value_cents: 50, roll_value_cents: 1000, coins_per_roll: 20, display_label: "Half dollars (roll)", sort_order: 250 },
+  { code: "USD_ROLL_DOLLARS", kind: "coin_roll", face_value_cents: 100, roll_value_cents: 2500, coins_per_roll: 25, display_label: "Dollars (roll)", sort_order: 260 }
+]
+
+cash_denominations.each do |attrs|
+  CashDenomination.find_or_create_by!(code: attrs[:code]) do |cd|
+    cd.kind = attrs[:kind]
+    cd.face_value_cents = attrs[:face_value_cents]
+    cd.roll_value_cents = attrs[:roll_value_cents]
+    cd.coins_per_roll = attrs[:coins_per_roll]
+    cd.display_label = attrs[:display_label]
+    cd.sort_order = attrs[:sort_order]
+    cd.enabled = true
+  end
+end

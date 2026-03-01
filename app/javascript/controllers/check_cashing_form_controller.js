@@ -20,6 +20,8 @@ export default class extends PostingFormBase {
     "partyId",
     "feeCents",
     "feeIncomeAccountReference",
+    "cashPayoutSubtotal",
+    "cashCountModalWrapper",
     "computedCashSubtotal",
     "computedCheckSubtotal",
     "computedCashBackRow",
@@ -66,8 +68,15 @@ export default class extends PostingFormBase {
       accountNumber: "",
       payerName: "",
       presenterType: "",
-      partyId: this.hasPartyIdTarget ? this.partyIdTarget.value : ""
+      partyId: this.hasPartyIdTarget ? this.partyIdTarget.value : "",
+      denominationLines: this.denominationLines || []
     }
+  }
+
+  onDenominationChange(event) {
+    const { lines = [] } = event.detail || {}
+    this.denominationLines = lines
+    if (typeof this.recalculate === "function") this.recalculate()
   }
 
   recalculate() {
@@ -124,7 +133,11 @@ export default class extends PostingFormBase {
     if (this.hasCheckSectionTarget) this.checkSectionTarget.hidden = !showCheckSection
     if (this.hasCheckCashingSectionTarget) this.checkCashingSectionTarget.hidden = !showCheckCashingSection
 
+    if (this.hasCashPayoutSubtotalTarget) this.cashPayoutSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
     if (this.hasComputedCashSubtotalTarget) this.computedCashSubtotalTarget.textContent = this.formatCents(displayedCashAmount)
+    if (this.hasCashCountModalWrapperTarget) {
+      this.cashCountModalWrapperTarget.dataset.expectedCents = String(displayedCashAmount)
+    }
     if (this.hasComputedCheckSubtotalTarget) this.computedCheckSubtotalTarget.textContent = this.formatCents(checkSubtotalCents)
     if (this.hasComputedFeeSubtotalTarget) {
       const feeCents = checkCashingAmounts.feeCents ?? 0
@@ -240,6 +253,7 @@ export default class extends PostingFormBase {
   }
 
   resetFormFieldClearing(isAfterPost = false) {
+    this.denominationLines = []
     if (this.hasAmountCentsTarget) this.setAmountCents(this.amountCentsTarget, 0)
     if (this.hasFeeCentsTarget) this.setAmountCents(this.feeCentsTarget, 0)
     if (this.hasPartyIdTarget) this.partyIdTarget.value = ""

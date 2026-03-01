@@ -42,6 +42,15 @@ export default class extends Controller {
     this.priorBalanceDisplayTarget.textContent = label + formatted
   }
 
+  onDenominationChange(event) {
+    const { totalCents = 0 } = event.detail || {}
+    if (!this.hasOpeningWrapperTarget) return
+
+    this.openingWrapperTarget.dispatchEvent(
+      new CustomEvent("currency:set", { bubbles: true, detail: { cents: String(totalCents) } })
+    )
+  }
+
   clearPriorBalance() {
     if (!this.hasPriorBalanceDisplayTarget) return
     this.priorBalanceDisplayTarget.textContent = ""

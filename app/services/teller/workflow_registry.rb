@@ -14,7 +14,8 @@ module Teller
         primary_account_policy: "always",
         requires_counterparty_account: false,
         cash_account_policy: "always",
-        requires_settlement_account: false
+        requires_settlement_account: false,
+        denomination_breakdown_mode: :optional
       },
       "withdrawal" => {
         label: "Withdrawal",
@@ -29,7 +30,8 @@ module Teller
         primary_account_policy: "always",
         requires_counterparty_account: false,
         cash_account_policy: "always",
-        requires_settlement_account: false
+        requires_settlement_account: false,
+        denomination_breakdown_mode: :optional
       },
       "transfer" => {
         label: "Transfer",
@@ -44,7 +46,8 @@ module Teller
         primary_account_policy: "always",
         requires_counterparty_account: true,
         cash_account_policy: "never",
-        requires_settlement_account: false
+        requires_settlement_account: false,
+        denomination_breakdown_mode: :hidden
       },
       "check_cashing" => {
         label: "Check Cashing",
@@ -59,7 +62,8 @@ module Teller
         primary_account_policy: "never",
         requires_counterparty_account: false,
         cash_account_policy: "always",
-        requires_settlement_account: false
+        requires_settlement_account: false,
+        denomination_breakdown_mode: :optional
       },
       "draft" => {
         label: "Bank Draft",
@@ -74,7 +78,8 @@ module Teller
         primary_account_policy: "draft_account_only",
         requires_counterparty_account: false,
         cash_account_policy: "draft_cash_only",
-        requires_settlement_account: false
+        requires_settlement_account: false,
+        denomination_breakdown_mode: :optional
       },
       "misc_receipt" => {
         label: "Misc Receipt",
@@ -89,7 +94,8 @@ module Teller
         primary_account_policy: "misc_account_only",
         requires_counterparty_account: false,
         cash_account_policy: "misc_cash_only",
-        requires_settlement_account: false
+        requires_settlement_account: false,
+        denomination_breakdown_mode: :optional
       },
       "bill_payment" => {
         label: "Bill Payment",
@@ -104,7 +110,8 @@ module Teller
         primary_account_policy: "bill_payment_account_only",
         requires_counterparty_account: false,
         cash_account_policy: "bill_payment_cash_only",
-        requires_settlement_account: false
+        requires_settlement_account: false,
+        denomination_breakdown_mode: :optional
       },
       "vault_transfer" => {
         label: "Vault Transfer",
@@ -118,7 +125,8 @@ module Teller
         primary_account_policy: "never",
         requires_counterparty_account: false,
         cash_account_policy: "never",
-        requires_settlement_account: false
+        requires_settlement_account: false,
+        denomination_breakdown_mode: :required
       }
     }.freeze
 
@@ -131,7 +139,7 @@ module Teller
         WORKFLOWS.key?(transaction_type.to_s)
       end
 
-      def       workflow_schema
+      def workflow_schema
         WORKFLOWS.transform_values do |definition|
           {
             label: definition.fetch(:label),
@@ -146,7 +154,8 @@ module Teller
             primary_account_policy: definition.fetch(:primary_account_policy).to_s,
             requires_counterparty_account: definition.fetch(:requires_counterparty_account),
             cash_account_policy: definition.fetch(:cash_account_policy).to_s,
-            requires_settlement_account: definition.fetch(:requires_settlement_account)
+            requires_settlement_account: definition.fetch(:requires_settlement_account),
+            denomination_breakdown_mode: (definition[:denomination_breakdown_mode] || :optional).to_s
           }
         end
       end

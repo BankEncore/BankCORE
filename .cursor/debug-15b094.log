@@ -1,0 +1,11 @@
+{"sessionId":"15b094","location":"check_cashing_form_controller.js:connect","message":"Layout check","data":{"computedTotalsTop":601,"computedTotalsBottom":719.78125,"previewTop":752.78125,"previewLeft":328.5,"entryBottom":736.78125},"timestamp":1772401776003,"hypothesisId":"A,D"}
+{"sessionId":"15b094","location":"cash_count_modal_controller.js:open","message":"Modal opened","data":{"vh":929,"boxHeight":512,"actionTop":550.25,"actionBottom":609.25,"actionVisible":true,"overflowHidden":false},"timestamp":1772401802511,"hypothesisId":"B,E"}
+{"sessionId":"15b094","location":"cash_count_modal_controller.js:_onDialogClose","message":"Dialog close event","data":{},"timestamp":1772401823984,"hypothesisId":"C"}
+{"sessionId":"15b094","location":"cash_count_modal_controller.js:cancel","message":"Cancel clicked","data":{},"timestamp":1772401823983,"hypothesisId":"C"}
+{"sessionId":"15b094","location":"cash_count_modal_controller.js:apply","message":"Apply clicked","data":{},"timestamp":1772401823967,"hypothesisId":"C"}
+{"sessionId":"15b094","location":"check_cashing_form_controller.js:connect","message":"Layout check","data":{"computedTotalsTop":716,"computedTotalsBottom":834.78125,"previewTop":867.78125,"previewLeft":328.5,"entryBottom":851.78125},"timestamp":1772401849032,"hypothesisId":"A,D"}
+{"sessionId":"15b094","location":"check_cashing_form_controller.js:connect","message":"Layout check","data":{"computedTotalsTop":716,"computedTotalsBottom":834.78125,"previewTop":867.78125,"previewLeft":328.5,"entryBottom":851.78125},"timestamp":1772401849149,"hypothesisId":"A,D"}
+{"sessionId":"15b094","location":"cash_count_modal_controller.js:open","message":"Modal opened","data":{"vh":929,"boxHeight":512,"actionTop":550.25,"actionBottom":609.25,"actionVisible":true,"overflowHidden":false},"timestamp":1772401862722,"hypothesisId":"B,E"}
+{"sessionId":"15b094","location":"cash_count_modal_controller.js:apply","message":"Apply clicked","data":{},"timestamp":1772401868753,"hypothesisId":"C"}
+{"sessionId":"15b094","location":"cash_count_modal_controller.js:_onDialogClose","message":"Dialog close event","data":{},"timestamp":1772401868766,"hypothesisId":"C"}
+{"sessionId":"15b094","location":"cash_count_modal_controller.js:cancel","message":"Cancel clicked","data":{},"timestamp":1772401868765,"hypothesisId":"C"}
