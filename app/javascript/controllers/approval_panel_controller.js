@@ -94,7 +94,7 @@ export default class extends Controller {
       return
     }
 
-    const fallbackPostButton = this.element.querySelector('#posting-form-header-submit')
+    const fallbackPostButton = this.element.querySelector('#posting-form-footer-submit') || this.element.querySelector('#posting-form-header-submit')
     if (fallbackPostButton && typeof fallbackPostButton.focus === "function") {
       fallbackPostButton.focus()
     }

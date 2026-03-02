@@ -122,6 +122,17 @@
       </aside>
     </div>
 
+    <section aria-label="Transaction actions" class="sticky bottom-0 z-40 mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-base-300 bg-base-100 px-4 py-3">
+      <div class="flex items-center gap-2">
+        <span class="badge badge-neutral" data-<%= workflow_form_controller %>-target="summaryReadinessBadge">Blocked</span>
+        <span class="text-xs text-base-content/70" data-<%= workflow_form_controller %>-target="summaryReadinessReason">Amount must be greater than zero.</span>
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <button type="button" class="btn btn-outline" data-action="<%= workflow_form_controller %>#resetForm"><%= local_assigns.fetch(:secondary_button_label, "Cancel") %></button>
+        <button type="button" id="posting-form-footer-submit" class="btn btn-primary" data-action="click-><%= workflow_form_controller %>#submitFromHeader" data-<%= workflow_form_controller %>-target="headerSubmitButton"><%= local_assigns.fetch(:primary_submit_label, "Post Transaction") %></button>
+      </div>
+    </section>
+
     <section aria-label="Receipt Confirmation" data-<%= workflow_form_controller %>-target="receiptPanel" class="card bg-base-100 border border-base-300" hidden>
       <div class="card-body">
         <h2 class="card-title text-lg">Receipt Confirmation</h2>
