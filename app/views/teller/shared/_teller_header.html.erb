@@ -14,16 +14,16 @@
       </div>
     </div>
 
-    <div class="mt-2 text-xs text-slate-600">
-      Branch <span class="font-medium text-slate-800"><%= current_branch&.name || "—" %></span>
+    <div class="mt-2 text-xs text-base-content/70">
+      Branch <span class="font-medium text-base-content"><%= current_branch&.name || "—" %></span>
       <span class="opacity-50">•</span>
-      Workstation <span class="font-medium text-slate-800"><%= current_workstation&.name || "—" %></span>
+      Workstation <span class="font-medium text-base-content"><%= current_workstation&.name || "—" %></span>
       <span class="opacity-50">•</span>
-      Teller <span class="font-medium text-slate-800"><%= Current.user&.display_label || "—" %></span>
+      Teller <span class="font-medium text-base-content"><%= Current.user&.display_label || "—" %></span>
       <span class="opacity-50">•</span>
-      Session <span class="font-medium text-slate-800 mono"><%= teller_session&.id || "—" %></span>
+      Session <span class="font-medium text-base-content mono"><%= teller_session&.id || "—" %></span>
       <span class="opacity-50">•</span>
-      <span class="font-medium text-slate-800 mono tabular-nums"><%= Time.current.strftime("%b %-d, %Y %-l:%M %p") %></span>
+      <span class="font-medium text-base-content mono tabular-nums"><%= Time.current.strftime("%b %-d, %Y %-l:%M %p") %></span>
     </div>
   </div>
 </header>

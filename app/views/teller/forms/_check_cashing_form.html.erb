@@ -20,12 +20,12 @@
   <div class="font-medium">Check Cashing Details</div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
     <div class="form-control">
-      <%= form.label :fee_cents, "Fee", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :fee_cents, "Fee", class: "text-xs font-medium text-base-content block" %>
       <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
         <%= form.hidden_field :fee_cents, value: 0, data: { "#{wfc}_target": "feeCents", currency_input_target: "hiddenInput" } %>
         <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:fee_cents) %>" />
       </div>
-      <span class="text-xs text-slate-600 mt-1 block">Optional fee withheld from payout.</span>
+      <span class="text-xs text-base-content/70 mt-1 block">Optional fee withheld from payout.</span>
     </div>
   </div>
 
@@ -38,7 +38,7 @@
 
 <div class="flex gap-2 items-center mt-4 mb-2" data-<%= wfc %>-target="cashPayoutRow">
   <div class="flex-1 min-w-0">
-    <span class="text-xs font-medium text-slate-700 block">Cash payout</span>
+    <span class="text-xs font-medium text-base-content block">Cash payout</span>
     <span class="text-lg font-semibold mono ui-money" data-<%= wfc %>-target="cashPayoutSubtotal">$0.00</span>
   </div>
   <div data-controller="cash-count-modal" data-action="denomination:change-><%= wfc %>#onDenominationChange" data-<%= wfc %>-target="cashCountModalWrapper" class="self-end pb-0.5">

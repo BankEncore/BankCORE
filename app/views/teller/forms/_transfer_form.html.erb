@@ -15,7 +15,7 @@
 <div class="flex flex-col md:flex-row gap-3 mt-4">
 
     <div class="form-control flex-1 min-w-[8rem] md:max-w-[12rem]" data-<%= wfc %>-target="cashAmountRow">
-    <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700 block" %>
+    <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-base-content block" %>
     <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
       <%= form.hidden_field :amount_cents, value: 0, data: { "#{wfc}_target": "amountCents", currency_input_target: "hiddenInput" } %>
       <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:amount_cents) %>" required />
@@ -24,7 +24,7 @@
 </div>
 
 <p class="form-control" data-<%= wfc %>-target="counterpartyRow">
-  <%= form.label :counterparty_account_reference, "Counterparty Account Reference", class: "text-xs font-medium text-slate-700" %><br>
+  <%= form.label :counterparty_account_reference, "Counterparty Account Reference", class: "text-xs font-medium text-base-content" %><br>
   <%= form.text_field :counterparty_account_reference, data: { "#{wfc}_target": "counterpartyAccountReference", action: "input->#{wfc}#recalculate" }, class: "input input-bordered" %>
 </p>
 
@@ -37,7 +37,7 @@
   <div class="font-medium">Transfer Details</div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
     <p class="form-control">
-      <%= form.label :transfer_fee_cents, "Fee", class: "text-xs font-medium text-slate-700" %><br>
+      <%= form.label :transfer_fee_cents, "Fee", class: "text-xs font-medium text-base-content" %><br>
       <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
         <%= form.hidden_field :transfer_fee_cents, value: 0, data: { "#{wfc}_target": "transferFeeCents", currency_input_target: "hiddenInput" } %>
         <input type="text" class="input input-bordered" inputmode="decimal" placeholder="$0.00" aria-label="Transfer Fee" id="<%= form.field_id(:transfer_fee_cents) %>" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" />

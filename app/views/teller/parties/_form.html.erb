@@ -12,11 +12,11 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="form-control">
-      <%= f.label :party_kind, class: "text-xs font-medium text-slate-700" %>
+      <%= f.label :party_kind, class: "text-xs font-medium text-base-content" %>
       <%= f.select :party_kind, Party::PARTY_KINDS.map { |k| [ k.titleize, k ] }, {}, class: "select select-bordered w-full", data: { party_form_target: "partyKind" } %>
     </div>
     <div class="form-control">
-      <%= f.label :relationship_kind, class: "text-xs font-medium text-slate-700" %>
+      <%= f.label :relationship_kind, class: "text-xs font-medium text-base-content" %>
       <%= f.select :relationship_kind, Party::RELATIONSHIP_KINDS.map { |k| [ k.titleize, k ] }, {}, class: "select select-bordered w-full" %>
     </div>
   </div>
@@ -27,23 +27,23 @@
     <h3 class="font-medium text-sm">Individual</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="form-control">
-        <%= label_tag :first_name, "First name", class: "text-xs font-medium text-slate-700" %>
+        <%= label_tag :first_name, "First name", class: "text-xs font-medium text-base-content" %>
         <%= text_field_tag "party[first_name]", @party.party_individual&.first_name, class: "input input-bordered w-full" %>
       </div>
       <div class="form-control">
-        <%= label_tag :last_name, "Last name", class: "text-xs font-medium text-slate-700" %>
+        <%= label_tag :last_name, "Last name", class: "text-xs font-medium text-base-content" %>
         <%= text_field_tag "party[last_name]", @party.party_individual&.last_name, class: "input input-bordered w-full" %>
       </div>
       <div class="form-control">
-        <%= label_tag :dob, "Date of birth", class: "text-xs font-medium text-slate-700" %>
+        <%= label_tag :dob, "Date of birth", class: "text-xs font-medium text-base-content" %>
         <%= date_field_tag "party[dob]", @party.party_individual&.dob&.strftime("%Y-%m-%d"), class: "input input-bordered w-full" %>
       </div>
       <div class="form-control">
-        <%= label_tag :govt_id_type, "Govt ID type", class: "text-xs font-medium text-slate-700" %>
+        <%= label_tag :govt_id_type, "Govt ID type", class: "text-xs font-medium text-base-content" %>
         <%= select_tag "party[govt_id_type]", options_for_select(PartyIndividual::GOVT_ID_TYPES.map { |k| [ k.titleize, k ] }, @party.party_individual&.govt_id_type), { include_blank: true, class: "select select-bordered w-full" } %>
       </div>
       <div class="form-control">
-        <%= label_tag :govt_id, "Govt ID number", class: "text-xs font-medium text-slate-700" %>
+        <%= label_tag :govt_id, "Govt ID number", class: "text-xs font-medium text-base-content" %>
         <% if @party.persisted? && @party.party_individual&.govt_id.present? %>
           <%= text_field_tag "party[govt_id]", "", class: "input input-bordered w-full font-mono", placeholder: "Leave blank to keep current", autocomplete: "off" %>
         <% else %>
@@ -57,11 +57,11 @@
     <h3 class="font-medium text-sm">Organization</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="form-control">
-        <%= label_tag :legal_name, "Legal name", class: "text-xs font-medium text-slate-700" %>
+        <%= label_tag :legal_name, "Legal name", class: "text-xs font-medium text-base-content" %>
         <%= text_field_tag "party[legal_name]", @party.party_organization&.legal_name, class: "input input-bordered w-full" %>
       </div>
       <div class="form-control">
-        <%= label_tag :dba_name, "DBA name", class: "text-xs font-medium text-slate-700" %>
+        <%= label_tag :dba_name, "DBA name", class: "text-xs font-medium text-base-content" %>
         <%= text_field_tag "party[dba_name]", @party.party_organization&.dba_name, class: "input input-bordered w-full" %>
       </div>
     </div>
@@ -72,7 +72,7 @@
   <h3 class="font-medium text-sm">Tax & ID</h3>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="form-control">
-      <%= f.label :tax_id, "Tax ID (SSN/EIN)", class: "text-xs font-medium text-slate-700" %>
+      <%= f.label :tax_id, "Tax ID (SSN/EIN)", class: "text-xs font-medium text-base-content" %>
       <% if @party.persisted? && @party.tax_id.present? %>
         <%= f.text_field :tax_id, value: "", class: "input input-bordered w-full font-mono", placeholder: "Leave blank to keep current", autocomplete: "off" %>
       <% else %>
@@ -86,11 +86,11 @@
   <h3 class="font-medium text-sm">Contact</h3>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="form-control">
-      <%= f.label :email, class: "text-xs font-medium text-slate-700" %>
+      <%= f.label :email, class: "text-xs font-medium text-base-content" %>
       <%= f.email_field :email, class: "input input-bordered w-full", placeholder: "Optional" %>
     </div>
     <div class="form-control">
-      <%= f.label :phone, class: "text-xs font-medium text-slate-700" %>
+      <%= f.label :phone, class: "text-xs font-medium text-base-content" %>
       <%= f.text_field :phone, class: "input input-bordered w-full", placeholder: "000-000-0000 x0000", data: { controller: "phone-format" }, autocomplete: "tel" %>
     </div>
   </div>
@@ -100,19 +100,19 @@
   <h3 class="font-medium text-sm">Address</h3>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="form-control md:col-span-2">
-      <%= f.label :street_address, class: "text-xs font-medium text-slate-700" %>
+      <%= f.label :street_address, class: "text-xs font-medium text-base-content" %>
       <%= f.text_field :street_address, class: "input input-bordered w-full", placeholder: "Optional" %>
     </div>
     <div class="form-control">
-      <%= f.label :city, class: "text-xs font-medium text-slate-700" %>
+      <%= f.label :city, class: "text-xs font-medium text-base-content" %>
       <%= f.text_field :city, class: "input input-bordered w-full", placeholder: "Optional" %>
     </div>
     <div class="form-control">
-      <%= f.label :state, class: "text-xs font-medium text-slate-700" %>
+      <%= f.label :state, class: "text-xs font-medium text-base-content" %>
       <%= f.text_field :state, class: "input input-bordered w-full", placeholder: "Optional", maxlength: 2, data: { controller: "uppercase" } %>
     </div>
     <div class="form-control">
-      <%= f.label :zip_code, class: "text-xs font-medium text-slate-700" %>
+      <%= f.label :zip_code, class: "text-xs font-medium text-base-content" %>
       <%= f.text_field :zip_code, class: "input input-bordered w-full", placeholder: "Optional", maxlength: 10 %>
     </div>
   </div>

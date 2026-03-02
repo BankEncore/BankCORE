@@ -28,7 +28,7 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
     <div class="form-control">
-      <%= form.label :payee_id, "Payee", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :payee_id, "Payee", class: "text-xs font-medium text-base-content block" %>
       <select name="payee_id" id="payee_id"
               class="select select-bordered w-full"
               data-<%= wfc %>-target="payeeSelect"
@@ -45,29 +45,29 @@
       </select>
     </div>
     <div class="form-control">
-      <%= form.label :payee_reference, "Payee Account/Reference", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :payee_reference, "Payee Account/Reference", class: "text-xs font-medium text-base-content block" %>
       <%= form.text_field :payee_reference, data: { "#{wfc}_target": "payeeReference", action: "input->#{wfc}#recalculate" }, class: "input input-bordered w-full", placeholder: "Account or reference number" %>
     </div>
     <div class="form-control" data-<%= wfc %>-target="memoRow">
-      <%= form.label :memo, "Memo (optional)", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :memo, "Memo (optional)", class: "text-xs font-medium text-base-content block" %>
       <%= form.text_field :memo, data: { "#{wfc}_target": "memo", action: "input->#{wfc}#recalculate" }, class: "input input-bordered w-full" %>
     </div>
     <div class="form-control">
-      <%= form.label :payment_cents, "Payment Amount", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :payment_cents, "Payment Amount", class: "text-xs font-medium text-base-content block" %>
       <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
         <%= form.hidden_field :payment_cents, value: 0, data: { "#{wfc}_target": "paymentCents", currency_input_target: "hiddenInput" } %>
         <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Payment amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="bill_payment_payment_cents_display" />
       </div>
     </div>
     <div class="form-control">
-      <%= form.label :fee_cents, "Fee", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :fee_cents, "Fee", class: "text-xs font-medium text-base-content block" %>
       <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
         <%= form.hidden_field :fee_cents, value: 0, data: { "#{wfc}_target": "feeCents", currency_input_target: "hiddenInput" } %>
         <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="bill_payment_fee_cents_display" />
       </div>
     </div>
     <div class="form-control">
-      <span class="text-xs font-medium text-slate-700 block">Total Due</span>
+      <span class="text-xs font-medium text-base-content block">Total Due</span>
       <p class="text-sm mono py-2 font-medium" data-<%= wfc %>-target="totalDueDisplay">$0.00</p>
     </div>
   </div>
@@ -81,7 +81,7 @@
     <div class="font-medium text-sm mb-2">Payment (cash + checks + account = total due)</div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div class="form-control" data-<%= wfc %>-target="billPaymentCashRow">
-        <%= form.label :bill_payment_cash_cents, "Cash", class: "text-xs font-medium text-slate-700 block" %>
+        <%= form.label :bill_payment_cash_cents, "Cash", class: "text-xs font-medium text-base-content block" %>
         <div class="flex gap-2 items-center">
           <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate" class="flex-1 min-w-0">
             <%= form.hidden_field :bill_payment_cash_cents, value: 0, data: { "#{wfc}_target": "billPaymentCashCents", currency_input_target: "hiddenInput" } %>
@@ -94,12 +94,12 @@
         </div>
       </div>
       <div class="form-control">
-        <span class="text-xs font-medium text-slate-700 block">Checks</span>
+        <span class="text-xs font-medium text-base-content block">Checks</span>
         <p class="text-sm mono py-2" data-<%= wfc %>-target="checkSubtotal">$0.00</p>
-        <span class="text-xs text-slate-600">From check rows above</span>
+        <span class="text-xs text-base-content/70">From check rows above</span>
       </div>
       <div class="form-control">
-        <%= form.label :bill_payment_account_cents, "Account Transfer", class: "text-xs font-medium text-slate-700 block" %>
+        <%= form.label :bill_payment_account_cents, "Account Transfer", class: "text-xs font-medium text-base-content block" %>
         <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
           <%= form.hidden_field :bill_payment_account_cents, value: 0, data: { "#{wfc}_target": "billPaymentAccountCents", currency_input_target: "hiddenInput" } %>
           <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Account payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:bill_payment_account_cents) %>" />

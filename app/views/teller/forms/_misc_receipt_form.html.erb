@@ -28,7 +28,7 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
     <div class="form-control">
-      <%= form.label :misc_receipt_type_id, "Receipt Type", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :misc_receipt_type_id, "Receipt Type", class: "text-xs font-medium text-base-content block" %>
       <select name="misc_receipt_type_id" id="misc_receipt_type_id"
               class="select select-bordered w-full"
               data-<%= wfc %>-target="miscReceiptTypeSelect"
@@ -45,22 +45,22 @@
       </select>
     </div>
     <div class="form-control" data-<%= wfc %>-target="memoRow">
-      <%= form.label :memo, "Memo (optional)", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :memo, "Memo (optional)", class: "text-xs font-medium text-base-content block" %>
       <%= form.text_field :memo, data: { "#{wfc}_target": "memo", action: "input->#{wfc}#recalculate" }, class: "input input-bordered w-full" %>
     </div>
     <div class="form-control">
-      <%= form.label :unit_amount_cents, "Unit amount", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :unit_amount_cents, "Unit amount", class: "text-xs font-medium text-base-content block" %>
       <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
         <%= form.hidden_field :unit_amount_cents, value: 0, data: { "#{wfc}_target": "unitAmountCents", currency_input_target: "hiddenInput" } %>
         <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Unit amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="misc_receipt_unit_amount_display" />
       </div>
     </div>
     <div class="form-control">
-      <%= form.label :quantity, "Qty", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :quantity, "Qty", class: "text-xs font-medium text-base-content block" %>
       <%= form.number_field :quantity, value: 1, min: 1, step: 1, data: { "#{wfc}_target": "quantity", action: "input->#{wfc}#recalculate" }, class: "input input-bordered w-full" %>
     </div>
     <div class="form-control">
-      <span class="text-xs font-medium text-slate-700 block">Total</span>
+      <span class="text-xs font-medium text-base-content block">Total</span>
       <p class="text-sm mono py-2 font-medium" data-<%= wfc %>-target="miscTotalDisplay">$0.00</p>
     </div>
   </div>
@@ -74,7 +74,7 @@
     <div class="font-medium text-sm mb-2">Payment (cash + checks + account = amount)</div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div class="form-control" data-<%= wfc %>-target="miscCashRow">
-        <%= form.label :misc_cash_cents, "Cash", class: "text-xs font-medium text-slate-700 block" %>
+        <%= form.label :misc_cash_cents, "Cash", class: "text-xs font-medium text-base-content block" %>
         <div class="flex gap-2 items-center">
           <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate" class="flex-1 min-w-0">
             <%= form.hidden_field :misc_cash_cents, value: 0, data: { "#{wfc}_target": "miscCashCents", currency_input_target: "hiddenInput" } %>
@@ -87,12 +87,12 @@
         </div>
       </div>
       <div class="form-control">
-        <span class="text-xs font-medium text-slate-700 block">Checks</span>
+        <span class="text-xs font-medium text-base-content block">Checks</span>
         <p class="text-sm mono py-2" data-<%= wfc %>-target="miscCheckSubtotal">$0.00</p>
-        <span class="text-xs text-slate-600">From check rows above</span>
+        <span class="text-xs text-base-content/70">From check rows above</span>
       </div>
       <div class="form-control">
-        <%= form.label :misc_account_cents, "Account Transfer", class: "text-xs font-medium text-slate-700 block" %>
+        <%= form.label :misc_account_cents, "Account Transfer", class: "text-xs font-medium text-base-content block" %>
         <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
           <%= form.hidden_field :misc_account_cents, value: 0, data: { "#{wfc}_target": "miscAccountCents", currency_input_target: "hiddenInput" } %>
           <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Account payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:misc_account_cents) %>" />
