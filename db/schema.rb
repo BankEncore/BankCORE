@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_01_110002) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_02_200535) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -48,6 +48,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_110002) do
     t.date "closed_on"
     t.datetime "created_at", null: false
     t.datetime "last_activity_at", default: -> { "current_timestamp(6)" }, null: false
+    t.integer "ledger_balance_cents", default: 0, null: false
+    t.datetime "ledger_balance_updated_at"
     t.date "opened_on", default: -> { "curdate()" }, null: false
     t.string "status", default: "open", null: false
     t.datetime "updated_at", null: false

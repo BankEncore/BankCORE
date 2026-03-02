@@ -29,8 +29,6 @@ class Account < ApplicationRecord
   end
 
   def balance_cents
-    credits = account_transactions.where(direction: "credit").sum(:amount_cents)
-    debits = account_transactions.where(direction: "debit").sum(:amount_cents)
-    credits - debits
+    ledger_balance_cents
   end
 end

@@ -6,6 +6,10 @@
         <div class="font-semibold tabular-nums <%= account.balance_cents.negative? ? 'text-error' : '' %>">
           <%= number_to_currency(account.balance_cents / 100.0) %>
         </div>
+        <% as_of = account.ledger_balance_updated_at %>
+        <div class="text-xs text-base-content/50">
+          Latest transaction: <%= as_of.present? ? as_of.strftime("%b %-d, %y %-l:%M%P") : "—" %>
+        </div>
       </div>
     </div>
   </div>

@@ -13,8 +13,11 @@ module Teller
       latest_transaction = transactions.order(created_at: :desc).first
       computed_balance = credit_total - debit_total
 
-      account = Account.find_by(account_number: reference)
+      account = find_account
       primary_owner_name = account&.primary_owner&.display_name.presence
+
+      ledger = account.present? ? account.ledger_balance_cents : (latest_transaction&.running_balance_cents || computed_balance)
+      available = account.present? ? account.ledger_balance_cents : (latest_transaction&.running_balance_cents || computed_balance)
 
       {
         ok: true,
@@ -23,8 +26,8 @@ module Teller
         account_exists: account.present?,
         found: transactions.exists?,
         status: transactions.exists? ? "Active" : "No activity",
-        ledger_balance_cents: latest_transaction&.running_balance_cents || computed_balance,
-        available_balance_cents: latest_transaction&.running_balance_cents || computed_balance,
+        ledger_balance_cents: ledger,
+        available_balance_cents: available,
         total_debits_cents: debit_total,
         total_credits_cents: credit_total,
         last_posted_at: latest_transaction&.created_at&.iso8601,
@@ -40,8 +43,13 @@ module Teller
     private
       attr_reader :reference
 
+      def find_account
+        normalized = reference.to_s.sub(/\Aacct:/, "").strip.presence || reference
+        Account.find_by(account_number: normalized)
+      end
+
       def resolve_transactions_scope
-        account = Account.find_by(account_number: reference)
+        account = find_account
         if account
           AccountTransaction.where(account_id: account.id)
         else

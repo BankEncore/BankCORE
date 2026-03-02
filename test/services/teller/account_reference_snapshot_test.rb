@@ -53,6 +53,7 @@ module Teller
         direction: "credit",
         amount_cents: 50_000
       )
+      @account.update!(ledger_balance_cents: 50_000)
 
       result = AccountReferenceSnapshot.new(reference: @account.account_number).call
 
@@ -99,8 +100,7 @@ module Teller
         direction: "credit",
         amount_cents: 25_000
       )
-
-      @account.update!(account_number: "9999999999999999")
+      @account.update!(account_number: "9999999999999999", ledger_balance_cents: 25_000)
 
       result = AccountReferenceSnapshot.new(reference: "9999999999999999").call
 

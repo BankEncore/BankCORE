@@ -10,6 +10,7 @@ module Posting
         teller_transaction = create_teller_transaction!
         posting_batch = create_posting_batch!(teller_transaction)
         persist_legs_and_account_transactions!(posting_batch, teller_transaction)
+        Posting::LedgerBalanceUpdater.call(legs: legs)
 
         Posting::Effects::CashMovementRecorder.new(
           request: request,
@@ -58,7 +59,8 @@ module Posting
       def persist_legs_and_account_transactions!(posting_batch, teller_transaction)
         legs.each do |leg|
           account_reference = leg.fetch(:account_reference)
-          account_id = Account.find_by(account_number: account_reference)&.id
+          account_number = account_reference.to_s.sub(/\Aacct:/, "").strip.presence || account_reference
+          account_id = Account.find_by(account_number: account_number)&.id
 
           PostingLeg.create!(
             posting_batch: posting_batch,
