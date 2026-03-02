@@ -41,6 +41,7 @@ module Posting
         reversal_transaction = create_reversal_transaction!(original)
         reversal_batch = create_reversal_batch!(reversal_transaction, original)
         persist_legs_and_account_transactions!(reversal_batch, reversal_transaction, legs)
+        Posting::LedgerBalanceUpdater.call(legs: legs)
         Posting::Effects::CashMovementRecorder.new(
           request: request,
           legs: legs,
@@ -134,7 +135,8 @@ module Posting
 
         legs.each do |leg|
           account_reference = leg.fetch(:account_reference)
-          account_id = Account.find_by(account_number: account_reference)&.id
+          account_number = account_reference.to_s.sub(/\Aacct:/, "").strip.presence || account_reference
+          account_id = Account.find_by(account_number: account_number)&.id
 
           PostingLeg.create!(
             posting_batch: posting_batch,

@@ -88,6 +88,7 @@ class AccountTest < ActiveSupport::TestCase
 
     AccountTransaction.create!(teller_transaction: tt, posting_batch: batch, account_reference: account.account_number, account_id: account.id, direction: "credit", amount_cents: 10_000)
     AccountTransaction.create!(teller_transaction: tt, posting_batch: batch, account_reference: account.account_number, account_id: account.id, direction: "debit", amount_cents: 3_000)
+    account.update!(ledger_balance_cents: 7_000, ledger_balance_updated_at: Time.current)
 
     assert_equal 7_000, account.balance_cents
   end

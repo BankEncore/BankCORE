@@ -80,6 +80,38 @@ module Posting
       credit_tx = posting_batch.account_transactions.find_by(direction: "credit")
       assert_equal account.id, credit_tx.account_id
       assert_nil posting_batch.account_transactions.find_by(direction: "debit").account_id
+      assert_equal 5_000, account.reload.ledger_balance_cents
+    end
+
+    test "updates ledger_balance_cents for customer account legs" do
+      account = Account.create!(
+        account_number: "3333333333333333",
+        account_type: "checking",
+        branch: @branch,
+        status: "open",
+        opened_on: Date.current,
+        last_activity_at: Time.current
+      )
+
+      request = {
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: "commit-req-balance",
+        transaction_type: "deposit",
+        amount_cents: 12_000,
+        metadata: {},
+        currency: "USD"
+      }
+      legs = [
+        { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 12_000, position: 0 },
+        { side: "credit", account_reference: account.account_number, amount_cents: 12_000, position: 1 }
+      ]
+
+      Committer.new(request: request, legs: legs).call
+
+      assert_equal 12_000, account.reload.ledger_balance_cents
     end
 
     test "sets deposit description for account credit leg" do

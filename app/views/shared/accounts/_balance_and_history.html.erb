@@ -11,14 +11,15 @@
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <h2 class="card-title text-base">Balance</h2>
-          <p class="text-xs text-base-content/70 mt-1">Current ledger balance for this account.</p>
         </div>
       </div>
-
       <div class="divider my-3"></div>
-
       <p class="tabular-nums text-sm font-semibold text-base-content">
         <%= balance_formatted %>
+      </p>
+      <% as_of = account.ledger_balance_updated_at %>
+      <p class="text-xs text-base-content/60 mt-1">
+        As of most the recent transaction on <%= as_of.present? ? as_of.strftime("%b %-d, %y %-l:%M%P") : "—" %>
       </p>
     </div>
   </section>
