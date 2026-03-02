@@ -51,7 +51,8 @@ module Teller
 
       payload = { ok: true, advisories: advisories }
       if params[:account_reference].present?
-        account = Account.find_by(account_number: params[:account_reference].to_s.strip)
+        account_ref = params[:account_reference].to_s.sub(/\Aacct:/, "").strip
+        account = Account.find_by(account_number: account_ref) if account_ref.present?
         if account
           payload[:account_id] = account.id
           payload[:record_path] = Rails.application.routes.url_helpers.teller_account_path(account, tab: "advisories")
@@ -180,7 +181,8 @@ module Teller
           account = Account.find_by(id: params[:account_id])
           scopes_for_account(account)
         elsif params[:account_reference].present?
-          account = Account.find_by(account_number: params[:account_reference].to_s.strip)
+          account_ref = params[:account_reference].to_s.sub(/\Aacct:/, "").strip
+          account = Account.find_by(account_number: account_ref) if account_ref.present?
           scopes_for_account(account)
         elsif params[:scope_type].present? && params[:scope_id].present?
           [ [ params[:scope_type], params[:scope_id] ] ]
