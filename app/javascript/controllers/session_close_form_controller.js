@@ -15,4 +15,8 @@ export default class extends Controller {
       new CustomEvent("currency:set", { bubbles: true, detail: { cents: String(totalCents) } })
     )
   }
+
+  onSubmitClick(_event) {}
+
+  onFormSubmit(_event) {}
 }
