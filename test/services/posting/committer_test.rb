@@ -130,6 +130,81 @@ module Posting
       assert_equal "Transfer from xxxx0123", credit_tx.description
     end
 
+    test "sets misc_receipt description for account debit leg with label and memo" do
+      request = {
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: "commit-req-misc",
+        transaction_type: "misc_receipt",
+        amount_cents: 15_000,
+        metadata: {
+          misc_receipt: { type_label: "Wire Fee", memo: "Incoming wire" }
+        },
+        currency: "USD"
+      }
+      legs = [
+        { side: "debit", account_reference: "acct:misc-cust", amount_cents: 15_000, position: 0 },
+        { side: "credit", account_reference: "income:fee", amount_cents: 15_000, position: 1 }
+      ]
+
+      posting_batch = Committer.new(request: request, legs: legs).call
+
+      debit_tx = posting_batch.account_transactions.find_by(direction: "debit")
+      assert_equal "Wire Fee - Incoming wire", debit_tx.description
+    end
+
+    test "sets misc_receipt description without memo when memo blank" do
+      request = {
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: "commit-req-misc2",
+        transaction_type: "misc_receipt",
+        amount_cents: 5_000,
+        metadata: {
+          misc_receipt: { type_label: "Service Fee", memo: "" }
+        },
+        currency: "USD"
+      }
+      legs = [
+        { side: "debit", account_reference: "acct:misc-cust", amount_cents: 5_000, position: 0 },
+        { side: "credit", account_reference: "income:fee", amount_cents: 5_000, position: 1 }
+      ]
+
+      posting_batch = Committer.new(request: request, legs: legs).call
+
+      debit_tx = posting_batch.account_transactions.find_by(direction: "debit")
+      assert_equal "Service Fee", debit_tx.description
+    end
+
+    test "sets bill_payment description for account debit leg" do
+      request = {
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: "commit-req-bp",
+        transaction_type: "bill_payment",
+        amount_cents: 10_000,
+        metadata: {
+          bill_payment: { payee_name: "ABC Utilities", payee_reference: "1234567899" }
+        },
+        currency: "USD"
+      }
+      legs = [
+        { side: "debit", account_reference: "acct:bp-cust", amount_cents: 10_000, position: 0 },
+        { side: "credit", account_reference: "official_check:outstanding", amount_cents: 10_000, position: 1 }
+      ]
+
+      posting_batch = Committer.new(request: request, legs: legs).call
+
+      debit_tx = posting_batch.account_transactions.find_by(direction: "debit")
+      assert_equal "ABC Utilities xxxx7899", debit_tx.description
+    end
+
     test "creates AuditEvent transaction.posted with served_party primary_account initiating_lookup in metadata" do
       party = Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Audit Party", is_active: true)
       party.create_party_individual!(first_name: "Audit", last_name: "Party")
