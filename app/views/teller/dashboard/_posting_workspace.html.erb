@@ -9,9 +9,9 @@
     <p class="alert alert-info hidden" data-<%= workflow_form_controller %>-target="message" aria-live="polite" hidden></p>
 
     <div class="mb-4" data-reference-panel-target="advisoriesContainer">
-      <p class="text-xs opacity-70"></p>
-      <div class="space-y-2 mt-2" hidden></div>
-      <a href="#" class="text-xs link link-hover mt-2 block" hidden>View all advisories</a>
+      <p class="text-xs opacity-70" data-posting-form-target="advisoriesPlaceholder">Select an account to view advisories.</p>
+      <div class="space-y-2 mt-2" data-posting-form-target="advisoriesList" hidden></div>
+      <a href="#" class="text-xs link link-hover mt-2 block" data-posting-form-target="advisoriesViewAllLink" hidden>View all advisories</a>
     </div>
 
     <div class="mb-4">

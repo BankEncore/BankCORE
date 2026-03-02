@@ -22,6 +22,7 @@ module Posting
       when "transfer" then transfer_description
       when "draft" then draft_description
       when "misc_receipt" then misc_receipt_description
+      when "bill_payment" then bill_payment_description
       when "reversal" then reversal_description
       else
         nil
@@ -91,7 +92,17 @@ module Posting
       label = (misc["type_label"] || misc[:type_label]).to_s.strip
       label = "Misc Receipt" if label.blank?
       memo = (misc["memo"] || misc[:memo]).to_s.strip
-      memo.present? ? "#{label} (#{memo})" : label
+      memo.present? ? "#{label} - #{memo}" : label
+    end
+
+    def bill_payment_description
+      return nil unless direction == "debit"
+      bp = metadata.dig("bill_payment") || metadata.dig(:bill_payment) || {}
+      payee_name = (bp["payee_name"] || bp[:payee_name]).to_s.strip
+      payee_name = "Bill Payment" if payee_name.blank?
+      payee_ref = (bp["payee_reference"] || bp[:payee_reference]).to_s.strip
+      masked = masked_account(payee_ref)
+      "#{payee_name} #{masked}"
     end
 
     def reversal_description

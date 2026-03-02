@@ -298,6 +298,14 @@ export default class extends Controller {
     })
   }
 
+  accountRefForAdvisories(ref) {
+    const s = (ref ?? "").trim()
+    if (!s) return ""
+    if (s.startsWith("acct:")) return s.slice(5).trim()
+    if (s.includes(":")) return ""
+    return s
+  }
+
   async checkAdvisories(state) {
     if (!this.hasAdvisoriesUrlValue) {
       return { ok: true }
@@ -305,15 +313,16 @@ export default class extends Controller {
 
     const primaryRef = (state.primaryAccountReference ?? "").trim()
     const partyId = (state.partyId ?? "").trim()
-    if (!primaryRef && !partyId) {
+    const accountRef = this.accountRefForAdvisories(primaryRef)
+    if (!accountRef && !partyId) {
       return { ok: true }
     }
 
     const url = new URL(this.advisoriesUrlValue, window.location.origin)
     if (partyId) {
       url.searchParams.set("party_id", partyId)
-    } else if (primaryRef && !primaryRef.includes(":")) {
-      url.searchParams.set("account_reference", primaryRef)
+    } else if (accountRef) {
+      url.searchParams.set("account_reference", accountRef)
     } else {
       return { ok: true }
     }

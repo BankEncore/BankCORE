@@ -151,6 +151,14 @@ export default class extends Controller {
     this.setText("projectedDrawer", this.formatCents(projectedDrawerCents))
   }
 
+  accountRefForAdvisories(ref) {
+    const s = (ref ?? "").trim()
+    if (!s) return ""
+    if (s.startsWith("acct:")) return s.slice(5).trim()
+    if (s.includes(":")) return ""
+    return s
+  }
+
   fetchAdvisoriesIfNeeded(primaryReference, partyId) {
     if (!this.hasAdvisoriesUrlValue) return
     if (!primaryReference && !partyId) {
@@ -172,10 +180,11 @@ export default class extends Controller {
 
   async fetchAdvisories(primaryReference, partyId) {
     const url = new URL(this.advisoriesUrlValue, window.location.origin)
+    const accountRef = this.accountRefForAdvisories(primaryReference)
     if (partyId) {
       url.searchParams.set("party_id", partyId)
-    } else if (primaryReference && !primaryReference.includes(":")) {
-      url.searchParams.set("account_reference", primaryReference)
+    } else if (accountRef) {
+      url.searchParams.set("account_reference", accountRef)
     } else {
       this.renderAdvisories([], null, "fetched")
       return
@@ -198,6 +207,7 @@ export default class extends Controller {
   }
 
   renderAdvisories(advisories, recordPath, state) {
+    const container = this.element.querySelector("[data-reference-panel-target='advisoriesContainer']")
     const placeholder = this.findPostingTarget("advisoriesPlaceholder")
     const list = this.findPostingTarget("advisoriesList")
     const viewAllLink = this.findPostingTarget("advisoriesViewAllLink")
@@ -205,13 +215,14 @@ export default class extends Controller {
     if (!placeholder || !list) return
 
     if (advisories.length === 0) {
-      placeholder.hidden = false
-      placeholder.textContent = state === "empty" ? "Select an account to view advisories." : "No advisories."
+      if (container) container.hidden = true
+      placeholder.hidden = true
       list.hidden = true
       if (viewAllLink) viewAllLink.hidden = true
       return
     }
 
+    if (container) container.hidden = false
     placeholder.hidden = true
     list.hidden = false
     list.innerHTML = advisories
