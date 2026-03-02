@@ -20,7 +20,7 @@
                 <td><%= ur.branch&.name || "—" %></td>
                 <td><%= ur.workstation&.name || "—" %></td>
                 <td>
-                  <%= button_to "Remove", admin_role_user_role_path(role, ur), method: :delete, data: { turbo_confirm: "Remove this user from the role?" }, class: "btn btn-ghost btn-sm text-error" %>
+                  <%= button_to "Remove", admin_role_user_role_path(role, ur), method: :delete, data: { turbo_confirm: "Remove this user from the role?" }, class: "btn btn-error btn-sm" %>
                 </td>
               </tr>
             <% end %>
@@ -28,7 +28,7 @@
         </table>
       </div>
     <% else %>
-      <p class="text-sm text-slate-600 mb-4">No users assigned yet.</p>
+      <p class="text-sm text-base-content/70 mb-4">No users assigned yet.</p>
     <% end %>
 
     <h3 class="font-medium text-sm mb-2">Assign User</h3>

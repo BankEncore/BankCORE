@@ -23,7 +23,7 @@
               <td class="text-right">
                 <%= link_to "View", admin_role_path(role), class: "btn btn-ghost btn-sm" %>
                 <%= link_to "Edit", edit_admin_role_path(role), class: "btn btn-ghost btn-sm" %>
-                <%= button_to "Delete", admin_role_path(role), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "btn btn-ghost btn-sm text-error" %>
+                <%= button_to "Delete", admin_role_path(role), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "btn btn-error btn-sm" %>
               </td>
             </tr>
           <% end %>

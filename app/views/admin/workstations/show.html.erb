@@ -9,13 +9,13 @@
 <section class="card bg-base-100 border border-base-300">
   <div class="card-body">
     <dl class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      <dt class="font-medium text-slate-600">Branch</dt>
+      <dt class="font-medium text-base-content/70">Branch</dt>
       <dd><%= link_to @workstation.branch.name, admin_branch_path(@workstation.branch), class: "link" %></dd>
 
-      <dt class="font-medium text-slate-600">Code</dt>
+      <dt class="font-medium text-base-content/70">Code</dt>
       <dd><%= @workstation.code %></dd>
 
-      <dt class="font-medium text-slate-600">Name</dt>
+      <dt class="font-medium text-base-content/70">Name</dt>
       <dd><%= @workstation.name %></dd>
     </dl>
   </div>

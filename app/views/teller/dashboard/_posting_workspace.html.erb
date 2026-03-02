@@ -9,7 +9,7 @@
     <p class="alert alert-info hidden" data-<%= workflow_form_controller %>-target="message" aria-live="polite" hidden></p>
 
     <div class="mb-4" data-reference-panel-target="advisoriesContainer">
-      <p class="text-xs opacity-70">Select an account to view advisories.</p>
+      <p class="text-xs opacity-70"></p>
       <div class="space-y-2 mt-2" hidden></div>
       <a href="#" class="text-xs link link-hover mt-2 block" hidden>View all advisories</a>
     </div>
@@ -90,7 +90,7 @@
           <div class="flex items-start justify-between gap-3">
             <div>
               <h2 class="card-title text-base">Posting Preview</h2>
-              <p class="text-xs text-slate-600 mt-1">Ledger entries: debits and credits.</p>
+              <p class="text-xs text-base-content/70 mt-1">Ledger entries: debits and credits.</p>
             </div>
             <span class="badge badge-outline">Preview</span>
           </div>
@@ -108,7 +108,7 @@
               <tbody data-<%= workflow_form_controller %>-target="postingPreviewBody"></tbody>
             </table>
           </div>
-          <p class="mt-3 text-xs text-slate-600" data-<%= workflow_form_controller %>-target="postingPreviewEmpty">Enter amounts to see posting preview.</p>
+          <p class="mt-3 text-xs text-base-content/70" data-<%= workflow_form_controller %>-target="postingPreviewEmpty">Enter amounts to see posting preview.</p>
         </div>
       </section>
       </div>
@@ -121,6 +121,17 @@
         <%# drawer_totals removed from transaction screen; partial kept at teller/shared/_drawer_totals.html.erb %>
       </aside>
     </div>
+
+    <section aria-label="Transaction actions" class="sticky bottom-0 z-40 mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-base-300 bg-base-100 px-4 py-3">
+      <div class="flex items-center gap-2">
+        <span class="badge badge-neutral" data-<%= workflow_form_controller %>-target="summaryReadinessBadge">Blocked</span>
+        <span class="text-xs text-base-content/70" data-<%= workflow_form_controller %>-target="summaryReadinessReason">Amount must be greater than zero.</span>
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <button type="button" class="btn btn-outline" data-action="<%= workflow_form_controller %>#resetForm"><%= local_assigns.fetch(:secondary_button_label, "Cancel") %></button>
+        <button type="button" id="posting-form-footer-submit" class="btn btn-primary" data-action="click-><%= workflow_form_controller %>#submitFromHeader" data-<%= workflow_form_controller %>-target="headerSubmitButton"><%= local_assigns.fetch(:primary_submit_label, "Post Transaction") %></button>
+      </div>
+    </section>
 
     <section aria-label="Receipt Confirmation" data-<%= workflow_form_controller %>-target="receiptPanel" class="card bg-base-100 border border-base-300" hidden>
       <div class="card-body">

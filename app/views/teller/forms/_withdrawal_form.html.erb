@@ -14,7 +14,7 @@
 
 <div class="flex flex-col md:flex-row gap-3 mt-4">
   <div class="form-control flex-1 min-w-[8rem] md:max-w-[12rem]" data-<%= wfc %>-target="cashAmountRow">
-    <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-slate-700 block" %>
+    <%= form.label :amount_cents, "Cash Amount", class: "text-xs font-medium text-base-content block" %>
     <div class="flex gap-2 items-center">
       <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate" class="flex-1 min-w-0">
         <%= form.hidden_field :amount_cents, value: 0, data: { "#{wfc}_target": "amountCents", currency_input_target: "hiddenInput" } %>

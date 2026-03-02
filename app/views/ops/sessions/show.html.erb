@@ -18,8 +18,8 @@
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 class="ui-section-title text-lg font-bold">Session <%= @session.id %></h2>
-          <div class="mt-1 text-xs text-slate-500">
-            <span class="font-medium text-slate-700"><%= @session.closed? ? "Closed" : "Open" %></span>
+          <div class="mt-1 text-xs text-neutral">
+            <span class="font-medium text-base-content"><%= @session.closed? ? "Closed" : "Open" %></span>
             <% if @session.opened_at.present? %>
               • Opened <span class="[font-variant-numeric:tabular-nums]"><%= @session.opened_at.strftime("%Y-%m-%d %H:%M") %></span>
             <% end %>
@@ -37,9 +37,9 @@
       <div class="divider my-3"></div>
 
       <div class="flex items-center justify-between gap-4">
-        <h3 class="text-sm font-semibold text-slate-800">Session Summary</h3>
-        <div class="text-xs text-slate-500">
-          Teller session ID <span class="font-medium text-slate-700">#<%= @session.id %></span>
+        <h3 class="text-sm font-semibold text-base-content">Session Summary</h3>
+        <div class="text-xs text-neutral">
+          Teller session ID <span class="font-medium text-base-content">#<%= @session.id %></span>
         </div>
       </div>
 
@@ -50,55 +50,55 @@
         <%# helper-ish pattern: .ui-kv-item is inline here via grid classes %>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Teller</dt>
-          <dd class="text-slate-900"><%= @session.user&.display_label || "—" %></dd>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Teller</dt>
+          <dd class="text-base-content"><%= @session.user&.display_label || "—" %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Branch</dt>
-          <dd class="text-slate-900"><%= @session.branch&.name || "—" %></dd>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Branch</dt>
+          <dd class="text-base-content"><%= @session.branch&.name || "—" %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Workstation</dt>
-          <dd class="text-slate-900"><%= @session.workstation&.name || "—" %></dd>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Workstation</dt>
+          <dd class="text-base-content"><%= @session.workstation&.name || "—" %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Drawer</dt>
-          <dd class="text-slate-900"><%= @session.cash_location&.name || "—" %></dd>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Drawer</dt>
+          <dd class="text-base-content"><%= @session.cash_location&.name || "—" %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Opened at</dt>
-          <dd class="text-slate-900 [font-variant-numeric:tabular-nums]"><%= @session.opened_at&.strftime("%Y-%m-%d %H:%M") || "—" %></dd>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Opened at</dt>
+          <dd class="text-base-content [font-variant-numeric:tabular-nums]"><%= @session.opened_at&.strftime("%Y-%m-%d %H:%M") || "—" %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Closed at</dt>
-          <dd class="text-slate-900 [font-variant-numeric:tabular-nums]"><%= @session.closed_at&.strftime("%Y-%m-%d %H:%M") || "—" %></dd>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Closed at</dt>
+          <dd class="text-base-content [font-variant-numeric:tabular-nums]"><%= @session.closed_at&.strftime("%Y-%m-%d %H:%M") || "—" %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Opening cash</dt>
-          <dd class="font-semibold text-slate-900 [font-variant-numeric:tabular-nums]"><%= money[@session.opening_cash_cents] %></dd>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Opening cash</dt>
+          <dd class="font-semibold text-base-content [font-variant-numeric:tabular-nums]"><%= money[@session.opening_cash_cents] %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500"><%= @session.closed? ? "Expected closing" : "Expected cash now" %></dt>
-          <dd class="font-semibold text-slate-900 [font-variant-numeric:tabular-nums]">
+          <dt class="text-xs uppercase tracking-wide text-neutral"><%= @session.closed? ? "Expected closing" : "Expected cash now" %></dt>
+          <dd class="font-semibold text-base-content [font-variant-numeric:tabular-nums]">
             <%= @session.closed? ? money[@session.expected_closing_cash_cents] : money[@session.expected_cash_cents] %>
           </dd>
         </div>
 
         <% if @session.closed? %>
           <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-            <dt class="text-xs uppercase tracking-wide text-slate-500">Declared closing</dt>
-            <dd class="font-semibold text-slate-900 [font-variant-numeric:tabular-nums]"><%= money[@session.closing_cash_cents] %></dd>
+            <dt class="text-xs uppercase tracking-wide text-neutral">Declared closing</dt>
+            <dd class="font-semibold text-base-content [font-variant-numeric:tabular-nums]"><%= money[@session.closing_cash_cents] %></dd>
           </div>
 
           <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-            <dt class="text-xs uppercase tracking-wide text-slate-500">Variance</dt>
+            <dt class="text-xs uppercase tracking-wide text-neutral">Variance</dt>
             <dd class="[font-variant-numeric:tabular-nums]">
               <% if @session.cash_variance_cents.present? && @session.cash_variance_cents != 0 %>
                 <span class="inline-flex items-center gap-2">
@@ -117,15 +117,15 @@
 
           <% if @session.cash_variance_reason.present? %>
             <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3 sm:col-span-2 lg:col-span-3">
-              <dt class="text-xs uppercase tracking-wide text-slate-500">Variance reason</dt>
-              <dd class="text-slate-900"><%= @session.cash_variance_reason %></dd>
+              <dt class="text-xs uppercase tracking-wide text-neutral">Variance reason</dt>
+              <dd class="text-base-content"><%= @session.cash_variance_reason %></dd>
             </div>
           <% end %>
 
           <% if @session.cash_variance_notes.present? %>
             <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3 sm:col-span-2 lg:col-span-3">
-              <dt class="text-xs uppercase tracking-wide text-slate-500">Variance notes</dt>
-              <dd class="text-slate-900"><%= @session.cash_variance_notes %></dd>
+              <dt class="text-xs uppercase tracking-wide text-neutral">Variance notes</dt>
+              <dd class="text-base-content"><%= @session.cash_variance_notes %></dd>
             </div>
           <% end %>
         <% end %>
@@ -139,9 +139,9 @@
   <section class="ui-panel bg-base-100 border-base-300">
     <div class="ui-panel-pad p-3 md:p-4">
       <div class="flex items-center justify-between gap-4">
-        <h3 class="text-sm font-semibold text-slate-800">Cash Reconciliation</h3>
-        <div class="text-xs text-slate-500">
-          Net cash movement <span class="font-semibold text-slate-800 [font-variant-numeric:tabular-nums]"><%= money[@cash_in_cents - @cash_out_cents] %></span>
+        <h3 class="text-sm font-semibold text-base-content">Cash Reconciliation</h3>
+        <div class="text-xs text-neutral">
+          Net cash movement <span class="font-semibold text-base-content [font-variant-numeric:tabular-nums]"><%= money[@cash_in_cents - @cash_out_cents] %></span>
         </div>
       </div>
 
@@ -149,27 +149,27 @@
 
       <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-3 text-sm">
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Cash in</dt>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Cash in</dt>
           <dd class="font-semibold [font-variant-numeric:tabular-nums]"><%= money[@cash_in_cents] %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Cash out</dt>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Cash out</dt>
           <dd class="font-semibold [font-variant-numeric:tabular-nums]"><%= money[@cash_out_cents] %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Net cash</dt>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Net cash</dt>
           <dd class="font-semibold [font-variant-numeric:tabular-nums]"><%= money[@cash_in_cents - @cash_out_cents] %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Expected (opening + net)</dt>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Expected (opening + net)</dt>
           <dd class="font-semibold [font-variant-numeric:tabular-nums]"><%= money[@session.opening_cash_cents + @cash_in_cents - @cash_out_cents] %></dd>
         </div>
 
         <div class="grid grid-cols-[10rem_1fr] items-baseline gap-x-3">
-          <dt class="text-xs uppercase tracking-wide text-slate-500">Fees collected</dt>
+          <dt class="text-xs uppercase tracking-wide text-neutral">Fees collected</dt>
           <dd class="font-semibold [font-variant-numeric:tabular-nums]"><%= money[@fee_total_cents] %></dd>
         </div>
       </dl>
@@ -182,8 +182,8 @@
   <section class="ui-panel bg-base-100 border-base-300">
     <div class="ui-panel-pad p-3 md:p-4">
       <div class="flex items-center justify-between gap-4">
-        <h3 class="text-sm font-semibold text-slate-800">Approval Events</h3>
-        <div class="text-xs text-slate-500"><%= @approval_events.size %> event(s)</div>
+        <h3 class="text-sm font-semibold text-base-content">Approval Events</h3>
+        <div class="text-xs text-neutral"><%= @approval_events.size %> event(s)</div>
       </div>
 
       <div class="divider my-3"></div>
@@ -191,7 +191,7 @@
       <% if @approval_events.any? %>
         <div class="overflow-x-auto">
           <table class="table w-full table-zebra text-sm">
-            <thead class="text-xs uppercase tracking-wide text-slate-600">
+            <thead class="text-xs uppercase tracking-wide text-base-content/70">
               <tr>
                 <th class="py-2">Approval Type</th>
                 <th class="py-2">Initiated By</th>
@@ -222,7 +222,7 @@
           </table>
         </div>
       <% else %>
-        <p class="text-sm text-slate-500">No approval events in this session.</p>
+        <p class="text-sm text-neutral">No approval events in this session.</p>
       <% end %>
     </div>
   </section>
@@ -233,15 +233,15 @@
   <section class="ui-panel bg-base-100 border-base-300">
     <div class="ui-panel-pad p-3 md:p-4">
       <div class="flex items-center justify-between gap-4">
-        <h3 class="text-sm font-semibold text-slate-800">Transactions</h3>
-        <div class="text-xs text-slate-500"><%= @transactions.size %> transaction(s)</div>
+        <h3 class="text-sm font-semibold text-base-content">Transactions</h3>
+        <div class="text-xs text-neutral"><%= @transactions.size %> transaction(s)</div>
       </div>
 
       <div class="divider my-3"></div>
 
       <div class="overflow-x-auto">
         <table class="table w-full table-zebra text-sm">
-          <thead class="text-xs uppercase tracking-wide text-slate-600">
+          <thead class="text-xs uppercase tracking-wide text-base-content/70">
             <tr>
               <th class="py-2">Time</th>
               <th class="py-2">Type</th>
@@ -257,7 +257,7 @@
               <% @transactions.each do |tx| %>
                 <% cash_impact = tx.cash_movements.sum { |m| m.direction == "in" ? m.amount_cents : -m.amount_cents } %>
 
-                <tr class="<%= tx.transaction_type == "reversal" ? "bg-slate-50 dark:bg-slate-800/50" : "" %>">
+                <tr class="<%= tx.transaction_type == "reversal" ? "bg-base-200" : "" %>">
                   <td class="[font-variant-numeric:tabular-nums]"><%= tx.posted_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
 
                   <td>
@@ -272,10 +272,10 @@
                   <td class="[font-variant-numeric:tabular-nums] text-sm">
                     <%= tx.request_id %>
                     <% if tx.transaction_type == "reversal" && tx.reversal_of_teller_transaction.present? %>
-                      <br><span class="text-xs text-slate-500">Reverses <span class="[font-variant-numeric:tabular-nums]"><%= tx.reversal_of_teller_transaction.request_id %></span></span>
+                      <br><span class="text-xs text-neutral">Reverses <span class="[font-variant-numeric:tabular-nums]"><%= tx.reversal_of_teller_transaction.request_id %></span></span>
                     <% elsif tx.reversed? && tx.reversed_by_teller_transaction.present? %>
                       <br>
-                      <span class="text-xs text-slate-500">
+                      <span class="text-xs text-neutral">
                         Reversed by
                         <%= link_to tx.reversed_by_teller_transaction.request_id,
                                     teller_receipt_path(request_id: tx.reversed_by_teller_transaction.request_id),
@@ -306,7 +306,7 @@
               <% end %>
             <% else %>
               <tr>
-                <td colspan="7" class="text-center text-slate-500 py-4">No transactions in this session.</td>
+                <td colspan="7" class="text-center text-neutral py-4">No transactions in this session.</td>
               </tr>
             <% end %>
           </tbody>
@@ -322,10 +322,10 @@
     <section class="ui-panel bg-base-100 border-base-300">
       <div class="ui-panel-pad p-3 md:p-4">
         <div class="flex items-center justify-between gap-4">
-          <h3 class="text-sm font-semibold text-slate-800">Vault Transfers</h3>
-          <div class="text-xs text-slate-500">
+          <h3 class="text-sm font-semibold text-base-content">Vault Transfers</h3>
+          <div class="text-xs text-neutral">
             <%= @vault_transfers.size %> transfer(s) • total
-            <span class="font-semibold text-slate-800 [font-variant-numeric:tabular-nums]"><%= money[@vault_transfers.sum(&:amount_cents)] %></span>
+            <span class="font-semibold text-base-content [font-variant-numeric:tabular-nums]"><%= money[@vault_transfers.sum(&:amount_cents)] %></span>
           </div>
         </div>
 
@@ -333,7 +333,7 @@
 
         <div class="overflow-x-auto">
           <table class="table w-full table-zebra text-sm">
-            <thead class="text-xs uppercase tracking-wide text-slate-600">
+            <thead class="text-xs uppercase tracking-wide text-base-content/70">
               <tr>
                 <th class="py-2">Time</th>
                 <th class="py-2">From</th>

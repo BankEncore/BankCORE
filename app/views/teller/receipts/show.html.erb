@@ -7,7 +7,7 @@
         <p class="flex flex-wrap justify-between gap-2 items-center">
           <span class="flex gap-2">
             <% if @teller_transaction.reversible? %>
-              <%= link_to "Reverse", reversal_teller_transaction_path(@teller_transaction), class: "btn btn-outline btn-error btn-sm" %>
+              <%= link_to "Reverse", reversal_teller_transaction_path(@teller_transaction), class: "btn btn-outline btn-error btn-sm", data: { turbo_confirm: "Reverse this transaction? This creates an offsetting posting." } %>
             <% elsif @teller_transaction.reversed? %>
               <%= link_to "Reversed by #{@teller_transaction.reversed_by_teller_transaction.request_id}", teller_receipt_path(request_id: @teller_transaction.reversed_by_teller_transaction.request_id), class: "btn btn-ghost btn-sm" %>
             <% elsif @teller_transaction.transaction_type == "reversal" && @teller_transaction.reversal_of_teller_transaction.present? %>
@@ -16,8 +16,8 @@
           </span>
           <span class="flex gap-2 flex-wrap">
             <%= link_to "Audit View", teller_receipt_path(request_id: @posting_batch.request_id, view: "audit"), class: "btn btn-outline btn-sm" %>
-            <button type="button" onclick="window.print()" class="btn btn-secondary btn-sm">Print</button>
-            <%= link_to "Back to Dashboard", teller_root_path, class: "btn btn-ghost btn-sm" %>
+            <%= link_to "Back to Dashboard", teller_root_path, class: "btn btn-outline btn-sm" %>
+            <button type="button" onclick="window.print()" class="btn btn-primary btn-sm">Print</button>
           </span>
         </p>
       </div>
@@ -49,7 +49,7 @@
         teller_transaction: @teller_transaction,
         posting_legs: @posting_legs %>
     <% else %>
-      <div class="receipt-type-details text-sm text-slate-500">
+      <div class="receipt-type-details text-sm text-neutral">
         <p>Receipt format for <%= @teller_transaction.transaction_type %> — not yet implemented.</p>
       </div>
     <% end %>

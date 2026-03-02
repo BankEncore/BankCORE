@@ -9,7 +9,7 @@
     <div class="flex items-start justify-between gap-3">
       <div>
         <h2 class="card-title text-base">Recent Transactions</h2>
-        <p class="text-xs text-slate-600 mt-1">Posted transactions for this teller and workstation.</p>
+        <p class="text-xs text-base-content/70 mt-1">Posted transactions for this teller and workstation.</p>
       </div>
     </div>
     <div class="divider my-3"></div>
@@ -50,18 +50,18 @@
                       <%= link_to "Receipt", teller_receipt_path(request_id: transaction.request_id), class: "btn btn-ghost btn-sm" %>
                       <%= link_to "Audit", teller_receipt_path(request_id: transaction.request_id, view: "audit"), class: "btn btn-ghost btn-sm" %>
                       <% if transaction.reversible? %>
-                        <%= link_to "Reverse", reversal_teller_transaction_path(transaction), class: "btn btn-outline btn-sm" %>
+                        <%= link_to "Reverse", reversal_teller_transaction_path(transaction), class: "btn btn-outline btn-error btn-sm", data: { turbo_confirm: "Reverse this transaction? This creates an offsetting posting." } %>
                       <% end %>
                     </div>
                   <% else %>
-                    <span class="text-slate-500 text-xs">—</span>
+                    <span class="text-neutral text-xs">—</span>
                   <% end %>
                 </td>
               </tr>
             <% end %>
           <% else %>
             <tr class="row-border">
-              <td colspan="6" class="py-8 text-center text-slate-600">No posted transactions available yet.</td>
+              <td colspan="6" class="py-8 text-center text-base-content/70">No posted transactions available yet.</td>
             </tr>
           <% end %>
         </tbody>

@@ -89,7 +89,7 @@
     <div class="flex items-start justify-between gap-3">
       <div>
         <h2 class="card-title text-base">Accounts</h2>
-        <p class="text-xs text-slate-600 mt-1">Accounts owned by this party.</p>
+        <p class="text-xs text-base-content/70 mt-1">Accounts owned by this party.</p>
       </div>
       <%= link_to "Add", new_teller_account_path(party_id: @party.id), class: "btn btn-primary btn-sm" %>
     </div>
@@ -127,7 +127,7 @@
         </table>
       </div>
     <% else %>
-      <p class="text-sm text-slate-600">No accounts yet.</p>
+      <p class="text-sm text-base-content/70">No accounts yet.</p>
     <% end %>
   </div>
 </section>
@@ -139,7 +139,7 @@
       <div class="flex items-start justify-between gap-3">
         <div>
           <h2 class="card-title text-base">Related parties</h2>
-          <p class="text-xs text-slate-600 mt-1">Parties with jointly owned accounts.</p>
+          <p class="text-xs text-base-content/70 mt-1">Parties with jointly owned accounts.</p>
         </div>
       </div>
       <div class="divider my-3"></div>

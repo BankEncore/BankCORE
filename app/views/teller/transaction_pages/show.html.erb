@@ -25,14 +25,13 @@
   data-advisory-panel-acknowledge-url-template-value="<%= teller_acknowledge_advisory_path('__ID__') %>">
   <%= render "teller/shared/page_header",
     title: @page_title,
-    description: "#{@page_title} flow. Validate and post once balanced.",
     show_state_badge: true,
     initial_state: "Editing",
     workflow_form_controller: workflow_form_controller,
     secondary_button_action: "#{workflow_form_controller}#resetForm",
     secondary_button_label: "Cancel",
     show_primary_submit: true,
-    primary_submit_label: "Post Transaction",
+    primary_submit_label: post_commit_label_for(@transaction_type),
     primary_submit_form_id: "posting-form" %>
 
   <%= render "teller/dashboard/posting_workspace",
@@ -41,6 +40,7 @@
     cash_locations: @cash_locations || [],
     default_transaction_type: @transaction_type,
     workflow_form_controller: workflow_form_controller,
+    primary_submit_label: post_commit_label_for(@transaction_type),
     show_transaction_type: false,
     parties: @parties || [],
     selected_party: @selected_party,

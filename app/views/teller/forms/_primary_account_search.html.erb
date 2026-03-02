@@ -10,14 +10,14 @@
      data-primary-account-search-account-reference-url-value="<%= teller_account_reference_path %>"
      data-primary-account-search-related-parties-url-template-value="<%= related_parties_teller_account_path('__ID__') %>">
   <div data-primary-account-search-target="relatedPartiesRow" class="form-control min-w-0 md:row-start-1 md:col-start-2" hidden>
-    <label class="text-xs font-medium text-slate-700">Related parties (optional)</label>
+    <label class="text-xs font-medium text-base-content">Related parties (optional)</label>
     <select data-primary-account-search-target="relatedPartiesSelect"
             data-action="change->primary-account-search#selectRelatedPartyFromDropdown"
             class="select select-bordered w-full mt-1">
     </select>
   </div>
   <div class="form-control overflow-visible min-w-0 md:row-start-2 md:col-start-1" data-<%= wfc %>-target="primaryAccountRow">
-    <%= form.label :primary_account_reference, label, class: "text-xs font-medium text-slate-700 block" %>
+    <%= form.label :primary_account_reference, label, class: "text-xs font-medium text-base-content block" %>
     <div class="relative overflow-visible">
       <%= form.text_field :primary_account_reference,
         data: {
@@ -36,7 +36,7 @@
     </div>
   </div>
   <div data-primary-account-search-target="partyAccountsRow" data-party-accounts-row class="form-control min-w-0 md:row-start-2 md:col-start-2" hidden>
-    <label class="text-xs font-medium text-slate-700">Related accounts for <span data-primary-account-search-target="partyName" data-party-name></span></label>
+    <label class="text-xs font-medium text-base-content">Related accounts for <span data-primary-account-search-target="partyName" data-party-name></span></label>
     <select data-primary-account-search-target="accountSelect" data-party-account-select
             data-action="change->primary-account-search#selectAccountFromDropdown"
             class="select select-bordered w-full mt-1">

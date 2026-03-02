@@ -11,13 +11,13 @@
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <h2 class="card-title text-base">Balance</h2>
-          <p class="text-xs text-slate-600 mt-1">Current ledger balance for this account.</p>
+          <p class="text-xs text-base-content/70 mt-1">Current ledger balance for this account.</p>
         </div>
       </div>
 
       <div class="divider my-3"></div>
 
-      <p class="tabular-nums text-sm font-semibold text-slate-900">
+      <p class="tabular-nums text-sm font-semibold text-base-content">
         <%= balance_formatted %>
       </p>
     </div>
@@ -36,7 +36,7 @@
       <div class="flex items-start justify-between gap-3">
         <div>
           <h2 class="card-title text-base">Transaction History</h2>
-          <p class="text-xs text-slate-600 mt-1">Posted transactions for this account.</p>
+          <p class="text-xs text-base-content/70 mt-1">Posted transactions for this account.</p>
         </div>
       </div>
 
@@ -48,25 +48,25 @@
         <% end %>
 
         <%= form_with url: history_form_url, method: :get, local: true, class: "no-print mt-3" do |f| %>
-          <div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+          <div class="rounded-md border border-base-300 bg-base-200 px-3 py-2">
             <div class="flex flex-wrap items-end gap-2">
               <div class="form-control">
-                <%= label_tag :date_from, "From", class: "text-[11px] font-semibold text-slate-600" %>
+                <%= label_tag :date_from, "From", class: "text-[11px] font-semibold text-base-content/70" %>
                 <%= date_field_tag :date_from, date_from, class: "input input-bordered h-9 px-2 text-sm w-[10.5rem]" %>
               </div>
 
               <div class="form-control">
-                <%= label_tag :date_to, "To", class: "text-[11px] font-semibold text-slate-600" %>
+                <%= label_tag :date_to, "To", class: "text-[11px] font-semibold text-base-content/70" %>
                 <%= date_field_tag :date_to, date_to, class: "input input-bordered h-9 px-2 text-sm w-[10.5rem]" %>
               </div>
 
               <div class="form-control">
-                <%= label_tag :amount_min, "Min ($)", class: "text-[11px] font-semibold text-slate-600" %>
+                <%= label_tag :amount_min, "Min ($)", class: "text-[11px] font-semibold text-base-content/70" %>
                 <%= number_field_tag :amount_min, history_filter_params[:amount_min], step: 0.01, class: "input input-bordered h-9 px-2 text-sm w-24" %>
               </div>
 
               <div class="form-control">
-                <%= label_tag :amount_max, "Max ($)", class: "text-[11px] font-semibold text-slate-600" %>
+                <%= label_tag :amount_max, "Max ($)", class: "text-[11px] font-semibold text-base-content/70" %>
                 <%= number_field_tag :amount_max, history_filter_params[:amount_max], step: 0.01, class: "input input-bordered h-9 px-2 text-sm w-24" %>
               </div>
 
@@ -74,20 +74,20 @@
               <% selected_types = Array(history_filter_params[:transaction_types] || history_filter_params["transaction_types"]).map(&:to_s) %>
 
               <div class="form-control">
-                <div class="text-[11px] font-semibold text-slate-600">Types</div>
+                <div class="text-[11px] font-semibold text-base-content/70">Types</div>
 
                 <div class="mt-1 flex flex-wrap gap-2">
                   <% types.each do |t| %>
                     <% checked = selected_types.include?(t.to_s) %>
 
                 <label class="inline-flex items-center gap-1.5
-                              rounded border border-slate-300
-                              bg-white
+                              rounded border border-base-300
+                              bg-base-100
                               px-2 py-1
                               text-[12px] font-medium
                               cursor-pointer select-none">
                   <%= check_box_tag "transaction_types[]", t, checked,
-                        class: "h-3.5 w-3.5 rounded border-slate-300" %>
+                        class: "h-3.5 w-3.5 rounded border-base-300" %>
                   <span class="whitespace-nowrap leading-none"><%= t.to_s.titleize %></span>
                 </label>
                   <% end %>
@@ -106,7 +106,7 @@
               <%= hidden_field_tag :sort_dir, history_filter_params[:sort_dir] || "desc" %>
 
               <div class="flex items-center gap-2 ml-auto">
-                <span class="text-[11px] font-semibold text-slate-600">Sort</span>
+                <span class="text-[11px] font-semibold text-base-content/70">Sort</span>
 
                 <%= link_to "Date ↑",
                       "#{history_form_url}?#{(base_params.merge("sort" => "date", "sort_dir" => "asc")).to_query}",
@@ -158,11 +158,11 @@
                   <td class="py-1.5"><%= tt.transaction_type.titleize %></td>
                   <td class="py-1.5"><%= at.description.presence || "—" %></td>
 
-                  <td class="py-1.5 font-semibold text-slate-700">
+                  <td class="py-1.5 font-semibold text-base-content">
                     <%= at.direction == "credit" ? "Credit" : "Debit" %>
                   </td>
 
-                  <td class="py-1.5 text-right mono tabular-nums text-slate-900">
+                  <td class="py-1.5 text-right mono tabular-nums text-base-content">
                     <%= signed_cents.negative? ? "−" : "+" %><%= number_to_currency(signed_cents.abs / 100.0) %>
                   </td>
 
@@ -173,14 +173,14 @@
                         <%= link_to "Audit", teller_receipt_path(request_id: tt.request_id, view: "audit"), class: "btn btn-ghost btn-sm h-8 px-2" %>
                       </div>
                     <% else %>
-                      <span class="text-slate-500 text-xs">—</span>
+                      <span class="text-neutral text-xs">—</span>
                     <% end %>
                   </td>
                 </tr>
               <% end %>
             <% else %>
               <tr class="row-border">
-                <td colspan="6" class="py-8 text-center text-slate-600">No transactions yet.</td>
+                <td colspan="6" class="py-8 text-center text-base-content/70">No transactions yet.</td>
               </tr>
             <% end %>
           </tbody>

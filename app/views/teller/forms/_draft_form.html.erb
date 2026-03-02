@@ -29,25 +29,25 @@
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
     <div class="form-control">
-      <%= form.label :draft_amount_cents, "Draft Amount", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :draft_amount_cents, "Draft Amount", class: "text-xs font-medium text-base-content block" %>
       <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
         <%= form.hidden_field :draft_amount_cents, value: 0, data: { "#{wfc}_target": "draftAmountCents", currency_input_target: "hiddenInput" } %>
         <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Draft Amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_amount_cents) %>" />
       </div>
     </div>
     <div class="form-control">
-      <%= form.label :draft_fee_cents, "Fee", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :draft_fee_cents, "Fee", class: "text-xs font-medium text-base-content block" %>
       <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
         <%= form.hidden_field :draft_fee_cents, value: 0, data: { "#{wfc}_target": "draftFeeCents", currency_input_target: "hiddenInput" } %>
         <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Draft Fee" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_fee_cents) %>" />
       </div>
     </div>
     <div class="form-control md:col-span-2">
-      <%= form.label :draft_payee_name, "Payee", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :draft_payee_name, "Payee", class: "text-xs font-medium text-base-content block" %>
       <%= form.text_field :draft_payee_name, data: { "#{wfc}_target": "draftPayeeName", action: "input->#{wfc}\#recalculate" }, class: "input input-bordered" %>
     </div>
     <div class="form-control">
-      <%= form.label :draft_instrument_number, "Instrument Number", class: "text-xs font-medium text-slate-700 block" %>
+      <%= form.label :draft_instrument_number, "Instrument Number", class: "text-xs font-medium text-base-content block" %>
       <%= form.text_field :draft_instrument_number, data: { "#{wfc}_target": "draftInstrumentNumber", action: "input->#{wfc}\#recalculate" }, class: "input input-bordered w-full" %>
     </div>
   </div>
@@ -58,19 +58,19 @@
     <div class="font-medium text-sm mb-2">Payment (cash + checks + account = total due)</div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div class="form-control">
-        <%= form.label :draft_cash_cents, "Cash", class: "text-xs font-medium text-slate-700 block" %>
+        <%= form.label :draft_cash_cents, "Cash", class: "text-xs font-medium text-base-content block" %>
         <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
           <%= form.hidden_field :draft_cash_cents, value: 0, data: { "#{wfc}_target": "draftCashCents", currency_input_target: "hiddenInput" } %>
           <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Cash payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_cash_cents) %>" />
         </div>
       </div>
       <div class="form-control">
-        <span class="text-xs font-medium text-slate-700 block">Checks</span>
+        <span class="text-xs font-medium text-base-content block">Checks</span>
         <p class="text-sm mono py-2" data-<%= wfc %>-target="draftCheckSubtotal">$0.00</p>
-        <span class="text-xs text-slate-600">From check rows above</span>
+        <span class="text-xs text-base-content/70">From check rows above</span>
       </div>
       <div class="form-control">
-        <%= form.label :draft_account_cents, "Account Transfer", class: "text-xs font-medium text-slate-700 block" %>
+        <%= form.label :draft_account_cents, "Account Transfer", class: "text-xs font-medium text-base-content block" %>
         <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate">
           <%= form.hidden_field :draft_account_cents, value: 0, data: { "#{wfc}_target": "draftAccountCents", currency_input_target: "hiddenInput" } %>
           <input type="text" class="input input-bordered w-full" inputmode="decimal" placeholder="$0.00" aria-label="Account payment" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" id="<%= form.field_id(:draft_account_cents) %>" />

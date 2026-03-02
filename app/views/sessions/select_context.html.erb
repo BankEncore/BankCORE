@@ -4,18 +4,18 @@
       <div class="flex items-start justify-between gap-3">
         <div>
           <h1 class="card-title text-base">Select Branch & Workstation</h1>
-          <p class="text-xs text-slate-600 mt-1">Choose your branch and workstation before logging in.</p>
+          <p class="text-xs text-base-content/70 mt-1">Choose your branch and workstation before logging in.</p>
         </div>
       </div>
       <div class="divider my-3"></div>
 
       <%= form_with url: update_context_session_path, method: :post, class: "space-y-4" do |form| %>
         <label class="form-control w-full">
-          <span class="block text-xs font-medium text-slate-700 mb-1">Branch</span>
+          <span class="block text-xs font-medium text-base-content mb-1">Branch</span>
           <%= form.collection_select :branch_id, @branches, :id, :name, { prompt: "Select branch" }, { required: true, class: "select select-bordered w-full" } %>
         </label>
         <label class="form-control w-full">
-          <span class="block text-xs font-medium text-slate-700 mb-1">Workstation</span>
+          <span class="block text-xs font-medium text-base-content mb-1">Workstation</span>
           <%= form.collection_select :workstation_id, @workstations, :id, :name, { prompt: "Select workstation" }, { required: true, class: "select select-bordered w-full" } %>
         </label>
         <div class="pt-2">

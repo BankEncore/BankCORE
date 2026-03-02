@@ -19,7 +19,7 @@
   <div class="print-only mb-4">
     <h1 class="text-lg font-bold">BankCORE</h1>
     <p class="text-sm">Account Details — <%= mask_account_number(@account.account_number) %></p>
-    <p class="text-xs text-slate-600"><%= @account.account_type.titleize %> • <%= @account.branch.name %> • <%= @account.status %></p>
+    <p class="text-xs text-base-content/70"><%= @account.account_type.titleize %> • <%= @account.branch.name %> • <%= @account.status %></p>
   </div>
 
   <% primary = @account.primary_owner %>
@@ -103,7 +103,7 @@
                         csr_account_account_owner_path(@account, ao),
                         method: :delete,
                         form: { data: { turbo_confirm: "Remove this owner?" } },
-                        class: "btn btn-ghost btn-sm text-error" %>
+                        class: "btn btn-error btn-sm" %>
                 <% end %>
               </td>
             </tr>
