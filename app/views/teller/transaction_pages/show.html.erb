@@ -32,7 +32,7 @@
     secondary_button_action: "#{workflow_form_controller}#resetForm",
     secondary_button_label: "Cancel",
     show_primary_submit: true,
-    primary_submit_label: "Post Transaction",
+    primary_submit_label: post_commit_label_for(@transaction_type),
     primary_submit_form_id: "posting-form" %>
 
   <%= render "teller/dashboard/posting_workspace",

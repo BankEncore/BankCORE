@@ -23,7 +23,7 @@
               <td class="text-right">
                 <%= link_to "View", admin_branch_path(branch), class: "btn btn-ghost btn-sm" %>
                 <%= link_to "Edit", edit_admin_branch_path(branch), class: "btn btn-ghost btn-sm" %>
-                <%= button_to "Delete", admin_branch_path(branch), method: :delete, data: { turbo_confirm: "Are you sure? This may fail if the branch has dependent records." }, class: "btn btn-ghost btn-sm text-error" %>
+                <%= button_to "Delete", admin_branch_path(branch), method: :delete, data: { turbo_confirm: "Are you sure? This may fail if the branch has dependent records." }, class: "btn btn-error btn-sm" %>
               </td>
             </tr>
           <% end %>

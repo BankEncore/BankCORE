@@ -45,7 +45,7 @@
                       <%= link_to "Receipt", teller_receipt_path(request_id: transaction.request_id), class: "btn btn-ghost btn-sm" %>
                       <%= link_to "Audit", teller_receipt_path(request_id: transaction.request_id, view: "audit"), class: "btn btn-ghost btn-sm" %>
                       <% if transaction.reversible? %>
-                        <%= link_to "Reverse", reversal_teller_transaction_path(transaction), class: "btn btn-outline btn-sm" %>
+                        <%= link_to "Reverse", reversal_teller_transaction_path(transaction), class: "btn btn-outline btn-error btn-sm", data: { turbo_confirm: "Reverse this transaction? This creates an offsetting posting." } %>
                       <% end %>
                     </div>
                   <% else %>

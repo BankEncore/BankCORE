@@ -69,6 +69,21 @@ module ApplicationHelper
     mask_last_four(account_number)
   end
 
+  POST_COMMIT_LABELS = {
+    "deposit" => "Post Deposit",
+    "withdrawal" => "Post Withdrawal",
+    "transfer" => "Post Transfer",
+    "draft" => "Post Draft",
+    "check_cashing" => "Post Check Cashing",
+    "misc_receipt" => "Post Misc Receipt",
+    "bill_payment" => "Post Bill Payment",
+    "vault_transfer" => "Post Vault Transfer"
+  }.freeze
+
+  def post_commit_label_for(transaction_type)
+    POST_COMMIT_LABELS[transaction_type.to_s] || "Post Transaction"
+  end
+
   def advisory_severity_label_for_enum(enum_key)
     { "info" => "Info", "notice" => "Notice", "alert" => "Alert",
       "requires_acknowledgment" => "Requires acknowledgment", "restriction" => "Restriction" }[enum_key.to_s] || enum_key.to_s.titleize
