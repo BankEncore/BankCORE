@@ -24,10 +24,27 @@ module Posting
       end
 
       def enrich_entries_with_structured_fields(entries)
+        check_items = all_check_items_from_params
+        check_index = 0
+
         entries.map do |entry|
-          metadata = check_metadata_for_entry(entry)
+          ref = entry[:account_reference].to_s
+          metadata = if ref.start_with?("check:")
+            item = check_items[check_index]
+            check_index += 1
+            item.present? ? { "check_type" => (item[:check_type] || item["check_type"]).to_s.presence || "transit" } : {}
+          else
+            {}
+          end
+
           parsed = AccountReferenceParser.parse(entry[:account_reference], metadata: metadata)
+          account_reference = canonicalize_account_reference(
+            entry[:account_reference],
+            parsed[:reference_type],
+            parsed[:reference_identifier]
+          )
           entry.merge(
+            account_reference: account_reference,
             reference_type: parsed[:reference_type],
             reference_identifier: parsed[:reference_identifier],
             check_routing_number: parsed[:check_routing_number],
@@ -38,16 +55,14 @@ module Posting
         end
       end
 
-      def check_metadata_for_entry(entry)
-        ref = entry[:account_reference].to_s
-        return {} unless ref.start_with?("check:")
+      def canonicalize_account_reference(raw, reference_type, reference_identifier)
+        return raw.to_s if raw.blank?
+        return raw.to_s if reference_type != "customer_account"
+        return raw.to_s if reference_identifier.blank?
 
-        check_items = all_check_items_from_params
-        item = check_items.find { |ci| (ci[:account_reference] || ci["account_reference"]).to_s == ref }
-        return {} if item.blank?
+        return raw.to_s if raw.to_s.strip.start_with?("acct:")
 
-        ct = (item[:check_type] || item["check_type"]).to_s.presence || "transit"
-        { "check_type" => ct }
+        "acct:#{reference_identifier}"
       end
 
       def all_check_items_from_params

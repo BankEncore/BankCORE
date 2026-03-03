@@ -1,0 +1,32 @@
+<%# Reusable party-search field for account owner selection.
+    Required: search_url, field_name
+    Optional: field_value, display_value, label, placeholder, context, required
+%>
+<% field_value = local_assigns[:field_value] %>
+<% display_value = local_assigns[:display_value] || "" %>
+<% label = local_assigns[:label] %>
+<% placeholder = local_assigns.fetch(:placeholder, "Search by name or phone") %>
+<% context = local_assigns[:context] %>
+<% required = local_assigns.fetch(:required, false) %>
+<% hidden_options = { data: { party_search_target: "hiddenInput" } } %>
+<% hidden_options[:required] = true if required %>
+
+<div data-controller="party-search" data-party-search-search-url-value="<%= search_url %>"<% if context %> data-party-search-context-value="<%= context %>"<% end %>>
+  <% if label.present? %>
+    <%= label_tag field_name, label, class: "text-xs font-medium text-base-content block" %>
+  <% end %>
+  <div class="relative">
+    <%= hidden_field_tag field_name, field_value, hidden_options %>
+    <input type="text"
+      class="input input-bordered w-full"
+      placeholder="<%= placeholder %>"
+      autocomplete="off"
+      data-party-search-target="searchInput"
+      data-action="input->party-search#search blur->party-search#hideResultsOnBlur"
+      value="<%= display_value %>" />
+    <div data-party-search-target="resultsList"
+      class="absolute left-0 right-0 z-50 mt-1 w-full max-h-48 overflow-auto rounded bg-base-100 border border-base-300 shadow"
+      hidden>
+    </div>
+  </div>
+</div>

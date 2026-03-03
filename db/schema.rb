@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_02_200535) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_043246) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -212,6 +212,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_200535) do
     t.datetime "updated_at", null: false
     t.index ["denominationable_type", "denominationable_id", "context"], name: "index_denomination_sets_on_denom_and_context"
     t.index ["denominationable_type", "denominationable_id"], name: "index_denomination_sets_on_denominationable"
+  end
+
+  create_table "ledger_references", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.bigint "account_id"
+    t.bigint "cash_location_id"
+    t.datetime "created_at", null: false
+    t.text "metadata", size: :long, collation: "utf8mb4_bin"
+    t.string "normal_balance", limit: 16
+    t.string "ref_type", limit: 64, null: false
+    t.string "reference", null: false
+    t.string "status", limit: 32, default: "active", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_ledger_references_on_account_id"
+    t.index ["cash_location_id"], name: "index_ledger_references_on_cash_location_id"
+    t.index ["ref_type"], name: "index_ledger_references_on_ref_type"
+    t.index ["reference"], name: "index_ledger_references_on_reference", unique: true
+    t.index ["status"], name: "index_ledger_references_on_status"
+    t.check_constraint "json_valid(`metadata`)", name: "ledger_references_metadata_valid"
   end
 
   create_table "misc_receipt_types", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
@@ -451,6 +469,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_200535) do
   add_foreign_key "cash_movements", "teller_transactions"
   add_foreign_key "denomination_lines", "cash_denominations"
   add_foreign_key "denomination_lines", "denomination_sets"
+  add_foreign_key "ledger_references", "accounts"
+  add_foreign_key "ledger_references", "cash_locations"
   add_foreign_key "party_individuals", "parties"
   add_foreign_key "party_organizations", "parties"
   add_foreign_key "posting_batches", "posting_batches", column: "reversal_of_posting_batch_id"

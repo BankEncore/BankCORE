@@ -15,6 +15,15 @@ module Posting
         last_activity_at: Time.current,
         ledger_balance_cents: 0
       )
+      # Create cash locations so ledger refs exist (used in legs)
+      CashLocation.find_or_create_by!(branch: @branch, code: "DRAWER1") do |loc|
+        loc.name = "Test Drawer 1"
+        loc.location_type = "drawer"
+      end
+      CashLocation.find_or_create_by!(branch: @branch, code: "D1") do |loc|
+        loc.name = "Test Drawer D1"
+        loc.location_type = "drawer"
+      end
     end
 
     test "skips internal account references" do

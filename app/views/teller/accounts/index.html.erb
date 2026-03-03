@@ -67,6 +67,7 @@
             <th class="py-2 text-left">Branch</th>
             <th class="py-2 text-left">Status</th>
             <th class="py-2 text-left">Owners</th>
+            <th class="py-2 text-right">Balance</th>
             <th class="py-2 text-right">Actions</th>
           </tr>
         </thead>
@@ -79,6 +80,8 @@
                 <td class="py-2"><%= account.branch.name %></td>
                 <td class="py-2"><span class="badge badge-outline"><%= account.status %></span></td>
                 <td class="py-2"><%= account.owners_ordered.map { |ao| ao.party.display_name }.compact.join(", ").presence || "—" %></td>
+                <% balance_cents = account.balance_cents %>
+                <td class="py-2 text-right font-sans tabular-nums <%= balance_cents.negative? ? 'text-error' : 'ui-money' %>"><%= number_to_currency(balance_cents / 100.0) %></td>
                 <td class="py-2 text-right">
                   <%= link_to "View", teller_account_path(account), class: "btn btn-ghost btn-sm" %>
                   <%= link_to "Edit", edit_teller_account_path(account), class: "btn btn-ghost btn-sm" %>
@@ -87,7 +90,7 @@
             <% end %>
           <% else %>
             <tr class="row-border">
-              <td colspan="6" class="py-4 text-center text-base-content/70">No accounts found.</td>
+              <td colspan="7" class="py-4 text-center text-base-content/70">No accounts found.</td>
             </tr>
           <% end %>
         </tbody>

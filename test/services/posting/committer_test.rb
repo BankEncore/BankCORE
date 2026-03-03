@@ -21,6 +21,33 @@ module Posting
         opened_at: Time.current,
         opening_cash_cents: 10_000
       )
+      # Ensure ledger references exist for refs used in legs (Account create callbacks register them)
+      ensure_ledger_ref_accounts
+      ensure_static_ledger_refs
+    end
+
+    def ensure_ledger_ref_accounts
+      %w[deposit dep misc-cust bp-cust audit-deposit 1234567890123 9876543210987].each do |acct_num|
+        next if Account.exists?(account_number: acct_num)
+
+        Account.create!(
+          account_number: acct_num,
+          account_type: "checking",
+          branch: @branch,
+          status: "open",
+          opened_on: Date.current,
+          last_activity_at: Time.current
+        )
+      end
+    end
+
+    def ensure_static_ledger_refs
+      %w[income:fee official_check:outstanding].each do |ref|
+        next if LedgerReference.exists?(reference: ref)
+
+        ref_type = ref.start_with?("income:") ? "income_code" : "liability"
+        LedgerReference.create!(reference: ref, ref_type: ref_type, status: "active")
+      end
     end
 
     test "persists posting records and returns committed batch" do

@@ -27,6 +27,7 @@ module Posting
       validate_request
       apply_policy
       legs = generate_legs
+      validate_references(legs)
       validate_balance(legs)
       commit(legs)
     rescue ActiveRecord::RecordNotUnique
@@ -74,6 +75,10 @@ module Posting
 
       def generate_legs
         request.fetch(:entries)
+      end
+
+      def validate_references(legs)
+        Posting::ReferenceValidator.call(legs: legs, error_class: Error)
       end
 
       def validate_balance(legs)

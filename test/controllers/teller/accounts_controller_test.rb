@@ -48,6 +48,16 @@ module Teller
       assert_select "form[action='#{teller_accounts_path}']"
     end
 
+    test "new from party profile pre-fills primary owner" do
+      get new_teller_account_path(branch_id: @branch.id, party_id: @party.id)
+
+      assert_response :success
+      assert_select "input[name='account[primary_party_id]'][value='#{@party.id}']", 1
+      assert_select "input[data-party-search-target='searchInput']" do |inputs|
+        assert inputs.any? { |i| i["value"]&.include?("Account") }, "Search input should show party display name"
+      end
+    end
+
     test "create account with owner" do
       assert_difference("Account.count", 1) do
         assert_difference("AccountOwner.count", 1) do

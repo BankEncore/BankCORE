@@ -62,7 +62,8 @@ module Teller
       by_ref.map do |ref, transactions|
         total_credit = transactions.select { |t| t.direction == "credit" }.sum(&:amount_cents)
         total_debit = transactions.select { |t| t.direction == "debit" }.sum(&:amount_cents)
-        account = Account.find_by(account_number: ref)
+        account_number = ref.to_s.sub(/\Aacct:/, "").strip.presence || ref
+        account = Account.find_by(account_number: account_number)
 
         if account
           net_cents = total_credit - total_debit

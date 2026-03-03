@@ -24,6 +24,8 @@ module Posting
         parse_income
       elsif @ref.start_with?("official_check:")
         parse_liability
+      elsif @ref.start_with?("liability:")
+        parse_liability_code
       elsif @ref.start_with?("expense:")
         parse_expense
       else
@@ -78,6 +80,11 @@ module Posting
 
     def parse_liability
       type = ref.sub(/\Aofficial_check:/, "").strip
+      base_result("liability", type)
+    end
+
+    def parse_liability_code
+      type = ref.sub(/\Aliability:/, "").strip
       base_result("liability", type)
     end
 

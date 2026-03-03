@@ -26,6 +26,19 @@ module Teller
         location_type: "vault"
       )
 
+      %w[dep wd from to customer BP_TYPED].each do |acct_num|
+        next if Account.exists?(account_number: acct_num)
+
+        Account.create!(
+          account_number: acct_num,
+          account_type: "checking",
+          branch: @branch,
+          status: "open",
+          opened_on: Date.current,
+          last_activity_at: Time.current
+        )
+      end
+
       grant_permissions(@user, @branch, @workstation)
       sign_in_as(@user)
       patch teller_context_path, params: { branch_id: @branch.id, workstation_id: @workstation.id }

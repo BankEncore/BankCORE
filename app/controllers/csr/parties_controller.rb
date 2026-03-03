@@ -5,6 +5,30 @@ module Csr
     before_action :set_party, only: [ :show, :edit, :update ]
     before_action :ensure_authorized
 
+    def search
+      scope = Party.where(is_active: true, party_kind: "individual").includes(:party_individual).order(display_name: :asc).limit(20)
+      if params[:q].present?
+        q = "%#{ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)}%"
+        scope = scope.where("display_name LIKE ? OR phone LIKE ?", q, q)
+      end
+      parties = scope.map do |p|
+        pi = p.party_individual
+        raw_type = pi&.govt_id_type
+        govt_id_type = raw_type == "driver_license" ? "drivers_license" : raw_type.presence
+        govt_id = pi&.govt_id
+        {
+          id: p.id,
+          display_name: p.display_name.presence || "Party ##{p.id}",
+          relationship_kind: p.relationship_kind,
+          address: [ p.street_address, p.city, [ p.state, p.zip_code ].compact_blank.join(" ") ].compact_blank.join(", ").presence,
+          phone: p.phone,
+          govt_id_type: govt_id_type,
+          govt_id: govt_id.presence
+        }
+      end
+      render json: parties
+    end
+
     def index
       scope = Party.where(is_active: true).left_joins(:party_individual, :accounts).distinct
       scope = apply_parties_search(scope)

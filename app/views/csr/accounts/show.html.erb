@@ -112,26 +112,22 @@
       </table>
     </div>
 
-    <% if @parties_for_owner&.any? %>
-      <%= form_with scope: :account_owner, url: csr_account_account_owners_path(@account), method: :post, local: true, class: "no-print mt-4 pt-4 border-t border-base-300/60 flex flex-wrap items-end gap-3", id: "add-owner-form" do |f| %>
-        <div class="form-control">
-          <%= f.label :party_id, "Add owner", class: "label label-text" %>
-          <%= f.select :party_id,
-                options_from_collection_for_select(@parties_for_owner, :id, :display_name),
-                { include_blank: "Select party…" },
-                class: "select select-bordered select-sm",
-                required: true %>
-        </div>
-        <div class="form-control">
-          <label class="label cursor-pointer gap-2">
-            <%= f.check_box :is_primary, class: "checkbox checkbox-sm" %>
-            <span class="label-text">Primary</span>
-          </label>
-        </div>
-        <%= f.submit "Add", class: "btn btn-primary btn-sm" %>
-      <% end %>
-    <% elsif @parties_for_owner.present? %>
-      <p class="no-print mt-4 pt-4 border-t border-base-300/60 text-sm text-base-content/60">All eligible parties are already owners.</p>
+    <%= form_with scope: :account_owner, url: csr_account_account_owners_path(@account), method: :post, local: true, class: "no-print mt-4 pt-4 border-t border-base-300/60 flex flex-wrap items-end gap-3", id: "add-owner-form" do |f| %>
+      <div class="form-control min-w-[14rem]">
+        <%= render "shared/party_search_field",
+          search_url: search_csr_parties_path,
+          field_name: "account_owner[party_id]",
+          label: "Add owner",
+          placeholder: "Search by name or phone",
+          required: true %>
+      </div>
+      <div class="form-control">
+        <label class="label cursor-pointer gap-2">
+          <%= f.check_box :is_primary, class: "checkbox checkbox-sm" %>
+          <span class="label-text">Primary</span>
+        </label>
+      </div>
+      <%= f.submit "Add", class: "btn btn-primary btn-sm" %>
     <% end %>
   <% end %>
 
