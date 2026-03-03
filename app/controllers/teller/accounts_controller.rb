@@ -22,11 +22,6 @@ module Teller
         .active
         .ordered_for_display
         .includes(:created_by)
-      @parties_for_owner = Party
-        .where(is_active: true, relationship_kind: "customer")
-        .where.not(id: @account.account_owners.select(:party_id))
-        .order(:display_name)
-        .limit(50)
     end
 
     def edit
@@ -37,14 +32,13 @@ module Teller
       if @account.update(account_update_params)
         redirect_to teller_account_path(@account), notice: "Account updated."
       else
-        @parties = Party.where(is_active: true, relationship_kind: "customer").order(:display_name).limit(50)
         render :edit, status: :unprocessable_entity
       end
     end
 
     def new
       @account = Account.new(branch: @branch, status: "open", opened_on: Date.current)
-      @parties = Party.where(is_active: true, relationship_kind: "customer").order(:display_name).limit(50)
+      set_default_owner_party
     end
 
     def related_parties
@@ -72,12 +66,12 @@ module Teller
           redirect_to teller_account_path(@account), notice: "Account created."
         else
           @account.errors.add(:base, "At least one owner (primary) is required")
-          @parties = Party.where(is_active: true, relationship_kind: "customer").order(:display_name).limit(50)
+          set_default_owner_party
           render :new, status: :unprocessable_entity
         end
       else
         @branch = @account.branch
-        @parties = Party.where(is_active: true, relationship_kind: "customer").order(:display_name).limit(50)
+        set_default_owner_party
         render :new, status: :unprocessable_entity
       end
     end
@@ -160,6 +154,13 @@ module Teller
         end
 
         scope.limit(500)
+      end
+
+      def set_default_owner_party
+        party_id = params[:party_id].presence || params.dig(:account, :primary_party_id)
+        return if party_id.blank?
+
+        @default_owner_party = Party.find_by(id: party_id, is_active: true, relationship_kind: "customer")
       end
 
       def apply_accounts_index_filters(scope)

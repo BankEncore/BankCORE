@@ -65,6 +65,9 @@ Rails.application.routes.draw do
     root "dashboard#index"
     resources :advisories, only: [ :index ], path: "advisories"
     resources :parties, only: [ :index, :show, :new, :create, :edit, :update ] do
+      collection do
+        get :search
+      end
       resources :advisories, only: [ :index, :new, :create, :edit, :update ], controller: "advisories", path: "advisories"
     end
     resources :accounts, only: [ :index, :show, :new, :create, :edit, :update ] do

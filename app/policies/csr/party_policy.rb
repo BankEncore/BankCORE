@@ -6,6 +6,10 @@ module Csr
       csr_dashboard?
     end
 
+    def search?
+      index?
+    end
+
     def show?
       csr_dashboard?
     end

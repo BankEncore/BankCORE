@@ -5,7 +5,8 @@ export default class extends Controller {
 
   static values = {
     searchUrl: String,
-    partyAccountsUrlTemplate: String
+    partyAccountsUrlTemplate: String,
+    context: String
   }
 
   connect() {
@@ -193,10 +194,12 @@ export default class extends Controller {
     if (this.partyAccountsUrlTemplateValue) {
       this.fetchAndShowPartyAccounts(partyId, partyName)
     }
+    const detail = { partyId, partyName }
+    if (this.hasContextValue) detail.context = this.contextValue
     window.dispatchEvent(
       new CustomEvent("party-search:party-selected", {
         bubbles: true,
-        detail: { partyId, partyName }
+        detail
       })
     )
   }

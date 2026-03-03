@@ -32,6 +32,19 @@ module Csr
       assert_select "h1", /Show Me/
     end
 
+    test "search returns parties as json" do
+      party = Party.create!(party_kind: "individual", relationship_kind: "customer")
+      party.create_party_individual!(first_name: "CSR", last_name: "Search")
+
+      get search_csr_parties_path, params: { q: "CSR" }
+
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal 1, body.size
+      assert_equal "CSR Search", body[0]["display_name"]
+      assert_equal "customer", body[0]["relationship_kind"]
+    end
+
     private
 
       def set_branch_context(branch_id)
