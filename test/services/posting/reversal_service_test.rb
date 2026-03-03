@@ -123,6 +123,37 @@ module Posting
       assert_equal original_cash.amount_cents, reversal_cash.amount_cents
     end
 
+    test "reversal cash movement has party_id from original and decrements party_cash_daily_totals" do
+      party = Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Reversal Party", is_active: true)
+      party.create_party_individual!(first_name: "Reversal", last_name: "Party")
+      original_with_party = create_deposit_transaction_with_party(party)
+      PartyCashDailyTotal.create!(
+        party_id: party.id,
+        business_date: Date.current,
+        cash_in_cents: 10_000,
+        cash_out_cents: 0
+      )
+
+      batch = ReversalService.new(
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        original_teller_transaction_id: original_with_party.id,
+        reversal_reason_code: "ENTRY_ERROR",
+        reversal_memo: "Wrong amount",
+        request_id: "reversal-party-#{original_with_party.id}-#{Time.current.to_i}"
+      ).call
+
+      reversal_cash = batch.teller_transaction.cash_movements.first
+      assert_equal party.id, reversal_cash.party_id
+
+      total = PartyCashDailyTotal.find_by(party_id: party.id, business_date: Date.current)
+      assert total.present?
+      assert_equal 0, total.cash_in_cents, "Reversal should decrement cash_in"
+      assert_equal 0, total.cash_out_cents
+    end
+
     test "returns existing batch on idempotent retry" do
       request_id = "reversal-idem-#{@original.id}-#{Time.current.to_i}"
       batch1 = ReversalService.new(
@@ -152,6 +183,40 @@ module Posting
     end
 
     private
+
+    def create_deposit_transaction_with_party(party)
+      tt = TellerTransaction.create!(
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: "deposit-party-#{SecureRandom.hex(4)}",
+        transaction_type: "deposit",
+        amount_cents: 10_000,
+        currency: "USD",
+        status: "posted",
+        posted_at: Time.current
+      )
+      pb = PostingBatch.create!(
+        teller_transaction: tt,
+        request_id: tt.request_id,
+        currency: "USD",
+        status: "committed",
+        committed_at: Time.current,
+        metadata: { "served_party" => { "party_id" => party.id } }
+      )
+      PostingLeg.create!(posting_batch: pb, side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 10_000, position: 0)
+      PostingLeg.create!(posting_batch: pb, side: "credit", account_reference: "1000000000001001", amount_cents: 10_000, position: 1)
+      CashMovement.create!(
+        teller_transaction: tt,
+        teller_session: @teller_session,
+        cash_location: @drawer,
+        direction: "in",
+        amount_cents: 10_000,
+        party_id: party.id
+      )
+      tt
+    end
 
     def create_deposit_transaction
       tt = TellerTransaction.create!(

@@ -7,6 +7,7 @@
       <%= link_to "Dashboard", ops_root_path, class: "btn btn-sm btn-ghost #{active.call(ops_root_path)}", aria: (current_page?(ops_root_path) ? { current: "page" } : {}) %>
       <%= link_to "Sessions", ops_sessions_path, class: "btn btn-sm btn-ghost #{sessions_active}" %>
       <%= link_to "Ledger", ops_ledger_path, class: "btn btn-sm btn-ghost #{active.call(ops_ledger_path)}" %>
+      <%= link_to "Large Cash", ops_large_cash_path, class: "btn btn-sm btn-ghost #{active.call(ops_large_cash_path)}" %>
     </div>
   </div>
 </nav>

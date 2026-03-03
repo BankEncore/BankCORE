@@ -42,11 +42,14 @@ module Posting
         reversal_batch = create_reversal_batch!(reversal_transaction, original)
         persist_legs_and_account_transactions!(reversal_batch, reversal_transaction, legs)
         Posting::LedgerBalanceUpdater.call(legs: legs)
-        Posting::Effects::CashMovementRecorder.new(
+        cash_movement = Posting::Effects::CashMovementRecorder.new(
           request: request,
           legs: legs,
           teller_transaction: reversal_transaction
         ).call
+
+        Posting::Effects::PartyCashDailyTotalUpdater.call(cash_movement: cash_movement) if cash_movement.present?
+
         original.update!(
           reversed_by_teller_transaction_id: reversal_transaction.id,
           reversed_at: Time.current

@@ -264,6 +264,35 @@ module Posting
       assert_equal "ABC Utilities xxxx7899", debit_tx.description
     end
 
+    test "updates party_cash_daily_totals when served_party present and cash movement recorded" do
+      party = Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "CTR Committer Party", is_active: true)
+      party.create_party_individual!(first_name: "CTR", last_name: "Committer")
+      request = {
+        user: @user,
+        teller_session: @teller_session,
+        branch: @branch,
+        workstation: @workstation,
+        request_id: "commit-req-ctr",
+        transaction_type: "deposit",
+        amount_cents: 12_000,
+        metadata: { "served_party" => { "party_id" => party.id } },
+        currency: "USD"
+      }
+      legs = [
+        { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 12_000, position: 0 },
+        { side: "credit", account_reference: "acct:deposit", amount_cents: 12_000, position: 1 }
+      ]
+
+      assert_difference -> { PartyCashDailyTotal.count }, 1 do
+        Committer.new(request: request, legs: legs).call
+      end
+
+      total = PartyCashDailyTotal.find_by(party_id: party.id, business_date: Date.current)
+      assert total.present?
+      assert_equal 12_000, total.cash_in_cents
+      assert_equal 0, total.cash_out_cents
+    end
+
     test "creates AuditEvent transaction.posted with served_party primary_account initiating_lookup in metadata" do
       party = Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Audit Party", is_active: true)
       party.create_party_individual!(first_name: "Audit", last_name: "Party")

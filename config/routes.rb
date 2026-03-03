@@ -80,6 +80,7 @@ Rails.application.routes.draw do
   namespace :ops do
     root "dashboard#index"
     get "ledger", to: "ledger#index", as: :ledger
+    get "large_cash", to: "large_cash#index", as: :large_cash
     resources :sessions, only: [ :index, :show ], controller: "sessions", path: "sessions"
   end
 

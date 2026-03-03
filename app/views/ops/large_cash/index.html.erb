@@ -1,0 +1,82 @@
+<section class="ui-panel bg-base-100 border-base-300">
+  <div class="ui-panel-pad">
+    <h2 class="ui-section-title text-lg mb-4">Large Cash Transactions</h2>
+    <p class="text-sm text-base-content/70 mb-4">
+      Parties whose combined cash in/out meets or exceeds the threshold for a business day (CTR-style reporting).
+    </p>
+
+    <%= form_with url: ops_large_cash_path, method: :get, local: true, class: "mb-6" do |f| %>
+      <div class="flex flex-wrap items-end gap-4 p-3 rounded-lg bg-base-200">
+        <div class="form-control">
+          <%= label_tag :date, "Business Date", class: "text-xs font-medium text-base-content block mb-1" %>
+          <%= date_field_tag :date, @date, class: "input input-bordered input-sm" %>
+        </div>
+        <div class="form-control">
+          <%= label_tag :party_id, "Party ID (optional)", class: "text-xs font-medium text-base-content block mb-1" %>
+          <%= number_field_tag :party_id, @party_id, placeholder: "Filter by party", class: "input input-bordered input-sm w-32", min: 1 %>
+        </div>
+        <div class="form-control">
+          <%= label_tag :threshold, "Threshold ($)", class: "text-xs font-medium text-base-content block mb-1" %>
+          <%= number_field_tag :threshold, (@threshold_cents / 100.0).round(2), step: 0.01, min: 0.01, class: "input input-bordered input-sm w-24", placeholder: "10000" %>
+        </div>
+        <%= submit_tag "Apply", class: "btn btn-primary btn-sm" %>
+        <%= link_to "Clear", ops_large_cash_path, class: "btn btn-ghost btn-sm" %>
+      </div>
+    <% end %>
+
+    <% if @party_id.present? && @records.empty? %>
+      <p class="text-sm text-base-content/70 mb-4">
+        No daily totals for party <%= @selected_party&.display_name || @party_id %> on <%= @date.strftime("%B %-d, %Y") %>.
+        <%= link_to "View all parties exceeding threshold", ops_large_cash_path(date: @date, threshold: @threshold_cents / 100.0), class: "link link-hover" %>
+      </p>
+    <% end %>
+
+    <div class="overflow-x-auto">
+      <table class="table w-full table-zebra">
+        <thead>
+          <tr>
+            <th>Party</th>
+            <th>Business Date</th>
+            <th class="text-right">Cash In</th>
+            <th class="text-right">Cash Out</th>
+            <th class="text-right">Total</th>
+            <th>Meets Threshold</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @records.any? %>
+            <% @records.each do |record| %>
+              <tr>
+                <td>
+                  <%= link_to record.party.display_name, teller_party_path(record.party), class: "link link-hover" if record.party %>
+                  <% if record.party.blank? %><span class="text-base-content/50">—</span><% end %>
+                </td>
+                <td><%= record.business_date.strftime("%Y-%m-%d") %></td>
+                <td class="text-right ui-money"><%= number_to_currency(record.cash_in_cents / 100.0) %></td>
+                <td class="text-right ui-money"><%= number_to_currency(record.cash_out_cents / 100.0) %></td>
+                <td class="text-right font-semibold ui-money"><%= number_to_currency(record.total_cents / 100.0) %></td>
+                <td>
+                  <% meets = record.total_cents >= @threshold_cents %>
+                  <span class="badge <%= meets ? 'badge-warning' : 'badge-ghost' %>">
+                    <%= meets ? "Yes" : "No" %>
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="6" class="py-8 text-center text-base-content/70">No records for this date and filter.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @records.any? %>
+      <p class="text-xs text-base-content/60 mt-4">
+        Threshold: <%= number_to_currency(@threshold_cents / 100.0) %>.
+        <%= @records.size %> <%= "record".pluralize(@records.size) %> shown.
+      </p>
+    <% end %>
+  </div>
+</section>
