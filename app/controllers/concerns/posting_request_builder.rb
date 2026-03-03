@@ -28,24 +28,29 @@ module PostingRequestBuilder
     end
 
     def approval_policy_trigger(posting_params)
-      return "amount_threshold" if posting_params[:amount_cents].to_i >= approval_amount_threshold_cents
-
-      nil
+      result = approval_threshold_check(posting_params)
+      result&.dig(:policy_trigger)
     end
 
     def approval_policy_context(posting_params)
-      trigger = approval_policy_trigger(posting_params)
-      return {} if trigger.blank?
+      result = approval_threshold_check(posting_params)
+      return {} if result.blank?
 
       {
-        trigger: trigger,
-        threshold_cents: approval_amount_threshold_cents,
-        amount_cents: posting_params[:amount_cents].to_i,
-        transaction_type: posting_params[:transaction_type].to_s
+        trigger: result[:policy_trigger],
+        threshold_cents: result[:threshold_cents],
+        amount_cents: result[:amount_cents],
+        transaction_type: posting_params[:transaction_type].to_s,
+        trigger_key: result[:trigger_key]
       }
     end
 
-    def approval_amount_threshold_cents
-      100_000
+    def approval_threshold_check(posting_params)
+      entries = normalized_entries(posting_params)
+      Posting::ApprovalThresholdChecker.call(
+        posting_params: posting_params,
+        entries: entries,
+        default_cash_account_reference: default_cash_account_reference
+      )
     end
 end

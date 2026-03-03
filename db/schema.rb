@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_043246) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_060000) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -90,6 +90,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_043246) do
     t.index ["teller_session_id"], name: "index_advisory_acknowledgments_on_teller_session_id"
     t.index ["user_id"], name: "index_advisory_acknowledgments_on_user_id"
     t.index ["workstation_id"], name: "index_advisory_acknowledgments_on_workstation_id"
+  end
+
+  create_table "approval_thresholds", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "policy_trigger", null: false
+    t.integer "threshold_cents", null: false
+    t.string "transaction_type"
+    t.string "trigger_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["trigger_key", "transaction_type"], name: "index_approval_thresholds_on_trigger_and_type", unique: true
+    t.index ["trigger_key"], name: "index_approval_thresholds_on_trigger_key"
   end
 
   create_table "audit_events", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
