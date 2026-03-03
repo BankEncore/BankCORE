@@ -37,6 +37,31 @@ module Posting
       assert_equal "transit", metadata[:check_items][0][:check_type]
     end
 
+    test "assigns check_type by position when multiple checks share same account_reference" do
+      builder = RecipeBuilder.new(
+        posting_params: {
+          transaction_type: "deposit",
+          amount_cents: 3_000,
+          primary_account_reference: "acct:123",
+          check_items: [
+            { routing: "021", account: "456", number: "100", account_reference: "check:021:456:100", amount_cents: 1_000, check_type: "transit" },
+            { routing: "021", account: "456", number: "100", account_reference: "check:021:456:100", amount_cents: 2_000, check_type: "on_us" }
+          ],
+          entries: [
+            { side: "debit", account_reference: "check:021:456:100", amount_cents: 1_000 },
+            { side: "debit", account_reference: "check:021:456:100", amount_cents: 2_000 },
+            { side: "credit", account_reference: "acct:123", amount_cents: 3_000 }
+          ]
+        },
+        default_cash_account_reference: "cash:D01"
+      )
+
+      entries = builder.normalized_entries
+      check_entries = entries.select { |e| e[:account_reference].to_s.start_with?("check:") }
+      assert_equal "transit", check_entries[0][:check_type], "First check should be transit"
+      assert_equal "on_us", check_entries[1][:check_type], "Second check should be on_us"
+    end
+
     test "builds vault transfer generated entries" do
       builder = RecipeBuilder.new(
         posting_params: {

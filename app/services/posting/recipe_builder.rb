@@ -24,8 +24,19 @@ module Posting
       end
 
       def enrich_entries_with_structured_fields(entries)
+        check_items = all_check_items_from_params
+        check_index = 0
+
         entries.map do |entry|
-          metadata = check_metadata_for_entry(entry)
+          ref = entry[:account_reference].to_s
+          metadata = if ref.start_with?("check:")
+            item = check_items[check_index]
+            check_index += 1
+            item.present? ? { "check_type" => (item[:check_type] || item["check_type"]).to_s.presence || "transit" } : {}
+          else
+            {}
+          end
+
           parsed = AccountReferenceParser.parse(entry[:account_reference], metadata: metadata)
           account_reference = canonicalize_account_reference(
             entry[:account_reference],
@@ -52,18 +63,6 @@ module Posting
         return raw.to_s if raw.to_s.strip.start_with?("acct:")
 
         "acct:#{reference_identifier}"
-      end
-
-      def check_metadata_for_entry(entry)
-        ref = entry[:account_reference].to_s
-        return {} unless ref.start_with?("check:")
-
-        check_items = all_check_items_from_params
-        item = check_items.find { |ci| (ci[:account_reference] || ci["account_reference"]).to_s == ref }
-        return {} if item.blank?
-
-        ct = (item[:check_type] || item["check_type"]).to_s.presence || "transit"
-        { "check_type" => ct }
       end
 
       def all_check_items_from_params
