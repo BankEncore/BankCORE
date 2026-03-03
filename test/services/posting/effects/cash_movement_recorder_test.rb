@@ -4,6 +4,8 @@ module Posting
   module Effects
     class CashMovementRecorderTest < ActiveSupport::TestCase
       setup do
+        @party = Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "Cash Party", is_active: true)
+        @party.create_party_individual!(first_name: "Cash", last_name: "Party")
         @user = User.take || User.create!(email_address: "cash-effect@example.com", password: "password")
         @branch = Branch.create!(code: "711", name: "Cash Effect Branch")
         @workstation = Workstation.create!(branch: @branch, code: "CE1", name: "Cash Effect WS")
@@ -53,6 +55,75 @@ module Posting
         movement = CashMovement.order(:id).last
         assert_equal "in", movement.direction
         assert_equal 7_000, movement.amount_cents
+      end
+
+      test "sets party_id from request metadata served_party" do
+        recorder = CashMovementRecorder.new(
+          request: base_request.merge(
+            transaction_type: "deposit",
+            metadata: { served_party: { party_id: @party.id } }
+          ),
+          legs: [
+            { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 6_000 },
+            { side: "credit", account_reference: "acct:deposit", amount_cents: 6_000 }
+          ],
+          teller_transaction: @teller_transaction
+        )
+
+        movement = recorder.call
+        assert movement.present?
+        assert_equal @party.id, movement.party_id
+      end
+
+      test "sets party_id from reversal_of_teller_transaction posting_batch metadata" do
+        original_tt = TellerTransaction.create!(
+          user: @user,
+          teller_session: @teller_session,
+          branch: @branch,
+          workstation: @workstation,
+          request_id: "ce-orig-party",
+          transaction_type: "deposit",
+          currency: "USD",
+          amount_cents: 5_000,
+          status: "posted",
+          posted_at: Time.current
+        )
+        PostingBatch.create!(
+          teller_transaction: original_tt,
+          request_id: original_tt.request_id,
+          currency: "USD",
+          status: "committed",
+          committed_at: Time.current,
+          metadata: { "served_party" => { "party_id" => @party.id } }
+        )
+        reversal_tt = TellerTransaction.create!(
+          user: @user,
+          teller_session: @teller_session,
+          branch: @branch,
+          workstation: @workstation,
+          request_id: "ce-rev-party",
+          transaction_type: "reversal",
+          currency: "USD",
+          amount_cents: 5_000,
+          status: "posted",
+          posted_at: Time.current,
+          reversal_of_teller_transaction_id: original_tt.id
+        )
+        recorder = CashMovementRecorder.new(
+          request: base_request.merge(
+            transaction_type: "reversal",
+            metadata: { reversal: { original_transaction_type: "deposit" } }
+          ),
+          legs: [
+            { side: "credit", account_reference: "cash:#{@drawer.code}", amount_cents: 5_000 },
+            { side: "debit", account_reference: "acct:deposit", amount_cents: 5_000 }
+          ],
+          teller_transaction: reversal_tt
+        )
+
+        movement = recorder.call
+        assert movement.present?
+        assert_equal @party.id, movement.party_id
       end
 
       test "records cash out for vault transfer drawer credit" do
@@ -191,6 +262,20 @@ module Posting
         movement = CashMovement.order(:id).last
         assert_equal "out", movement.direction
         assert_equal 5_000, movement.amount_cents
+      end
+
+      test "returns nil when no cash movement created" do
+        recorder = CashMovementRecorder.new(
+          request: base_request.merge(transaction_type: "transfer"),
+          legs: [
+            { side: "debit", account_reference: "acct:from", amount_cents: 4_000 },
+            { side: "credit", account_reference: "acct:to", amount_cents: 4_000 }
+          ],
+          teller_transaction: @teller_transaction
+        )
+
+        result = recorder.call
+        assert_nil result
       end
 
       private

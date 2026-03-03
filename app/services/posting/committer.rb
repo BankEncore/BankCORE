@@ -12,11 +12,13 @@ module Posting
         persist_legs_and_account_transactions!(posting_batch, teller_transaction)
         Posting::LedgerBalanceUpdater.call(legs: legs)
 
-        Posting::Effects::CashMovementRecorder.new(
+        cash_movement = Posting::Effects::CashMovementRecorder.new(
           request: request,
           legs: legs,
           teller_transaction: teller_transaction
         ).call
+
+        Posting::Effects::PartyCashDailyTotalUpdater.call(cash_movement: cash_movement) if cash_movement.present?
 
         denom_set = persist_denomination_breakdown!(teller_transaction) if denomination_lines_from_metadata.any?
 

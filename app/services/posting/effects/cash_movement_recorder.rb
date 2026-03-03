@@ -15,19 +15,41 @@ module Posting
         return if direction.blank?
 
         cash_amount_cents = cash_amount(cash_legs, direction)
-        return unless cash_amount_cents.positive?
+        return nil unless cash_amount_cents.positive?
 
         CashMovement.create!(
           teller_transaction: teller_transaction,
           teller_session: request.fetch(:teller_session),
           cash_location: request.fetch(:teller_session).cash_location,
           direction: direction,
-          amount_cents: cash_amount_cents
+          amount_cents: cash_amount_cents,
+          party_id: resolved_party_id
         )
       end
 
       private
         attr_reader :request, :legs, :teller_transaction
+
+        def resolved_party_id
+          if teller_transaction.transaction_type == "reversal"
+            party_id_from_reversal
+          else
+            party_id_from_request
+          end
+        end
+
+        def party_id_from_request
+          request.dig(:metadata, :served_party, :party_id) ||
+            request.dig(:metadata, "served_party", "party_id")
+        end
+
+        def party_id_from_reversal
+          original = teller_transaction.reversal_of_teller_transaction
+          return nil unless original&.posting_batch
+
+          meta = original.posting_batch.metadata || {}
+          meta.dig("served_party", "party_id") || meta.dig(:served_party, :party_id)
+        end
 
         def cash_direction(cash_legs)
           case request.fetch(:transaction_type)

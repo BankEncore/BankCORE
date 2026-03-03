@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_060000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_070001) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -192,11 +192,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_060000) do
     t.bigint "cash_location_id", null: false
     t.datetime "created_at", null: false
     t.string "direction", null: false
+    t.bigint "party_id"
     t.bigint "teller_session_id", null: false
     t.bigint "teller_transaction_id", null: false
     t.datetime "updated_at", null: false
     t.index ["cash_location_id"], name: "index_cash_movements_on_cash_location_id"
     t.index ["direction"], name: "index_cash_movements_on_direction"
+    t.index ["party_id"], name: "index_cash_movements_on_party_id"
     t.index ["teller_session_id"], name: "index_cash_movements_on_teller_session_id"
     t.index ["teller_transaction_id"], name: "index_cash_movements_on_teller_transaction_id"
   end
@@ -271,6 +273,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_060000) do
     t.string "tax_id"
     t.datetime "updated_at", null: false
     t.string "zip_code", limit: 10
+  end
+
+  create_table "party_cash_daily_totals", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.date "business_date", null: false
+    t.integer "cash_in_cents", default: 0, null: false
+    t.integer "cash_out_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "party_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["business_date"], name: "index_party_cash_daily_totals_on_business_date"
+    t.index ["party_id", "business_date"], name: "index_party_cash_daily_totals_on_party_and_date", unique: true
+    t.index ["party_id"], name: "index_party_cash_daily_totals_on_party_id"
   end
 
   create_table "party_individuals", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
@@ -476,12 +490,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_060000) do
   add_foreign_key "cash_location_assignments", "teller_sessions"
   add_foreign_key "cash_locations", "branches"
   add_foreign_key "cash_movements", "cash_locations"
+  add_foreign_key "cash_movements", "parties"
   add_foreign_key "cash_movements", "teller_sessions"
   add_foreign_key "cash_movements", "teller_transactions"
   add_foreign_key "denomination_lines", "cash_denominations"
   add_foreign_key "denomination_lines", "denomination_sets"
   add_foreign_key "ledger_references", "accounts"
   add_foreign_key "ledger_references", "cash_locations"
+  add_foreign_key "party_cash_daily_totals", "parties"
   add_foreign_key "party_individuals", "parties"
   add_foreign_key "party_organizations", "parties"
   add_foreign_key "posting_batches", "posting_batches", column: "reversal_of_posting_batch_id"

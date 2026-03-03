@@ -10,6 +10,8 @@ class Party < ApplicationRecord
   has_one :party_organization, dependent: :destroy
   has_many :account_owners, dependent: :destroy
   has_many :accounts, through: :account_owners
+  has_many :cash_movements, dependent: :nullify
+  has_many :party_cash_daily_totals, dependent: :destroy
 
   validates :party_kind, presence: true, inclusion: { in: PARTY_KINDS }
   validates :relationship_kind, presence: true, inclusion: { in: RELATIONSHIP_KINDS }
