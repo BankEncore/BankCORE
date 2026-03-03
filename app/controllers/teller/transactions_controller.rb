@@ -19,14 +19,15 @@ module Teller
 
       approval_trigger = approval_policy_trigger(validation_params)
       approval_needed = approval_trigger.present?
+      context = approval_needed ? approval_policy_context(validation_params) : {}
 
       render json: {
         ok: errors.empty?,
         errors: errors,
         approval_required: approval_needed,
-        approval_reason: approval_needed ? "Amount threshold exceeded" : nil,
+        approval_reason: approval_needed ? approval_reason_for(approval_trigger) : nil,
         approval_policy_trigger: approval_trigger,
-        approval_policy_context: approval_needed ? approval_policy_context(validation_params) : {},
+        approval_policy_context: context,
         totals: {
           debit_cents: debit_total,
           credit_cents: credit_total,
@@ -90,6 +91,16 @@ module Teller
 
       def validation_errors(posting_params)
         Posting::WorkflowValidator.errors(posting_params)
+      end
+
+      def approval_reason_for(policy_trigger)
+        case policy_trigger.to_s
+        when "cash_in_threshold" then "Cash-in threshold exceeded"
+        when "cash_out_threshold" then "Cash-out threshold exceeded"
+        when "vault_transfer_threshold" then "Vault transfer threshold exceeded"
+        when "amount_threshold" then "Amount threshold exceeded"
+        else "Approval required"
+        end
       end
   end
 end

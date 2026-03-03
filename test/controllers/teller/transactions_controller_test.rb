@@ -41,14 +41,14 @@ module Teller
       assert_equal 0, body.dig("totals", "imbalance_cents")
     end
 
-    test "flags approval required for threshold amount" do
+    test "flags approval required for cash-in threshold on deposit" do
       post teller_validate_transaction_path, params: {
         request_id: "validate-2",
         transaction_type: "deposit",
-        amount_cents: 150_000,
+        amount_cents: 600_000,
         party_id: @party.id,
         primary_account_reference: "acct:customer",
-        cash_account_reference: "cash:drawer"
+        cash_account_reference: "cash:VDR1"
       }
 
       assert_response :success
@@ -56,9 +56,75 @@ module Teller
 
       assert_equal true, body["ok"]
       assert_equal true, body["approval_required"]
-      assert_match(/threshold/i, body["approval_reason"])
-      assert_equal "amount_threshold", body["approval_policy_trigger"]
+      assert_match(/Cash-in threshold/i, body["approval_reason"])
+      assert_equal "cash_in_threshold", body["approval_policy_trigger"]
       assert_equal "deposit", body.dig("approval_policy_context", "transaction_type")
+      assert_equal 600_000, body.dig("approval_policy_context", "amount_cents")
+      assert_equal 500_000, body.dig("approval_policy_context", "threshold_cents")
+    end
+
+    test "flags approval required for cash-out threshold on withdrawal" do
+      post teller_validate_transaction_path, params: {
+        request_id: "validate-withdrawal-threshold",
+        transaction_type: "withdrawal",
+        amount_cents: 150_000,
+        party_id: @party.id,
+        primary_account_reference: "acct:customer",
+        cash_account_reference: "cash:VDR1"
+      }
+
+      assert_response :success
+      body = JSON.parse(response.body)
+
+      assert_equal true, body["ok"]
+      assert_equal true, body["approval_required"]
+      assert_match(/Cash-out threshold/i, body["approval_reason"])
+      assert_equal "cash_out_threshold", body["approval_policy_trigger"]
+      assert_equal 150_000, body.dig("approval_policy_context", "amount_cents")
+      assert_equal 100_000, body.dig("approval_policy_context", "threshold_cents")
+    end
+
+    test "flags approval required for vault transfer threshold" do
+      post teller_validate_transaction_path, params: {
+        request_id: "validate-vault-threshold",
+        transaction_type: "vault_transfer",
+        amount_cents: 1_500_000,
+        vault_transfer_direction: "drawer_to_vault",
+        vault_transfer_destination_cash_account_reference: "cash:VLT1",
+        vault_transfer_reason_code: "end_of_day_adjustment",
+        vault_transfer_memo: "Large transfer",
+        denomination_lines: denomination_lines_for(1_500_000)
+      }
+
+      assert_response :success
+      body = JSON.parse(response.body)
+
+      assert_equal true, body["ok"]
+      assert_equal true, body["approval_required"]
+      assert_match(/Vault transfer threshold/i, body["approval_reason"])
+      assert_equal "vault_transfer_threshold", body["approval_policy_trigger"]
+      assert_equal 1_500_000, body.dig("approval_policy_context", "amount_cents")
+      assert_equal 1_000_000, body.dig("approval_policy_context", "threshold_cents")
+    end
+
+    test "flags approval required for amount threshold on transfer" do
+      post teller_validate_transaction_path, params: {
+        request_id: "validate-transfer-threshold",
+        transaction_type: "transfer",
+        amount_cents: 150_000,
+        party_id: @party.id,
+        primary_account_reference: "acct:from",
+        counterparty_account_reference: "acct:to",
+        transfer_fee_cents: 0
+      }
+
+      assert_response :success
+      body = JSON.parse(response.body)
+
+      assert_equal true, body["ok"]
+      assert_equal true, body["approval_required"]
+      assert_match(/Amount threshold/i, body["approval_reason"])
+      assert_equal "amount_threshold", body["approval_policy_trigger"]
       assert_equal 150_000, body.dig("approval_policy_context", "amount_cents")
       assert_equal 100_000, body.dig("approval_policy_context", "threshold_cents")
     end

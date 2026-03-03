@@ -100,12 +100,13 @@ module Teller
       grant_supervisor_permissions(supervisor, @branch, @workstation)
 
       request_id = "http-post-approved-#{Time.current.to_i}"
+      amount_cents = 600_000
       approval_token = ActiveSupport::MessageVerifier.new(Rails.application.secret_key_base, serializer: JSON).generate(
         {
           supervisor_user_id: supervisor.id,
           request_id: request_id,
-          reason: "threshold_exceeded",
-          policy_trigger: "amount_threshold",
+          reason: "Cash-in threshold exceeded",
+          policy_trigger: "cash_in_threshold",
           policy_context: {},
           approved_at: Time.current.to_i
         }
@@ -113,10 +114,10 @@ module Teller
 
       post teller_posting_path, params: valid_posting_payload(
         request_id: request_id,
-        amount_cents: 150_000,
+        amount_cents: amount_cents,
         entries: [
-          { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 150_000 },
-          { side: "credit", account_reference: "acct:deposit", amount_cents: 150_000 }
+          { side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: amount_cents },
+          { side: "credit", account_reference: "acct:deposit", amount_cents: amount_cents }
         ]
       ).merge(approval_token: approval_token)
 
