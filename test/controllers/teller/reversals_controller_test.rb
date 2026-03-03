@@ -22,6 +22,16 @@ module Teller
         opened_at: Time.current,
         opening_cash_cents: 10_000
       )
+      unless Account.exists?(account_number: "1000000000001001")
+        Account.create!(
+          account_number: "1000000000001001",
+          account_type: "checking",
+          branch: @branch,
+          status: "open",
+          opened_on: Date.current,
+          last_activity_at: Time.current
+        )
+      end
       @original = create_deposit_transaction
       grant_posting_access(@user, @branch, @workstation)
       grant_supervisor_access(@supervisor, @branch, @workstation)

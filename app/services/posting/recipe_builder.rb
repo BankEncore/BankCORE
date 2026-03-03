@@ -27,7 +27,13 @@ module Posting
         entries.map do |entry|
           metadata = check_metadata_for_entry(entry)
           parsed = AccountReferenceParser.parse(entry[:account_reference], metadata: metadata)
+          account_reference = canonicalize_account_reference(
+            entry[:account_reference],
+            parsed[:reference_type],
+            parsed[:reference_identifier]
+          )
           entry.merge(
+            account_reference: account_reference,
             reference_type: parsed[:reference_type],
             reference_identifier: parsed[:reference_identifier],
             check_routing_number: parsed[:check_routing_number],
@@ -36,6 +42,16 @@ module Posting
             check_type: parsed[:check_type]
           )
         end
+      end
+
+      def canonicalize_account_reference(raw, reference_type, reference_identifier)
+        return raw.to_s if raw.blank?
+        return raw.to_s if reference_type != "customer_account"
+        return raw.to_s if reference_identifier.blank?
+
+        return raw.to_s if raw.to_s.strip.start_with?("acct:")
+
+        "acct:#{reference_identifier}"
       end
 
       def check_metadata_for_entry(entry)

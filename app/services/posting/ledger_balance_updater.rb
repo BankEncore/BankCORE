@@ -14,9 +14,9 @@ module Posting
       deltas = compute_deltas
       return if deltas.empty?
 
-      account_numbers = deltas.keys.uniq
-      Account.where(account_number: account_numbers).lock.each do |account|
-        delta = deltas[account.account_number]
+      account_ids = deltas.keys.uniq
+      Account.where(id: account_ids).lock.each do |account|
+        delta = deltas[account.id]
         next if delta.zero?
 
         account.increment!(:ledger_balance_cents, delta)
@@ -30,25 +30,16 @@ module Posting
 
     def compute_deltas
       legs.each_with_object(Hash.new(0)) do |leg, h|
-        ref = leg.fetch(:account_reference).to_s.strip
-        next unless customer_account_reference?(ref)
+        reference = leg.fetch(:account_reference).to_s.strip
+        next if reference.blank?
 
-        account_number = normalize_customer_account_ref(ref)
-        next if account_number.blank?
+        resolved = LedgerReferences::Resolver.call(reference: reference)
+        next unless resolved.ref_type == "customer_account"
+        next if resolved.account_id.blank?
 
         delta = leg.fetch(:side) == "credit" ? leg.fetch(:amount_cents) : -leg.fetch(:amount_cents)
-        h[account_number] += delta
+        h[resolved.account_id] += delta
       end
-    end
-
-    def customer_account_reference?(ref)
-      return false if ref.blank?
-
-      AccountReferenceParser::INTERNAL_PREFIXES.none? { |p| ref.start_with?(p) }
-    end
-
-    def normalize_customer_account_ref(ref)
-      ref.to_s.sub(/\Aacct:/, "").strip.presence
     end
   end
 end

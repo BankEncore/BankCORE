@@ -7,6 +7,19 @@ module Teller
       @branch = Branch.create!(code: "901", name: "Receipt Branch")
       @workstation = Workstation.create!(branch: @branch, code: "RC1", name: "Receipt WS")
       @drawer = CashLocation.create!(branch: @branch, code: "RDR1", name: "Receipt Drawer", location_type: "drawer")
+      CashLocation.find_or_create_by!(branch: @branch, code: "V01") { |l| l.name = "Vault 01"; l.location_type = "vault" }
+      %w[deposit settlement customer].each do |acct_num|
+        next if Account.exists?(account_number: acct_num)
+
+        Account.create!(
+          account_number: acct_num,
+          account_type: "checking",
+          branch: @branch,
+          status: "open",
+          opened_on: Date.current,
+          last_activity_at: Time.current
+        )
+      end
       @teller_session = TellerSession.create!(
         user: @user,
         branch: @branch,

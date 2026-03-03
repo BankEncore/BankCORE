@@ -4,6 +4,8 @@ class Account < ApplicationRecord
   ACCOUNT_TYPES = %w[checking savings deposit].freeze
   STATUSES = %w[open closed frozen restricted].freeze
 
+  after_create :register_ledger_reference
+
   belongs_to :branch
   has_many :account_owners, dependent: :destroy
   has_many :account_transactions, dependent: :nullify
@@ -30,5 +32,16 @@ class Account < ApplicationRecord
 
   def balance_cents
     ledger_balance_cents
+  end
+
+  private
+
+  def register_ledger_reference
+    return unless LedgerReference.table_exists?
+
+    ref = "acct:#{account_number}"
+    return if LedgerReference.exists?(reference: ref)
+
+    LedgerReference.create!(reference: ref, ref_type: "customer_account", status: "active", account_id: id)
   end
 end

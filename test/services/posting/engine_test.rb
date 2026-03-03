@@ -22,6 +22,19 @@ module Posting
         opened_at: Time.current,
         opening_cash_cents: 10_000
       )
+
+      %w[deposit from to check_settlement cash].each do |acct_num|
+        next if Account.exists?(account_number: acct_num)
+
+        Account.create!(
+          account_number: acct_num,
+          account_type: "checking",
+          branch: @branch,
+          status: "open",
+          opened_on: Date.current,
+          last_activity_at: Time.current
+        )
+      end
     end
 
     test "creates balanced posting records" do
