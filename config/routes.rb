@@ -28,6 +28,13 @@ Rails.application.routes.draw do
     resources :misc_receipts, only: [ :new, :create ]
     resources :bill_payments, only: [ :new, :create ]
     resources :check_cashings, only: [ :new, :create ]
+    namespace :parts do
+      resources :deposits, only: [ :new, :create ]
+      resources :vault_transfers, only: [ :new, :create ]
+      resources :withdrawals, only: [ :new, :create ]
+      resources :transfers, only: [ :new, :create ]
+      resources :check_cashings, only: [ :new, :create ]
+    end
     resource :context, only: [ :show, :update ]
     get "transactions/deposit", to: "transaction_pages#deposit", as: :deposit_transaction
     get "transactions/withdrawal", to: "transaction_pages#withdrawal", as: :withdrawal_transaction

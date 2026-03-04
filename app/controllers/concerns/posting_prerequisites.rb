@@ -39,17 +39,17 @@ module PostingPrerequisites
 
     def inferred_transaction_type
       case controller_path
-      when "teller/deposits"
+      when "teller/deposits", "teller/parts/deposits"
         "deposit"
-      when "teller/withdrawals"
+      when "teller/withdrawals", "teller/parts/withdrawals"
         "withdrawal"
-      when "teller/transfers"
+      when "teller/transfers", "teller/parts/transfers"
         "transfer"
-      when "teller/vault_transfers"
+      when "teller/vault_transfers", "teller/parts/vault_transfers"
         "vault_transfer"
       when "teller/drafts"
         "draft"
-      when "teller/check_cashings"
+      when "teller/check_cashings", "teller/parts/check_cashings"
         "check_cashing"
       when "teller/misc_receipts"
         "misc_receipt"
