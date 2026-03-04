@@ -183,19 +183,21 @@ test/services/posting/parts/
 ### Parts GUI (Option A — separate routes)
 
 - **Routes** under `namespace :teller` / `namespace :parts`:
+  - `GET /teller/parts` — Parts landing page (Overview)
   - `/teller/parts/deposits/new`, `POST /teller/parts/deposits`
   - `/teller/parts/vault_transfers/new`, `POST /teller/parts/vault_transfers`
-  - `/teller/parts/withdrawals/new`, `POST /teller/parts/withdrawals` (flow placeholder)
-  - `/teller/parts/transfers/new`, `POST /teller/parts/transfers` (flow placeholder)
-  - `/teller/parts/check_cashings/new`, `POST /teller/parts/check_cashings` (flow implemented)
+  - `/teller/parts/withdrawals/new`, `POST /teller/parts/withdrawals`
+  - `/teller/parts/transfers/new`, `POST /teller/parts/transfers`
+  - `/teller/parts/check_cashings/new`, `POST /teller/parts/check_cashings`
+- **Navigation:** “Parts (test)” dropdown in the teller command bar links to Overview and each flow.
 - **Controllers** in `app/controllers/teller/parts/` use **PartBuilder** instead of RecipeBuilder.
 - **PartsPostingExecution** concern overrides posting logic to use PartBuilder; metadata and Engine integration unchanged.
 - Pages show a “(Parts)” label to distinguish from the main teller flows.
 
 ### Rake task
 
-- `rake parts:print_legs FLOW=deposit` and `FLOW=vault_transfer` supported.
-- Optional env: `CASH_BACK_CENTS`, `SOURCE_REF`, `DEST_REF`, `FEE_CENTS`, `CHECK_ITEMS`, etc.
+- `rake parts:print_legs FLOW=check_cashing|withdrawal|transfer|deposit|vault_transfer` supported.
+- Optional env: `CASH_BACK_CENTS`, `SOURCE_REF`, `DEST_REF`, `FEE_CENTS`, `CHECK_ITEMS`, `AMOUNT_CENTS`, etc.
 
 ---
 

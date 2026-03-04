@@ -267,6 +267,136 @@ module Posting
         end
       end
 
+      test "parity with TransferRecipe when FEE is non-zero" do
+        amount = 2_000
+        fee = 50
+        primary = "acct:123"
+        counterparty = "acct:456"
+        fee_ref = "income:transfer_fee"
+
+        recipe_entries = RecipeBuilder.new(
+          posting_params: {
+            transaction_type: "transfer",
+            amount_cents: amount,
+            fee_cents: fee,
+            primary_account_reference: primary,
+            counterparty_account_reference: counterparty,
+            fee_income_account_reference: fee_ref
+          },
+          default_cash_account_reference: "cash:D01"
+        ).normalized_entries
+
+        part_legs = PartBuilder.build_entries(
+          flow_type: "transfer",
+          amount_cents: amount,
+          fee_cents: fee,
+          primary_account_reference: primary,
+          counterparty_account_reference: counterparty,
+          fee_income_account_reference: fee_ref
+        )
+
+        assert_equal recipe_entries.size, part_legs.size
+        recipe_by_key = recipe_entries.index_by { |e| [ e[:side], e[:account_reference], e[:amount_cents] ] }
+        part_legs.each do |leg|
+          key = [ leg[:side], leg[:account_reference], leg[:amount_cents] ]
+          assert recipe_by_key.key?(key), "PartBuilder leg #{leg.inspect} should match RecipeBuilder output"
+        end
+      end
+
+      test "parity with DepositRecipe when cash-only (no cash_back, no fee, no checks)" do
+        amount = 5_000
+        primary = "acct:123"
+        cash = "cash:D01"
+
+        recipe_entries = RecipeBuilder.new(
+          posting_params: {
+            transaction_type: "deposit",
+            amount_cents: amount,
+            cash_back_cents: 0,
+            primary_account_reference: primary
+          },
+          default_cash_account_reference: cash
+        ).normalized_entries
+
+        part_legs = PartBuilder.build_entries(
+          flow_type: "deposit",
+          amount_cents: amount,
+          cash_back_cents: 0,
+          fee_cents: 0,
+          check_items: [],
+          primary_account_reference: primary,
+          cash_account_reference: cash
+        )
+
+        assert_equal recipe_entries.size, part_legs.size
+        recipe_by_key = recipe_entries.index_by { |e| [ e[:side], e[:account_reference], e[:amount_cents] ] }
+        part_legs.each do |leg|
+          key = [ leg[:side], leg[:account_reference], leg[:amount_cents] ]
+          assert recipe_by_key.key?(key), "PartBuilder leg #{leg.inspect} should match RecipeBuilder output"
+        end
+      end
+
+      test "parity with VaultTransferRecipe when drawer_to_vault" do
+        amount = 10_000
+        source = "cash:D01"
+        dest = "cash:V01"
+
+        recipe_entries = RecipeBuilder.new(
+          posting_params: {
+            transaction_type: "vault_transfer",
+            amount_cents: amount,
+            vault_transfer_direction: "drawer_to_vault",
+            vault_transfer_destination_cash_account_reference: dest
+          },
+          default_cash_account_reference: source
+        ).normalized_entries
+
+        part_legs = PartBuilder.build_entries(
+          flow_type: "vault_transfer",
+          amount_cents: amount,
+          source_cash_account_reference: source,
+          destination_cash_account_reference: dest
+        )
+
+        assert_equal recipe_entries.size, part_legs.size
+        recipe_by_key = recipe_entries.index_by { |e| [ e[:side], e[:account_reference], e[:amount_cents] ] }
+        part_legs.each do |leg|
+          key = [ leg[:side], leg[:account_reference], leg[:amount_cents] ]
+          assert recipe_by_key.key?(key), "PartBuilder leg #{leg.inspect} should match RecipeBuilder output"
+        end
+      end
+
+      test "parity with VaultTransferRecipe when vault_to_vault" do
+        amount = 5_000
+        source = "cash:V01"
+        dest = "cash:V02"
+
+        recipe_entries = RecipeBuilder.new(
+          posting_params: {
+            transaction_type: "vault_transfer",
+            amount_cents: amount,
+            vault_transfer_direction: "vault_to_vault",
+            vault_transfer_source_cash_account_reference: source,
+            vault_transfer_destination_cash_account_reference: dest
+          },
+          default_cash_account_reference: "cash:D01"
+        ).normalized_entries
+
+        part_legs = PartBuilder.build_entries(
+          flow_type: "vault_transfer",
+          amount_cents: amount,
+          source_cash_account_reference: source,
+          destination_cash_account_reference: dest
+        )
+
+        assert_equal recipe_entries.size, part_legs.size
+        recipe_by_key = recipe_entries.index_by { |e| [ e[:side], e[:account_reference], e[:amount_cents] ] }
+        part_legs.each do |leg|
+          key = [ leg[:side], leg[:account_reference], leg[:amount_cents] ]
+          assert recipe_by_key.key?(key), "PartBuilder leg #{leg.inspect} should match RecipeBuilder output"
+        end
+      end
+
       test "parity with CheckCashingRecipe when FEE is zero" do
         check_items = [
           { routing: "021", account: "123", number: "100", account_reference: "check:021:123:100", amount_cents: 10_000 }
@@ -304,6 +434,43 @@ module Posting
         part_legs.each do |leg|
           assert leg.key?(:position)
           assert leg.key?(:reference_type) if leg[:account_reference].start_with?("check:")
+        end
+      end
+
+      test "parity with CheckCashingRecipe when FEE is non-zero" do
+        check_items = [
+          { routing: "021", account: "123", number: "100", account_reference: "check:021:123:100", amount_cents: 10_000 }
+        ]
+        cash_ref = "cash:D01"
+        fee_ref = "income:check_cashing_fee"
+        fee_cents = 500
+        net_payout = 10_000 - fee_cents
+
+        recipe_entries = RecipeBuilder.new(
+          posting_params: {
+            transaction_type: "check_cashing",
+            check_items: check_items,
+            fee_cents: fee_cents,
+            amount_cents: net_payout,
+            fee_income_account_reference: fee_ref
+          },
+          default_cash_account_reference: cash_ref
+        ).normalized_entries
+
+        part_legs = PartBuilder.build_entries(
+          flow_type: "check_cashing",
+          check_items: check_items,
+          fee_cents: fee_cents,
+          cash_account_reference: cash_ref,
+          fee_income_account_reference: fee_ref
+        )
+
+        assert_equal recipe_entries.size, part_legs.size, "Same number of legs"
+
+        recipe_by_key = recipe_entries.index_by { |e| [ e[:side], e[:account_reference], e[:amount_cents] ] }
+        part_legs.each do |leg|
+          key = [ leg[:side], leg[:account_reference], leg[:amount_cents] ]
+          assert recipe_by_key.key?(key), "PartBuilder leg #{leg.inspect} should match RecipeBuilder output"
         end
       end
     end
