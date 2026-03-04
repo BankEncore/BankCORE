@@ -10,7 +10,7 @@
       <%= link_to "Transfer", new_teller_transfer_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_transfer_path)}" %>
       <%= link_to "Vault Transfer", new_teller_vault_transfer_path, class: "btn btn-sm btn-ghost #{active.call(new_teller_vault_transfer_path)}" %>
 
-      <% parts_paths = [ teller_parts_root_path, new_teller_parts_deposit_path, new_teller_parts_withdrawal_path, new_teller_parts_transfer_path, new_teller_parts_vault_transfer_path, new_teller_parts_check_cashing_path ] %>
+      <% parts_paths = [ teller_parts_root_path, new_teller_parts_deposit_path, new_teller_parts_withdrawal_path, new_teller_parts_transfer_path, new_teller_parts_vault_transfer_path, new_teller_parts_check_cashing_path, new_teller_parts_draft_path, new_teller_parts_misc_receipt_path, new_teller_parts_bill_payment_path ] %>
       <details class="relative">
         <summary class="btn btn-sm btn-ghost cursor-pointer list-none [&::-webkit-details-marker]:hidden <%= "btn-active" if parts_paths.any? { |p| current_page?(p) } %>">
           Parts (test) ▼
@@ -22,6 +22,9 @@
           <li><%= link_to "Transfer", new_teller_parts_transfer_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
           <li><%= link_to "Vault Transfer", new_teller_parts_vault_transfer_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
           <li><%= link_to "Check Cashing", new_teller_parts_check_cashing_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
+          <li><%= link_to "Bank Draft", new_teller_parts_draft_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
+          <li><%= link_to "Misc Receipt", new_teller_parts_misc_receipt_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
+          <li><%= link_to "Bill Payment", new_teller_parts_bill_payment_path, class: "block rounded px-3 py-2 hover:bg-base-200" %></li>
         </ul>
       </details>
 

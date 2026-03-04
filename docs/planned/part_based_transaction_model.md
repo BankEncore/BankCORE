@@ -174,11 +174,17 @@ test/services/posting/parts/
 
 ## Implemented
 
-### DepositFlow and VaultTransferFlow
+### Implemented flows
 
-- **DepositFlow** (`app/services/posting/parts/flows/deposit_flow.rb`): CI + CK − CO − FEE = PAC. Handles cash in, checks in, cash back, and fees.
-- **VaultTransferFlow** (`app/services/posting/parts/flows/vault_transfer_flow.rb`): Debit destination, credit source. Same amount each side.
-- **PartBuilder** dispatches to `deposit` and `vault_transfer` flow types.
+- **DepositFlow**: CI + CK − CO − FEE = PAC. Handles cash in, checks in, cash back, and fees.
+- **VaultTransferFlow**: Debit destination, credit source. Same amount each side.
+- **WithdrawalFlow**: CO + FEE = PAD. Cash out + fee = debit from primary.
+- **TransferFlow**: CAC + FEE = PAD. Amount to counterparty + fee = debit from primary.
+- **CheckCashingFlow**: CK = CO + FEE. Disbursement = CK − FEE.
+- **MiscReceiptFlow**: FEE = CI + CK + PAD. Income credit funded by cash, checks, or account.
+- **DraftFlow**: BD + FEE = Total Due, CI + CK + PAD = Payments.
+- **BillPaymentFlow**: BP + FEE = Total Due, CI + CK + PAD = Payments.
+- **PartBuilder** dispatches to all flow types.
 
 ### Parts GUI (Option A — separate routes)
 
@@ -189,6 +195,9 @@ test/services/posting/parts/
   - `/teller/parts/withdrawals/new`, `POST /teller/parts/withdrawals`
   - `/teller/parts/transfers/new`, `POST /teller/parts/transfers`
   - `/teller/parts/check_cashings/new`, `POST /teller/parts/check_cashings`
+  - `/teller/parts/drafts/new`, `POST /teller/parts/drafts`
+  - `/teller/parts/misc_receipts/new`, `POST /teller/parts/misc_receipts`
+  - `/teller/parts/bill_payments/new`, `POST /teller/parts/bill_payments`
 - **Navigation:** “Parts (test)” dropdown in the teller command bar links to Overview and each flow.
 - **Controllers** in `app/controllers/teller/parts/` use **PartBuilder** instead of RecipeBuilder.
 - **PartsPostingExecution** concern overrides posting logic to use PartBuilder; metadata and Engine integration unchanged.
@@ -196,7 +205,7 @@ test/services/posting/parts/
 
 ### Rake task
 
-- `rake parts:print_legs FLOW=check_cashing|withdrawal|transfer|deposit|vault_transfer` supported.
+- `rake parts:print_legs FLOW=check_cashing|withdrawal|transfer|deposit|vault_transfer|misc_receipt|draft|bill_payment` supported.
 - Optional env: `CASH_BACK_CENTS`, `SOURCE_REF`, `DEST_REF`, `FEE_CENTS`, `CHECK_ITEMS`, `AMOUNT_CENTS`, etc.
 
 ---

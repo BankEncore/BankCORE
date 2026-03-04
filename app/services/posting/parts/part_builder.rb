@@ -64,6 +64,40 @@ module Posting
             source_cash_account_reference: params.fetch(:source_cash_account_reference),
             destination_cash_account_reference: params.fetch(:destination_cash_account_reference)
           )
+        when "misc_receipt"
+          Flows::MiscReceiptFlow.new(
+            amount_cents: params.fetch(:amount_cents),
+            misc_cash_cents: params.fetch(:misc_cash_cents, 0),
+            misc_account_cents: params.fetch(:misc_account_cents, 0),
+            check_items: params.fetch(:check_items, []),
+            primary_account_reference: params[:primary_account_reference].to_s,
+            cash_account_reference: params.fetch(:cash_account_reference),
+            income_account_reference: params.fetch(:income_account_reference)
+          )
+        when "draft"
+          Flows::DraftFlow.new(
+            draft_amount_cents: params.fetch(:draft_amount_cents),
+            draft_fee_cents: params.fetch(:draft_fee_cents, 0),
+            draft_cash_cents: params.fetch(:draft_cash_cents, 0),
+            draft_account_cents: params.fetch(:draft_account_cents, 0),
+            check_items: params.fetch(:check_items, []),
+            primary_account_reference: params[:primary_account_reference].to_s,
+            cash_account_reference: params.fetch(:cash_account_reference),
+            draft_liability_account_reference: params.fetch(:draft_liability_account_reference),
+            draft_fee_income_account_reference: params[:draft_fee_income_account_reference]
+          )
+        when "bill_payment"
+          Flows::BillPaymentFlow.new(
+            payment_cents: params.fetch(:payment_cents),
+            fee_cents: params.fetch(:fee_cents, 0),
+            bill_payment_cash_cents: params.fetch(:bill_payment_cash_cents, 0),
+            bill_payment_account_cents: params.fetch(:bill_payment_account_cents, 0),
+            check_items: params.fetch(:check_items, []),
+            primary_account_reference: params[:primary_account_reference].to_s,
+            cash_account_reference: params.fetch(:cash_account_reference),
+            liability_account_reference: params.fetch(:liability_account_reference),
+            fee_income_account_reference: params[:fee_income_account_reference]
+          )
         else
           raise ArgumentError, "Unknown flow type: #{flow_type}"
         end

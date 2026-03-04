@@ -199,6 +199,56 @@ module Posting
         assert legs.any? { |l| l[:account_reference] == "cash:D01" && l[:side] == "credit" }
       end
 
+      test "build_entries for misc_receipt returns legs" do
+        legs = PartBuilder.build_entries(
+          flow_type: "misc_receipt",
+          amount_cents: 5_000,
+          misc_cash_cents: 5_000,
+          misc_account_cents: 0,
+          check_items: [],
+          primary_account_reference: "acct:123",
+          cash_account_reference: "cash:D01",
+          income_account_reference: "income:misc_receipt"
+        )
+
+        assert legs.any? { |l| l[:account_reference] == "cash:D01" && l[:side] == "debit" }
+        assert legs.any? { |l| l[:account_reference] == "income:misc_receipt" && l[:side] == "credit" }
+      end
+
+      test "build_entries for draft returns legs" do
+        legs = PartBuilder.build_entries(
+          flow_type: "draft",
+          draft_amount_cents: 3_000,
+          draft_fee_cents: 0,
+          draft_cash_cents: 3_000,
+          draft_account_cents: 0,
+          check_items: [],
+          primary_account_reference: "acct:123",
+          cash_account_reference: "cash:D01",
+          draft_liability_account_reference: "official_check:outstanding"
+        )
+
+        assert legs.any? { |l| l[:account_reference] == "cash:D01" && l[:side] == "debit" }
+        assert legs.any? { |l| l[:account_reference] == "official_check:outstanding" && l[:side] == "credit" }
+      end
+
+      test "build_entries for bill_payment returns legs" do
+        legs = PartBuilder.build_entries(
+          flow_type: "bill_payment",
+          payment_cents: 2_000,
+          fee_cents: 0,
+          bill_payment_cash_cents: 2_000,
+          bill_payment_account_cents: 0,
+          check_items: [],
+          primary_account_reference: "acct:123",
+          cash_account_reference: "cash:D01",
+          liability_account_reference: "bill_pmt:payee1"
+        )
+
+        assert legs.any? { |l| l[:account_reference] == "cash:D01" && l[:side] == "debit" }
+        assert legs.any? { |l| l[:account_reference] == "bill_pmt:payee1" && l[:side] == "credit" }
+      end
+
       test "raises ArgumentError for unknown flow type" do
         assert_raises(ArgumentError) do
           PartBuilder.build_entries(flow_type: "unknown_flow", amount_cents: 100)
@@ -467,6 +517,118 @@ module Posting
 
         assert_equal recipe_entries.size, part_legs.size, "Same number of legs"
 
+        recipe_by_key = recipe_entries.index_by { |e| [ e[:side], e[:account_reference], e[:amount_cents] ] }
+        part_legs.each do |leg|
+          key = [ leg[:side], leg[:account_reference], leg[:amount_cents] ]
+          assert recipe_by_key.key?(key), "PartBuilder leg #{leg.inspect} should match RecipeBuilder output"
+        end
+      end
+
+      test "parity with MiscReceiptRecipe when cash-only" do
+        amount = 5_000
+        misc_cash = 5_000
+        cash_ref = "cash:D01"
+        income_ref = "income:misc_receipt"
+
+        recipe_entries = RecipeBuilder.new(
+          posting_params: {
+            transaction_type: "misc_receipt",
+            amount_cents: amount,
+            misc_cash_cents: misc_cash,
+            misc_account_cents: 0,
+            income_account_reference: income_ref
+          },
+          default_cash_account_reference: cash_ref
+        ).normalized_entries
+
+        part_legs = PartBuilder.build_entries(
+          flow_type: "misc_receipt",
+          amount_cents: amount,
+          misc_cash_cents: misc_cash,
+          misc_account_cents: 0,
+          check_items: [],
+          primary_account_reference: "acct:123",
+          cash_account_reference: cash_ref,
+          income_account_reference: income_ref
+        )
+
+        assert_equal recipe_entries.size, part_legs.size
+        recipe_by_key = recipe_entries.index_by { |e| [ e[:side], e[:account_reference], e[:amount_cents] ] }
+        part_legs.each do |leg|
+          key = [ leg[:side], leg[:account_reference], leg[:amount_cents] ]
+          assert recipe_by_key.key?(key), "PartBuilder leg #{leg.inspect} should match RecipeBuilder output"
+        end
+      end
+
+      test "parity with DraftRecipe when cash-only" do
+        draft_amt = 3_000
+        draft_cash = 3_000
+        cash_ref = "cash:D01"
+        liability_ref = "official_check:outstanding"
+
+        recipe_entries = RecipeBuilder.new(
+          posting_params: {
+            transaction_type: "draft",
+            draft_amount_cents: draft_amt,
+            draft_fee_cents: 0,
+            draft_cash_cents: draft_cash,
+            draft_account_cents: 0,
+            draft_liability_account_reference: liability_ref
+          },
+          default_cash_account_reference: cash_ref
+        ).normalized_entries
+
+        part_legs = PartBuilder.build_entries(
+          flow_type: "draft",
+          draft_amount_cents: draft_amt,
+          draft_fee_cents: 0,
+          draft_cash_cents: draft_cash,
+          draft_account_cents: 0,
+          check_items: [],
+          primary_account_reference: "acct:123",
+          cash_account_reference: cash_ref,
+          draft_liability_account_reference: liability_ref
+        )
+
+        assert_equal recipe_entries.size, part_legs.size
+        recipe_by_key = recipe_entries.index_by { |e| [ e[:side], e[:account_reference], e[:amount_cents] ] }
+        part_legs.each do |leg|
+          key = [ leg[:side], leg[:account_reference], leg[:amount_cents] ]
+          assert recipe_by_key.key?(key), "PartBuilder leg #{leg.inspect} should match RecipeBuilder output"
+        end
+      end
+
+      test "parity with BillPaymentRecipe when cash-only and no fee" do
+        payment = 2_000
+        bp_cash = 2_000
+        cash_ref = "cash:D01"
+        liability_ref = "liability:bill_payment_test"
+
+        recipe_entries = RecipeBuilder.new(
+          posting_params: {
+            transaction_type: "bill_payment",
+            payment_cents: payment,
+            fee_cents: 0,
+            bill_payment_cash_cents: bp_cash,
+            bill_payment_account_cents: 0,
+            liability_account_reference: liability_ref
+          },
+          default_cash_account_reference: cash_ref
+        ).normalized_entries
+
+        part_legs = PartBuilder.build_entries(
+          flow_type: "bill_payment",
+          payment_cents: payment,
+          fee_cents: 0,
+          bill_payment_cash_cents: bp_cash,
+          bill_payment_account_cents: 0,
+          check_items: [],
+          primary_account_reference: "acct:123",
+          cash_account_reference: cash_ref,
+          liability_account_reference: liability_ref
+        )
+
+        assert_equal recipe_entries.size, part_legs.size
         recipe_by_key = recipe_entries.index_by { |e| [ e[:side], e[:account_reference], e[:amount_cents] ] }
         part_legs.each do |leg|
           key = [ leg[:side], leg[:account_reference], leg[:amount_cents] ]

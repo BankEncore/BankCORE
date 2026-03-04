@@ -24,6 +24,18 @@
         <span>Check Cashing</span>
         <span class="badge badge-sm badge-ghost">CK = CO + FEE</span>
       <% end %>
+      <%= link_to new_teller_parts_draft_path, class: "btn btn-outline justify-start gap-2" do %>
+        <span>Bank Draft</span>
+        <span class="badge badge-sm badge-ghost">BD + FEE = Total, CI+CK+PAD = Payments</span>
+      <% end %>
+      <%= link_to new_teller_parts_misc_receipt_path, class: "btn btn-outline justify-start gap-2" do %>
+        <span>Misc Receipt</span>
+        <span class="badge badge-sm badge-ghost">FEE = CI + CK + PAD</span>
+      <% end %>
+      <%= link_to new_teller_parts_bill_payment_path, class: "btn btn-outline justify-start gap-2" do %>
+        <span>Bill Payment</span>
+        <span class="badge badge-sm badge-ghost">BP + FEE = Total, CI+CK+PAD = Payments</span>
+      <% end %>
     </div>
   </div>
 </section>

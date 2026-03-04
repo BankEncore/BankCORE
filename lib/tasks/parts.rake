@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 namespace :parts do
-  desc "Build and print legs (FLOW=check_cashing|withdrawal|transfer|deposit|vault_transfer)"
+  desc "Build and print legs (FLOW=check_cashing|withdrawal|transfer|deposit|vault_transfer|misc_receipt|draft|bill_payment)"
   task print_legs: :environment do
     flow = ENV.fetch("FLOW", "check_cashing")
     legs = build_legs_for(flow)
@@ -75,8 +75,58 @@ def demo_params_for(flow)
       source_cash_account_reference: source,
       destination_cash_account_reference: dest
     }
+  when "misc_receipt"
+    misc_cash = ENV["MISC_CASH_CENTS"].to_i
+    misc_account = ENV["MISC_ACCOUNT_CENTS"].to_i
+    amt = amount.positive? ? amount : 5_000
+    misc_cash = amt if misc_cash.zero? && misc_account.zero?
+    {
+      amount_cents: amt,
+      misc_cash_cents: misc_cash,
+      misc_account_cents: misc_account,
+      check_items: [],
+      primary_account_reference: primary,
+      cash_account_reference: cash,
+      income_account_reference: ENV["INCOME_REF"].presence || "income:misc_receipt"
+    }
+  when "draft"
+    draft_amt = ENV["DRAFT_AMOUNT_CENTS"].to_i
+    draft_amt = 3_000 if draft_amt.zero?
+    draft_fee = ENV["DRAFT_FEE_CENTS"].to_i
+    draft_cash = ENV["DRAFT_CASH_CENTS"].to_i
+    draft_account = ENV["DRAFT_ACCOUNT_CENTS"].to_i
+    draft_cash = draft_amt + draft_fee if draft_cash.zero? && draft_account.zero?
+    {
+      draft_amount_cents: draft_amt,
+      draft_fee_cents: draft_fee,
+      draft_cash_cents: draft_cash,
+      draft_account_cents: draft_account,
+      check_items: [],
+      primary_account_reference: primary,
+      cash_account_reference: cash,
+      draft_liability_account_reference: ENV["LIABILITY_REF"].presence || "official_check:outstanding",
+      draft_fee_income_account_reference: ENV["FEE_INCOME_REF"].presence || "income:draft_fee"
+    }
+  when "bill_payment"
+    payment = ENV["PAYMENT_CENTS"].to_i
+    payment = 2_000 if payment.zero?
+    bp_fee = ENV["FEE_CENTS"].to_i
+    bp_cash = ENV["BILL_PAYMENT_CASH_CENTS"].to_i
+    bp_account = ENV["BILL_PAYMENT_ACCOUNT_CENTS"].to_i
+    bp_cash = payment + bp_fee if bp_cash.zero? && bp_account.zero?
+    {
+      payment_cents: payment,
+      fee_cents: bp_fee,
+      bill_payment_cash_cents: bp_cash,
+      bill_payment_account_cents: bp_account,
+      check_items: [],
+      primary_account_reference: primary,
+      cash_account_reference: cash,
+      liability_account_reference: ENV["LIABILITY_REF"].presence || "bill_pmt:default",
+      fee_income_account_reference: ENV["FEE_INCOME_REF"].presence || "income:bill_payment_fee"
+    }
   else
-    raise ArgumentError, "Unknown flow: #{flow}. Use check_cashing, withdrawal, transfer, deposit, or vault_transfer."
+    raise ArgumentError, "Unknown flow: #{flow}. Use check_cashing, withdrawal, transfer, deposit, vault_transfer, misc_receipt, draft, or bill_payment."
   end
 end
 

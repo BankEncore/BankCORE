@@ -35,6 +35,9 @@ Rails.application.routes.draw do
       resources :withdrawals, only: [ :new, :create ]
       resources :transfers, only: [ :new, :create ]
       resources :check_cashings, only: [ :new, :create ]
+      resources :drafts, only: [ :new, :create ]
+      resources :misc_receipts, only: [ :new, :create ]
+      resources :bill_payments, only: [ :new, :create ]
     end
     resource :context, only: [ :show, :update ]
     get "transactions/deposit", to: "transaction_pages#deposit", as: :deposit_transaction

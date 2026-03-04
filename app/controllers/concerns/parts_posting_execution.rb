@@ -136,6 +136,40 @@ module PartsPostingExecution
           source_cash_account_reference: source,
           destination_cash_account_reference: dest
         }
+      when "misc_receipt"
+        {
+          amount_cents: request_params[:amount_cents].to_i,
+          misc_cash_cents: request_params[:misc_cash_cents].to_i,
+          misc_account_cents: request_params[:misc_account_cents].to_i,
+          check_items: Array(request_params[:check_items]).map(&:to_h).map(&:symbolize_keys),
+          primary_account_reference: request_params[:primary_account_reference].to_s,
+          cash_account_reference: request_params[:cash_account_reference].presence || cash_ref,
+          income_account_reference: resolve_misc_receipt_income_ref(request_params)
+        }
+      when "draft"
+        {
+          draft_amount_cents: request_params[:draft_amount_cents].to_i,
+          draft_fee_cents: request_params[:draft_fee_cents].to_i,
+          draft_cash_cents: request_params[:draft_cash_cents].to_i,
+          draft_account_cents: request_params[:draft_account_cents].to_i,
+          check_items: Array(request_params[:check_items]).map(&:to_h).map(&:symbolize_keys),
+          primary_account_reference: request_params[:primary_account_reference].to_s,
+          cash_account_reference: request_params[:cash_account_reference].presence || cash_ref,
+          draft_liability_account_reference: request_params[:draft_liability_account_reference].presence || "official_check:outstanding",
+          draft_fee_income_account_reference: request_params[:draft_fee_income_account_reference]
+        }
+      when "bill_payment"
+        {
+          payment_cents: request_params[:payment_cents].to_i,
+          fee_cents: request_params[:fee_cents].to_i,
+          bill_payment_cash_cents: request_params[:bill_payment_cash_cents].to_i,
+          bill_payment_account_cents: request_params[:bill_payment_account_cents].to_i,
+          check_items: Array(request_params[:check_items]).map(&:to_h).map(&:symbolize_keys),
+          primary_account_reference: request_params[:primary_account_reference].to_s,
+          cash_account_reference: request_params[:cash_account_reference].presence || cash_ref,
+          liability_account_reference: resolve_bill_payment_liability_ref(request_params),
+          fee_income_account_reference: request_params[:fee_income_account_reference]
+        }
       else
         raise ArgumentError, "Unsupported flow type for Parts: #{flow_type}"
       end
@@ -165,6 +199,28 @@ module PartsPostingExecution
         request_params[:vault_transfer_to_reference].presence ||
           request_params[:vault_transfer_destination_cash_account_reference].to_s
       end
+    end
+
+    def resolve_misc_receipt_income_ref(request_params)
+      ref = request_params[:income_account_reference].to_s.strip
+      return ref if ref.present?
+
+      type_id = request_params[:misc_receipt_type_id].to_s.presence
+      return "" if type_id.blank?
+
+      type = MiscReceiptType.find_by(id: type_id)
+      type&.income_account_reference.to_s
+    end
+
+    def resolve_bill_payment_liability_ref(request_params)
+      ref = request_params[:liability_account_reference].to_s.strip
+      return ref if ref.present?
+
+      payee_id = request_params[:payee_id].to_s.presence
+      return "" if payee_id.blank?
+
+      payee = BillPayee.find_by(id: payee_id)
+      payee&.liability_account_reference.to_s
     end
 
     def normalized_entries(posting_params)
