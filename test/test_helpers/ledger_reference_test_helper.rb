@@ -2,15 +2,15 @@
 
 module LedgerReferenceTestHelper
   STATIC_REFS = [
-    ["income:check_cashing_fee", "income_code"],
-    ["income:transfer_fee", "income_code"],
-    ["income:draft_fee", "income_code"],
-    ["income:bill_payment_fee", "income_code"],
-    ["income:cash_over", "income_code"],
-    ["income:variance", "income_code"],
-    ["income:fee", "income_code"],
-    ["expense:cash_short", "expense_code"],
-    ["official_check:outstanding", "liability"]
+    [ "income:check_cashing_fee", "income_code" ],
+    [ "income:transfer_fee", "income_code" ],
+    [ "income:draft_fee", "income_code" ],
+    [ "income:bill_payment_fee", "income_code" ],
+    [ "income:cash_over", "income_code" ],
+    [ "income:variance", "income_code" ],
+    [ "income:fee", "income_code" ],
+    [ "expense:cash_short", "expense_code" ],
+    [ "official_check:outstanding", "liability" ]
   ].freeze
 
   def ensure_ledger_references_for_fixtures
