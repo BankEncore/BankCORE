@@ -1,0 +1,29 @@
+<section aria-label="Parts Test Flows" class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <h1 class="card-title text-xl">Parts (test)</h1>
+    <p class="text-sm text-base-content/70 mt-1">Parallel transaction flows using PartBuilder instead of RecipeBuilder.</p>
+    <div class="divider my-4"></div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <%= link_to new_teller_parts_deposit_path, class: "btn btn-outline justify-start gap-2" do %>
+        <span>Deposit</span>
+        <span class="badge badge-sm badge-ghost">CI + CK − CO − FEE = PAC</span>
+      <% end %>
+      <%= link_to new_teller_parts_withdrawal_path, class: "btn btn-outline justify-start gap-2" do %>
+        <span>Withdrawal</span>
+        <span class="badge badge-sm badge-ghost">CO + FEE = PAD</span>
+      <% end %>
+      <%= link_to new_teller_parts_transfer_path, class: "btn btn-outline justify-start gap-2" do %>
+        <span>Transfer</span>
+        <span class="badge badge-sm badge-ghost">CAC + FEE = PAD</span>
+      <% end %>
+      <%= link_to new_teller_parts_vault_transfer_path, class: "btn btn-outline justify-start gap-2" do %>
+        <span>Vault Transfer</span>
+        <span class="badge badge-sm badge-ghost">Debit dest, credit source</span>
+      <% end %>
+      <%= link_to new_teller_parts_check_cashing_path, class: "btn btn-outline justify-start gap-2" do %>
+        <span>Check Cashing</span>
+        <span class="badge badge-sm badge-ghost">CK = CO + FEE</span>
+      <% end %>
+    </div>
+  </div>
+</section>

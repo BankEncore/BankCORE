@@ -29,6 +29,7 @@ Rails.application.routes.draw do
     resources :bill_payments, only: [ :new, :create ]
     resources :check_cashings, only: [ :new, :create ]
     namespace :parts do
+      root to: "landing#index"
       resources :deposits, only: [ :new, :create ]
       resources :vault_transfers, only: [ :new, :create ]
       resources :withdrawals, only: [ :new, :create ]
