@@ -86,6 +86,12 @@ module Teller
         end
         @misc_receipt_types = MiscReceiptType.active.ordered if transaction_type == "misc_receipt"
         @bill_payees = BillPayee.active.ordered if transaction_type == "bill_payment"
+        if TransactionMiscReceiptDefault::SUPPORTED_TRANSACTION_TYPES.include?(transaction_type)
+          @misc_receipt_defaults = TransactionMiscReceiptDefault
+            .for_transaction_type(transaction_type)
+            .includes(:misc_receipt_type)
+            .order(:display_order)
+        end
         render :show
       end
   end

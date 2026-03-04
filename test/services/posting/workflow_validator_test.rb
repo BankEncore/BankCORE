@@ -343,6 +343,93 @@ module Posting
       assert_empty errors, errors.inspect
     end
 
+    test "misc_additions returns error when misc_receipt_type_id blank" do
+      type = MiscReceiptType.create!(code: "ma1", label: "Fee", income_account_reference: "income:ma1", memo_required: false, display_order: 0, is_active: true)
+      TransactionMiscReceiptDefault.create!(
+        misc_receipt_type: type,
+        transaction_type: "deposit",
+        override_policy: "teller_override",
+        display_order: 0
+      )
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "MA Party", is_active: true)
+
+      errors = WorkflowValidator.errors({
+        transaction_type: "deposit",
+        amount_cents: 10_000,
+        party_id: party.id,
+        primary_account_reference: "acct:customer",
+        entries: [
+          { side: "debit", account_reference: "cash:D01", amount_cents: 10_000 },
+          { side: "credit", account_reference: "acct:customer", amount_cents: 10_000 }
+        ],
+        misc_additions: [
+          { misc_receipt_type_id: "", amount_charged_cents: 500 }
+        ]
+      }, mode: :post)
+
+      assert_includes errors, "Misc addition requires misc_receipt_type_id"
+    end
+
+    test "misc_additions fixed policy returns error when waived" do
+      type = MiscReceiptType.create!(code: "ma_fixed", label: "Fixed Fee", income_account_reference: "income:fixed", memo_required: false, display_order: 0, is_active: true)
+      TransactionMiscReceiptDefault.create!(
+        misc_receipt_type: type,
+        transaction_type: "deposit",
+        override_policy: "fixed",
+        default_amount_cents: 500,
+        display_order: 0
+      )
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "MA Party", is_active: true)
+
+      errors = WorkflowValidator.errors({
+        transaction_type: "deposit",
+        amount_cents: 10_000,
+        party_id: party.id,
+        primary_account_reference: "acct:customer",
+        entries: [
+          { side: "debit", account_reference: "cash:D01", amount_cents: 10_500 },
+          { side: "credit", account_reference: "acct:customer", amount_cents: 10_000 },
+          { side: "debit", account_reference: "cash:D01", amount_cents: 500 },
+          { side: "credit", account_reference: "income:fixed", amount_cents: 500 }
+        ],
+        misc_additions: [
+          { misc_receipt_type_id: type.id, amount_charged_cents: 0, default_amount_cents: 500, waived: true }
+        ]
+      }, mode: :post)
+
+      assert_includes errors, "Fee Fixed Fee cannot be waived"
+    end
+
+    test "misc_additions fixed policy returns error when amount differs from default" do
+      type = MiscReceiptType.create!(code: "ma_fixed2", label: "Fixed Fee 2", income_account_reference: "income:fixed2", memo_required: false, display_order: 0, is_active: true)
+      TransactionMiscReceiptDefault.create!(
+        misc_receipt_type: type,
+        transaction_type: "deposit",
+        override_policy: "fixed",
+        default_amount_cents: 500,
+        display_order: 0
+      )
+      party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "MA Party", is_active: true)
+
+      errors = WorkflowValidator.errors({
+        transaction_type: "deposit",
+        amount_cents: 10_000,
+        party_id: party.id,
+        primary_account_reference: "acct:customer",
+        entries: [
+          { side: "debit", account_reference: "cash:D01", amount_cents: 10_250 },
+          { side: "credit", account_reference: "acct:customer", amount_cents: 10_000 },
+          { side: "debit", account_reference: "cash:D01", amount_cents: 250 },
+          { side: "credit", account_reference: "income:fixed2", amount_cents: 250 }
+        ],
+        misc_additions: [
+          { misc_receipt_type_id: type.id, amount_charged_cents: 250, default_amount_cents: 500, waived: false }
+        ]
+      }, mode: :post)
+
+      assert_includes errors, "Fee Fixed Fee 2 amount must be 5.0"
+    end
+
     test "deposit returns no error when cash_back within total deposit" do
       party = Party.where(party_kind: "individual").first || Party.create!(party_kind: "individual", relationship_kind: "customer", display_name: "CashBack Party", is_active: true)
       errors = WorkflowValidator.errors({

@@ -79,6 +79,13 @@
               workflow_form_controller: workflow_form_controller %>
           <% end %>
 
+          <% if local_assigns[:misc_receipt_defaults].to_a.any? %>
+            <%= render "teller/forms/misc_additions_section",
+              form: form,
+              misc_receipt_defaults: local_assigns[:misc_receipt_defaults],
+              workflow_form_controller: workflow_form_controller %>
+          <% end %>
+
           <%= form.hidden_field :request_id, value: "", "data-#{workflow_form_controller}-target" => "requestId", "data-posting-form-target" => "requestId" %>
           <%= form.hidden_field :approval_token, value: "", "data-#{workflow_form_controller}-target" => "approvalToken", "data-posting-form-target" => "approvalToken" %>
           <%= form.hidden_field :initiating_lookup, value: "" %>

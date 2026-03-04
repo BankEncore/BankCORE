@@ -4,6 +4,7 @@ module Teller
   class BillPaymentsController < BaseController
     include PostingPrerequisites
     include TellerPostingExecution
+    include MiscReceiptDefaultsForTransaction
 
     before_action :ensure_authorized
     before_action :require_posting_context!
@@ -17,6 +18,7 @@ module Teller
       @parties = Party.where(is_active: true, party_kind: "individual").order(display_name: :asc).limit(50)
       @selected_party = Party.includes(:party_individual).find_by(id: params[:party_id]) if params[:party_id].present?
       @cash_locations = []
+      set_misc_receipt_defaults_for_transaction
       render "teller/transaction_pages/show"
     end
 

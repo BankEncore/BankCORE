@@ -2,6 +2,7 @@ module Teller
   class CheckCashingsController < BaseController
     include PostingPrerequisites
     include TellerPostingExecution
+    include MiscReceiptDefaultsForTransaction
 
     before_action :ensure_authorized
     before_action :require_posting_context!
@@ -13,6 +14,7 @@ module Teller
       @form_url = teller_check_cashings_path
       @parties = Party.where(is_active: true, party_kind: "individual").order(display_name: :asc).limit(50)
       @cash_locations = []
+      set_misc_receipt_defaults_for_transaction
       render "teller/transaction_pages/show"
     end
 

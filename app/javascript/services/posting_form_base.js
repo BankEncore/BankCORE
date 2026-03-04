@@ -15,7 +15,7 @@ import {
   getRequiresSettlementAccount,
   hasSection as workflowHasSectionInConfig
 } from "services/posting_workflows"
-import { appendEntriesAndTypePayload } from "services/posting_payload"
+import { appendEntriesAndTypePayload, appendMiscAdditionsFromForm } from "services/posting_payload"
 
 export default class extends Controller {
   static targets = [
@@ -273,6 +273,7 @@ export default class extends Controller {
     formData.set("counterparty_account_reference", state.counterpartyAccountReference ?? "")
     formData.set("cash_account_reference", state.cashAccountReference ?? "")
     appendEntriesAndTypePayload(formData, state.transactionType, state, this.workflowSchema)
+    appendMiscAdditionsFromForm(formData)
     return formData
   }
 
@@ -625,6 +626,7 @@ export default class extends Controller {
   appendEntries(formData) {
     const state = this.getState()
     appendEntriesAndTypePayload(formData, state.transactionType, state, this.workflowSchema)
+    appendMiscAdditionsFromForm(formData)
   }
 
   formatCents(cents) {

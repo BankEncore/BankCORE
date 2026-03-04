@@ -25,3 +25,5 @@
 <% if check_items.any? %>
   <%= render "teller/receipts/receipt_check_details", check_items: check_items, total_cents: check_amount %>
 <% end %>
+
+<%= render "teller/receipts/receipt_misc_additions", posting_batch: posting_batch %>

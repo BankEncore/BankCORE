@@ -149,6 +149,66 @@ module Posting
       assert entries.any? { |e| e[:account_reference] == "income:bill_payment_fee" && e[:side] == "credit" && e[:amount_cents] == 250 }
     end
 
+    test "appends misc addition legs to deposit entries and remains balanced" do
+      type = MiscReceiptType.create!(
+        code: "recipe_misc",
+        label: "Recipe Misc Fee",
+        income_account_reference: "income:recipe_misc",
+        memo_required: false,
+        display_order: 0,
+        is_active: true
+      )
+      builder = RecipeBuilder.new(
+        posting_params: {
+          transaction_type: "deposit",
+          amount_cents: 10_000,
+          primary_account_reference: "acct:customer",
+          misc_additions: [
+            { misc_receipt_type_id: type.id, amount_charged_cents: 500, default_amount_cents: 500, waived: false }
+          ]
+        },
+        default_cash_account_reference: "cash:D01"
+      )
+
+      entries = builder.normalized_entries
+      debit_total = entries.select { |e| e[:side] == "debit" }.sum { |e| e[:amount_cents] }
+      credit_total = entries.select { |e| e[:side] == "credit" }.sum { |e| e[:amount_cents] }
+
+      assert_equal debit_total, credit_total, "Entries must balance"
+      assert entries.any? { |e| e[:account_reference] == "income:recipe_misc" && e[:amount_cents] == 500 }
+    end
+
+    test "includes misc_additions in posting_metadata" do
+      type = MiscReceiptType.create!(
+        code: "recipe_meta",
+        label: "Meta Fee",
+        income_account_reference: "income:meta",
+        memo_required: false,
+        display_order: 0,
+        is_active: true
+      )
+      builder = RecipeBuilder.new(
+        posting_params: {
+          transaction_type: "deposit",
+          amount_cents: 5_000,
+          primary_account_reference: "acct:customer",
+          misc_additions: [
+            { misc_receipt_type_id: type.id, amount_charged_cents: 250, default_amount_cents: 250, waived: false }
+          ]
+        },
+        default_cash_account_reference: "cash:D01"
+      )
+
+      metadata = builder.posting_metadata
+      assert metadata.key?(:misc_additions)
+      items = metadata[:misc_additions]
+      assert_equal 1, items.size
+      assert_equal type.id, items[0][:misc_receipt_type_id]
+      assert_equal "Meta Fee", items[0][:type_label]
+      assert_equal 250, items[0][:amount_charged_cents]
+      assert_equal false, items[0][:waived]
+    end
+
     test "builds bill_payment metadata with payee snapshot" do
       payee = BillPayee.create!(code: "BP_META", name: "Meta Payee", liability_account_reference: "liability:BP_META", memo_required: true, is_active: true)
       builder = RecipeBuilder.new(

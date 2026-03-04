@@ -41,16 +41,20 @@ module PostingRequestBuilder
         threshold_cents: result[:threshold_cents],
         amount_cents: result[:amount_cents],
         transaction_type: posting_params[:transaction_type].to_s,
-        trigger_key: result[:trigger_key]
-      }
+        trigger_key: result[:trigger_key],
+        context: result[:context]
+      }.compact
     end
 
     def approval_threshold_check(posting_params)
       entries = normalized_entries(posting_params)
-      Posting::ApprovalThresholdChecker.call(
+      threshold_result = Posting::ApprovalThresholdChecker.call(
         posting_params: posting_params,
         entries: entries,
         default_cash_account_reference: default_cash_account_reference
       )
+      return threshold_result if threshold_result.present?
+
+      Posting::FeeOverrideChecker.call(posting_params: posting_params)
     end
 end

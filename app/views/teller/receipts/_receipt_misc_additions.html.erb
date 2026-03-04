@@ -1,0 +1,28 @@
+<% meta = posting_batch.metadata || {} %>
+<% meta = meta.with_indifferent_access if meta.respond_to?(:with_indifferent_access) %>
+<% items = meta["misc_additions"] || meta[:misc_additions] || [] %>
+<% items = Array(items).map { |i| i.is_a?(Hash) ? i.with_indifferent_access : i }.reject { |i| i["waived"] || i[:waived] } %>
+<% if items.any? %>
+
+<div class="mt-3 pt-3 border-t border-base-300">
+  <p class="font-semibold text-sm mb-1">Additional Fees</p>
+  <table class="table table-sm text-sm w-full">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th class="text-right">Default</th>
+        <th class="text-right">Charged</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% items.each do |line| %>
+        <tr>
+          <td><%= (line["type_label"] || line[:type_label]).to_s.presence || "—" %></td>
+          <td class="text-right tabular-nums"><%= receipt_money((line["default_amount_cents"] || line[:default_amount_cents]).to_i) %></td>
+          <td class="text-right tabular-nums"><%= receipt_money((line["amount_charged_cents"] || line[:amount_charged_cents]).to_i) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<% end %>

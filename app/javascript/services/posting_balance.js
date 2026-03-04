@@ -135,8 +135,10 @@ export function buildEntries(transactionType, state) {
     const draftAccountCents = state.draftAmounts?.draftAccountCents ?? 0
     const draftCheckCents = (state.checks ?? []).reduce((sum, c) => sum + (c.amount_cents ?? 0), 0)
     const totalPaymentCents = draftCashCents + draftAccountCents + draftCheckCents
-    const totalDueCents = draftAmountCents + draftFeeCents
-    if (totalPaymentCents !== totalDueCents) {
+    const miscTotalCents = state.draftAmounts?.miscTotalCents ?? 0
+    const totalDueCents = draftAmountCents + draftFeeCents + miscTotalCents
+    const paymentMismatch = totalPaymentCents !== totalDueCents
+    if (paymentMismatch) {
       return []
     }
 

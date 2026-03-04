@@ -6,6 +6,72 @@
 import { buildEntries } from "services/posting_balance"
 import { hasSection } from "services/posting_workflows"
 
+/**
+ * Returns total cents from misc_additions in #posting-form (for preview/totals).
+ */
+export function getMiscAdditionsTotalCentsFromForm() {
+  const form = document.getElementById("posting-form")
+  if (!form) return 0
+  const fd = new FormData(form)
+  let total = 0
+  for (const [key, value] of fd.entries()) {
+    if (key.includes("misc_additions") && key.includes("amount_charged_cents") && value) {
+      total += parseInt(value, 10) || 0
+    }
+  }
+  return total
+}
+
+/**
+ * Returns misc addition legs for preview (debit cash or account, credit income per fee).
+ * Used by draft and other transaction types that support misc_additions.
+ * @param {string} cashAccountReference - For FEE_DEBIT_FROM_CASH types (deposit, draft, etc.)
+ * @param {Object} [options] - { primaryAccountReference, draftCashCents, draftAccountCents }
+ *   For draft: when payment is from account only, fee debit uses primary account (matches server).
+ */
+export function getMiscAdditionLegsFromForm(cashAccountReference, options = {}) {
+  const section = document.querySelector("[data-misc-additions-section]")
+  const { primaryAccountReference = "", draftCashCents = 0, draftAccountCents = 0 } = options
+  const debitFromAccount = primaryAccountReference && draftAccountCents > 0 && draftCashCents === 0
+  const debitRef = debitFromAccount ? primaryAccountReference : cashAccountReference
+  if (!section || !debitRef) return []
+
+  const rows = section.querySelectorAll("[data-misc-addition-row]")
+  const legs = []
+  rows.forEach((row) => {
+    const waived = row.querySelector('[data-misc-addition-waived]')?.checked ?? false
+    if (waived) return
+    const amountInput = row.querySelector("[data-currency-input-target='hiddenInput']") || row.querySelector("input[name*='amount_charged_cents']")
+    const amountCents = parseInt(amountInput?.value || "0", 10) || 0
+    if (amountCents <= 0) return
+    const incomeRef = row.dataset.incomeAccountReference?.trim()
+    if (!incomeRef) return
+    legs.push({ side: "debit", account_reference: debitRef, amount_cents: amountCents })
+    legs.push({ side: "credit", account_reference: incomeRef, amount_cents: amountCents })
+  })
+  return legs
+}
+
+/**
+ * Appends misc_additions from the #posting-form DOM into formData.
+ * Skips if formData already has misc_additions (avoids duplication when FormData(form) included them).
+ */
+export function appendMiscAdditionsFromForm(formData) {
+  for (const [key] of formData.entries()) {
+    if (key.startsWith("misc_additions")) return
+  }
+
+  const form = document.getElementById("posting-form")
+  if (!form) return
+
+  const fd = new FormData(form)
+  for (const [key, value] of fd.entries()) {
+    if (key.startsWith("misc_additions")) {
+      formData.append(key, value)
+    }
+  }
+}
+
 export function appendEntriesAndTypePayload(formData, transactionType, state, schema = null) {
   const entries = buildEntries(transactionType, state)
   entries.forEach((entry) => {

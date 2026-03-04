@@ -94,6 +94,7 @@ Rails.application.routes.draw do
     resources :cash_locations, only: [ :index, :show, :edit, :update, :destroy ]
     resources :cash_location_assignments, only: [ :index, :show ]
     resources :misc_receipt_types, only: [ :index, :new, :create, :edit, :update ]
+    resources :transaction_misc_receipt_defaults, only: [ :index, :new, :create, :edit, :update, :destroy ], path: "linked-fees"
     resources :bill_payees, only: [ :index, :new, :create, :edit, :update ]
     resources :users do
       resources :user_roles, only: [ :create, :destroy ], path: "roles"

@@ -1,0 +1,42 @@
+<% defaults = local_assigns.fetch(:misc_receipt_defaults, []) %>
+<% return if defaults.blank? %>
+<% form = local_assigns.fetch(:form) %>
+<% wfc = local_assigns.fetch(:workflow_form_controller, "deposit-form") %>
+
+<div class="mt-4 pt-4 border-t border-base-300" data-misc-additions-section>
+  <p class="font-semibold text-sm mb-2">Additional Fees</p>
+  <% defaults.each_with_index do |default, idx| %>
+    <% type = default.misc_receipt_type %>
+    <% next unless type %>
+    <% default_cents = default.effective_default_amount_cents || 0 %>
+    <% is_fixed = default.fixed? %>
+    <div class="flex flex-wrap gap-2 items-end mb-2" data-misc-addition-row data-income-account-reference="<%= type.income_account_reference %>">
+      <%= form.hidden_field :misc_receipt_type_id, name: "misc_additions[][misc_receipt_type_id]", value: type.id, id: nil %>
+      <%= form.hidden_field :default_amount_cents, name: "misc_additions[][default_amount_cents]", value: default_cents, id: nil %>
+      <div class="form-control flex-1 min-w-[8rem]">
+        <%= label_tag "misc_additions_#{idx}_label", type.label, class: "text-xs font-medium text-base-content block" %>
+        <span class="text-sm text-base-content/70"><%= type.label %></span>
+      </div>
+      <div class="form-control w-28">
+        <%= label_tag "misc_additions_#{idx}_amount", "Amount", class: "text-xs font-medium text-base-content block" %>
+        <% if is_fixed %>
+          <input type="text" class="input input-bordered input-sm" value="<%= number_to_currency(default_cents / 100.0) %>" readonly disabled aria-readonly="true" />
+          <%= form.hidden_field :amount_charged_cents, name: "misc_additions[][amount_charged_cents]", value: default_cents, id: nil %>
+        <% else %>
+          <div data-controller="currency-input" data-action="input-><%= wfc %>#recalculate" class="flex-1 min-w-0">
+            <%= form.hidden_field :amount_charged_cents, name: "misc_additions[][amount_charged_cents]", value: default_cents, id: nil, data: { currency_input_target: "hiddenInput" } %>
+            <input type="text" class="input input-bordered input-sm w-full" inputmode="decimal" placeholder="$0.00" aria-label="<%= type.label %> amount" data-currency-input-target="displayInput" data-action="input->currency-input#input blur->currency-input#blur" />
+          </div>
+        <% end %>
+      </div>
+      <% unless is_fixed %>
+        <div class="form-control">
+          <label class="label cursor-pointer gap-2">
+            <%= check_box_tag "misc_additions[][waived]", "1", false, class: "checkbox checkbox-sm", data: { misc_addition_waived: true } %>
+            <span class="label-text text-xs">Waived</span>
+          </label>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

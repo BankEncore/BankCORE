@@ -132,7 +132,8 @@ module TellerPostingExecution
         acknowledged_advisory_ids: [],
         check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :check_type, :hold_reason, :hold_until ],
         entries: [ :side, :account_reference, :amount_cents ],
-        denomination_lines: [ :cash_denomination_id, :qty, :amount_cents ]
+        denomination_lines: [ :cash_denomination_id, :qty, :amount_cents ],
+        misc_additions: [ :misc_receipt_type_id, :amount_charged_cents, :default_amount_cents, :waived, :memo ]
       )
     end
 

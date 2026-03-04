@@ -1,5 +1,6 @@
 import PostingFormBase from "services/posting_form_base"
 import { buildEntries, computeTotals, calculateCashImpact } from "services/posting_balance"
+import { getMiscAdditionsTotalCentsFromForm, getMiscAdditionLegsFromForm } from "services/posting_payload"
 import {
   getSections,
   getEntryProfile,
@@ -114,7 +115,13 @@ export default class extends PostingFormBase {
     const hasInvalidCheckRows = this.hasInvalidCheckRows()
     const hasInvalidDraftFields = this.hasInvalidDraftFields(draftAmounts)
 
-    const entries = buildEntries(transactionType, state)
+    let entries = buildEntries(transactionType, state)
+    const miscLegs = getMiscAdditionLegsFromForm(state.cashAccountReference ?? "", {
+      primaryAccountReference: state.primaryAccountReference ?? "",
+      draftCashCents: state.draftAmounts?.draftCashCents ?? 0,
+      draftAccountCents: state.draftAmounts?.draftAccountCents ?? 0
+    })
+    entries = entries.concat(miscLegs)
     const { debitTotal, creditTotal, imbalance, balanced } = computeTotals(entries)
     const blockedReason = workflowBlockedReason({
       totalAmountCents,
@@ -221,6 +228,9 @@ export default class extends PostingFormBase {
     const draftCashCents = this.hasDraftCashCentsTarget ? Math.max(parseInt(this.draftCashCentsTarget.value || "0", 10), 0) : 0
     const draftAccountCents = this.hasDraftAccountCentsTarget ? Math.max(parseInt(this.draftAccountCentsTarget.value || "0", 10), 0) : 0
     const draftCheckCents = this.checkSubtotalCents()
+    const miscTotalCents = getMiscAdditionsTotalCentsFromForm()
+    const totalDueCents = draftAmountCents + draftFeeCents + miscTotalCents
+    const totalPaymentCents = draftCashCents + draftAccountCents + draftCheckCents
 
     return {
       draftAmountCents,
@@ -228,9 +238,10 @@ export default class extends PostingFormBase {
       draftCashCents,
       draftAccountCents,
       draftCheckCents,
-      totalDueCents: draftAmountCents + draftFeeCents,
-      totalPaymentCents: draftCashCents + draftAccountCents + draftCheckCents,
-      balanceCents: draftAmountCents + draftFeeCents - (draftCashCents + draftAccountCents + draftCheckCents)
+      miscTotalCents,
+      totalDueCents,
+      totalPaymentCents,
+      balanceCents: totalDueCents - totalPaymentCents
     }
   }
 

@@ -85,7 +85,8 @@ module Teller
           :bill_payment_account_cents,
           check_items: [ :routing, :account, :number, :account_reference, :amount_cents, :check_type, :hold_reason, :hold_until ],
           entries: [ :side, :account_reference, :amount_cents ],
-          denomination_lines: [ :cash_denomination_id, :qty, :amount_cents ]
+          denomination_lines: [ :cash_denomination_id, :qty, :amount_cents ],
+          misc_additions: [ :misc_receipt_type_id, :amount_charged_cents, :default_amount_cents, :waived, :memo ]
         )
       end
 
@@ -99,6 +100,7 @@ module Teller
         when "cash_out_threshold" then "Cash-out threshold exceeded"
         when "vault_transfer_threshold" then "Vault transfer threshold exceeded"
         when "amount_threshold" then "Amount threshold exceeded"
+        when "fee_override" then "Fee override requires supervisor approval"
         else "Approval required"
         end
       end

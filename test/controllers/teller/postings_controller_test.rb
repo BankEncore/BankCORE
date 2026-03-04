@@ -151,6 +151,39 @@ module Teller
       assert_equal "account_first", posting_batch.metadata["initiating_lookup"]
     end
 
+    test "journalizes misc addition fee legs when misc_additions present" do
+      fee_type = MiscReceiptType.create!(
+        code: "post_test_fee",
+        label: "Test Fee",
+        income_account_reference: "income:fee",
+        default_amount_cents: 500,
+        memo_required: false,
+        display_order: 0,
+        is_active: true
+      )
+
+      post teller_posting_path, params: valid_posting_payload(
+        request_id: "http-post-misc-1",
+        amount_cents: 10_000
+      ).merge(
+        misc_additions: [
+          { misc_receipt_type_id: fee_type.id, amount_charged_cents: 500, default_amount_cents: 500, waived: false }
+        ]
+      ), as: :json
+
+      assert_response :success
+      body = JSON.parse(response.body)
+      assert_equal true, body["ok"]
+
+      posting_batch = PostingBatch.find_by!(request_id: "http-post-misc-1")
+      fee_debit = posting_batch.posting_legs.find_by(side: "debit", account_reference: "cash:#{@drawer.code}", amount_cents: 500)
+      fee_credit = posting_batch.posting_legs.find_by(side: "credit", account_reference: "income:fee")
+
+      assert fee_debit.present?, "Expected fee debit leg to cash (500 cents)"
+      assert fee_credit.present?, "Expected fee credit leg to income"
+      assert_equal 500, fee_credit.amount_cents
+    end
+
     test "persists check hold metadata into posting batch metadata" do
       post teller_posting_path, params: valid_posting_payload(
         request_id: "http-post-hold-1",

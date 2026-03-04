@@ -2,6 +2,7 @@ module Teller
   class WithdrawalsController < BaseController
     include PostingPrerequisites
     include TellerPostingExecution
+    include MiscReceiptDefaultsForTransaction
 
     before_action :ensure_authorized
     before_action :require_posting_context!
@@ -11,6 +12,7 @@ module Teller
       @transaction_type = "withdrawal"
       @page_title = "Withdrawal"
       @form_url = teller_withdrawals_path
+      set_misc_receipt_defaults_for_transaction
       render "teller/transaction_pages/show"
     end
 

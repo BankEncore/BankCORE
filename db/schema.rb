@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_070001) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_070002) do
   create_table "account_owners", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -432,6 +432,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_070001) do
     t.index ["workstation_id"], name: "index_teller_transactions_on_workstation_id"
   end
 
+  create_table "transaction_misc_receipt_defaults", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "default_amount_cents"
+    t.integer "display_order", default: 0, null: false
+    t.boolean "mandatory", default: false, null: false
+    t.bigint "misc_receipt_type_id", null: false
+    t.string "override_policy", default: "supervisor_override", null: false
+    t.string "transaction_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["misc_receipt_type_id"], name: "idx_on_misc_receipt_type_id_334b34b383"
+    t.index ["transaction_type", "misc_receipt_type_id"], name: "index_tmrd_on_transaction_type_and_misc_receipt_type", unique: true
+    t.index ["transaction_type"], name: "index_transaction_misc_receipt_defaults_on_transaction_type"
+  end
+
   create_table "user_roles", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "branch_id"
     t.datetime "created_at", null: false
@@ -517,6 +531,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_070001) do
   add_foreign_key "teller_transactions", "users"
   add_foreign_key "teller_transactions", "users", column: "approved_by_user_id"
   add_foreign_key "teller_transactions", "workstations"
+  add_foreign_key "transaction_misc_receipt_defaults", "misc_receipt_types"
   add_foreign_key "user_roles", "branches"
   add_foreign_key "user_roles", "roles"
   add_foreign_key "user_roles", "users"

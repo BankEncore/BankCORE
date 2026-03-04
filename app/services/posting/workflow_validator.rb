@@ -61,6 +61,7 @@ module Posting
         end
 
         validate_denomination_breakdown!(errors, params, transaction_type)
+        validate_misc_additions!(errors, params, transaction_type)
 
         errors
       end
@@ -75,11 +76,12 @@ module Posting
         def validate_draft(errors, params, mode:)
           draft_amount_cents = params[:draft_amount_cents].to_i
           draft_fee_cents = params[:draft_fee_cents].to_i
+          misc_total = misc_additions_total_cents(params)
           draft_cash_cents = params[:draft_cash_cents].to_i
           draft_account_cents = params[:draft_account_cents].to_i
           check_items = Array(params[:check_items]).map { |item| item.to_h.symbolize_keys }
           draft_check_cents = check_items.sum { |item| item[:amount_cents].to_i }
-          total_due_cents = draft_amount_cents + draft_fee_cents
+          total_due_cents = draft_amount_cents + draft_fee_cents + misc_total
           total_payment_cents = draft_cash_cents + draft_account_cents + draft_check_cents
 
           errors << "Draft amount must be greater than zero" unless draft_amount_cents.positive?
@@ -104,13 +106,15 @@ module Posting
           errors << "Memo is required" if memo_required && params[:memo].to_s.strip.blank?
 
           amount_cents = params[:amount_cents].to_i
+          misc_total = misc_additions_total_cents(params)
 
           misc_cash_cents = params[:misc_cash_cents].to_i
           misc_account_cents = params[:misc_account_cents].to_i
           check_items = Array(params[:check_items]).map { |item| item.to_h.symbolize_keys }
           check_total = check_items.sum { |item| item[:amount_cents].to_i }
           total_payment = misc_cash_cents + misc_account_cents + check_total
-          errors << "Payment (cash + account + checks) must equal amount" unless total_payment == amount_cents
+          total_due = amount_cents + misc_total
+          errors << "Payment (cash + account + checks) must equal amount" unless total_payment == total_due
 
           return unless mode == :validate
 
@@ -130,12 +134,13 @@ module Posting
 
           payment_cents = params[:payment_cents].to_i
           fee_cents = params[:fee_cents].to_i
-          total_due_cents = payment_cents + fee_cents
+          misc_total = misc_additions_total_cents(params)
+          total_due_cents = payment_cents + fee_cents + misc_total
           amount_cents = params[:amount_cents].to_i
 
           errors << "Payment amount must be greater than zero" unless payment_cents.positive?
           errors << "Fee cannot be negative" if fee_cents.negative?
-          errors << "Amount must equal payment plus fee" unless amount_cents == total_due_cents
+          errors << "Amount must equal payment plus fee plus misc additions" unless amount_cents == total_due_cents
 
           bill_payment_cash_cents = params[:bill_payment_cash_cents].to_i
           bill_payment_account_cents = params[:bill_payment_account_cents].to_i
@@ -187,6 +192,57 @@ module Posting
           end
         end
 
+        def validate_misc_additions!(errors, params, transaction_type)
+          raw = params[:misc_additions] || params["misc_additions"]
+          misc_additions = Array(raw).map { |e| e.to_h.symbolize_keys }
+          return if misc_additions.blank?
+
+          return unless TransactionMiscReceiptDefault::SUPPORTED_TRANSACTION_TYPES.include?(transaction_type)
+
+          defaults = TransactionMiscReceiptDefault.for_transaction_type(transaction_type).includes(:misc_receipt_type)
+
+          misc_additions.each do |line|
+            type_id = (line[:misc_receipt_type_id] || line["misc_receipt_type_id"]).to_s.presence
+            errors << "Misc addition requires misc_receipt_type_id" if type_id.blank?
+
+            type = MiscReceiptType.find_by(id: type_id) if type_id.present?
+            if type_id.present? && type.nil?
+              errors << "Invalid misc receipt type for misc addition"
+            elsif type.present? && type.memo_required?
+              memo = (line[:memo] || line["memo"]).to_s.strip
+              errors << "Memo is required for #{type.label}" if memo.blank?
+            end
+
+            amount_charged = (line[:amount_charged_cents] || line["amount_charged_cents"]).to_i
+            errors << "Misc addition amount cannot be negative" if amount_charged.negative?
+          end
+
+          defaults.each do |default|
+            next unless default.mandatory?
+
+            found = misc_additions.any? do |line|
+              ((line[:misc_receipt_type_id] || line["misc_receipt_type_id"]).to_s == default.misc_receipt_type_id.to_s) &&
+                (line[:amount_charged_cents] || line["amount_charged_cents"]).to_i.positive?
+            end
+            errors << "Mandatory fee #{default.misc_receipt_type&.label} is required" unless found
+          end
+
+          misc_additions.each do |line|
+            type_id = (line[:misc_receipt_type_id] || line["misc_receipt_type_id"]).to_s.presence
+            next if type_id.blank?
+
+            default = defaults.find { |d| d.misc_receipt_type_id.to_s == type_id }
+            next if default.blank? || !default.fixed?
+
+            amount_charged = (line[:amount_charged_cents] || line["amount_charged_cents"]).to_i
+            waived = !! (line[:waived] || line["waived"])
+            expected = default.effective_default_amount_cents || 0
+
+            errors << "Fee #{default.misc_receipt_type&.label} cannot be waived" if waived
+            errors << "Fee #{default.misc_receipt_type&.label} amount must be #{expected / 100.0}" if !waived && amount_charged != expected
+          end
+        end
+
         def validate_denomination_breakdown!(errors, params, transaction_type)
           workflow = Teller::WorkflowRegistry.fetch(transaction_type)
           mode = workflow&.dig(:denomination_breakdown_mode)
@@ -201,6 +257,11 @@ module Posting
           elsif denom_total != amount_cents
             errors << "Denomination total must equal amount"
           end
+        end
+
+        def misc_additions_total_cents(params)
+          raw = params[:misc_additions] || params["misc_additions"]
+          Array(raw).sum { |line| (line[:amount_charged_cents] || line["amount_charged_cents"]).to_i }
         end
 
         def denomination_total_from_params(params)

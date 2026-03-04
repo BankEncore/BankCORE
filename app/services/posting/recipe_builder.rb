@@ -6,11 +6,21 @@ module Posting
     end
 
     def posting_metadata
-      recipe.posting_metadata
+      base = recipe.posting_metadata
+      return base if misc_additions.blank?
+
+      base.merge(misc_additions_metadata)
     end
 
     def normalized_entries
-      enrich_entries_with_structured_fields(recipe.normalized_entries)
+      entries = recipe.normalized_entries
+      misc_legs = MiscAdditionLegBuilder.call(
+        posting_params: posting_params,
+        default_cash_account_reference: default_cash_account_reference,
+        primary_account_reference: posting_params[:primary_account_reference].to_s
+      )
+      entries = entries + misc_legs if misc_legs.any?
+      enrich_entries_with_structured_fields(entries)
     end
 
     private
@@ -63,6 +73,28 @@ module Posting
         return raw.to_s if raw.to_s.strip.start_with?("acct:")
 
         "acct:#{reference_identifier}"
+      end
+
+      def misc_additions
+        raw = posting_params[:misc_additions] || posting_params["misc_additions"]
+        Array(raw).map { |e| e.to_h.symbolize_keys }
+      end
+
+      def misc_additions_metadata
+        return {} if misc_additions.blank?
+
+        items = misc_additions.map do |line|
+          type_id = (line[:misc_receipt_type_id] || line["misc_receipt_type_id"]).to_s.presence
+          type = type_id.present? ? MiscReceiptType.find_by(id: type_id) : nil
+          {
+            misc_receipt_type_id: type_id&.to_i,
+            type_label: type&.label.to_s,
+            default_amount_cents: (line[:default_amount_cents] || line["default_amount_cents"]).to_i,
+            amount_charged_cents: (line[:amount_charged_cents] || line["amount_charged_cents"]).to_i,
+            waived: !! (line[:waived] || line["waived"])
+          }
+        end
+        { misc_additions: items }
       end
 
       def all_check_items_from_params

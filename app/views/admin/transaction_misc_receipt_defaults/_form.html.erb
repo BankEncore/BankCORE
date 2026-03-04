@@ -1,0 +1,58 @@
+<% if f.object.errors.any? %>
+  <div class="alert alert-error">
+    <ul>
+      <% f.object.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<div class="form-control">
+  <%= f.label :transaction_type, class: "label" %>
+  <%= f.select :transaction_type,
+    TransactionMiscReceiptDefault::SUPPORTED_TRANSACTION_TYPES.map { |t| [ t.titleize, t ] },
+    { include_blank: "Select transaction type" },
+    class: "select select-bordered",
+    required: true %>
+</div>
+
+<div class="form-control">
+  <%= f.label :misc_receipt_type_id, "Fee Type", class: "label" %>
+  <%= f.collection_select :misc_receipt_type_id,
+    MiscReceiptType.active.ordered,
+    :id,
+    :label,
+    { include_blank: "Select fee type" },
+    class: "select select-bordered",
+    required: true %>
+</div>
+
+<div class="form-control">
+  <%= f.label :default_amount_cents, "Default Amount (cents, optional)", class: "label" %>
+  <%= f.number_field :default_amount_cents, class: "input input-bordered", min: 0, step: 1, placeholder: "Leave blank to use fee type default" %>
+  <p class="text-xs text-base-content/60 mt-1">Overrides the fee type's default when set. Use when this transaction needs a different amount.</p>
+</div>
+
+<div class="form-control">
+  <%= f.label :display_order, class: "label" %>
+  <%= f.number_field :display_order, class: "input input-bordered", min: 0, value: f.object.display_order || 0 %>
+</div>
+
+<div class="form-control">
+  <label class="label cursor-pointer justify-start gap-2">
+    <%= f.check_box :mandatory, class: "checkbox" %>
+    <span class="label-text">Mandatory (cannot remove from transaction)</span>
+  </label>
+</div>
+
+<div class="form-control">
+  <%= f.label :override_policy, "Override Policy", class: "label" %>
+  <%= f.select :override_policy,
+    TransactionMiscReceiptDefault::OVERRIDE_POLICIES.map { |p| [ p.titleize.tr("_", " "), p ] },
+    {},
+    class: "select select-bordered" %>
+  <p class="text-xs text-base-content/60 mt-1">
+    <strong>Teller override:</strong> Teller can change amount or waive. <strong>Supervisor override:</strong> Changes/waivers require supervisor approval. <strong>Fixed:</strong> Amount locked; teller cannot change or waive.
+  </p>
+</div>

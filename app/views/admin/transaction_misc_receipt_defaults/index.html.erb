@@ -1,0 +1,44 @@
+<%= render "admin/shared/page_header",
+  title: "Linked Fees",
+  description: "Default fees linked to transaction types. These appear on teller forms and can be mandatory, waivable by teller, or require supervisor approval.",
+  primary_button_path: new_admin_transaction_misc_receipt_default_path,
+  primary_button_label: "Add Linked Fee" %>
+
+<section class="card bg-base-100 border border-base-300">
+  <div class="card-body">
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Transaction Type</th>
+            <th>Fee Type</th>
+            <th>Default Amount</th>
+            <th>Order</th>
+            <th>Mandatory</th>
+            <th>Override Policy</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @transaction_misc_receipt_defaults.each do |tmrd| %>
+            <tr>
+              <td><%= tmrd.transaction_type.titleize %></td>
+              <td><%= tmrd.misc_receipt_type&.label || "—" %></td>
+              <td><%= tmrd.effective_default_amount_cents ? number_to_currency(tmrd.effective_default_amount_cents / 100.0) : "—" %></td>
+              <td><%= tmrd.display_order %></td>
+              <td><%= tmrd.mandatory? ? "Yes" : "No" %></td>
+              <td><%= tmrd.override_policy.titleize.tr("_", " ") %></td>
+              <td class="text-right">
+                <%= link_to "Edit", edit_admin_transaction_misc_receipt_default_path(tmrd), class: "btn btn-ghost btn-sm" %>
+                <%= button_to "Remove", admin_transaction_misc_receipt_default_path(tmrd), method: :delete, data: { turbo_confirm: "Remove this linked fee?" }, class: "btn btn-error btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% if @transaction_misc_receipt_defaults.empty? %>
+      <p class="text-sm text-base-content/70 mt-4">No linked fees. Add one to show default fees on teller transaction forms (e.g. Teller-assisted fee on deposits).</p>
+    <% end %>
+  </div>
+</section>

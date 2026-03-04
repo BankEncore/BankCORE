@@ -9,6 +9,8 @@ class MiscReceiptType < ApplicationRecord
   validates :default_amount_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :display_order, numericality: { greater_than_or_equal_to: 0 }
 
+  has_many :transaction_misc_receipt_defaults, dependent: :destroy
+
   scope :active, -> { where(is_active: true) }
   scope :ordered, -> { order(:display_order, :label) }
 
